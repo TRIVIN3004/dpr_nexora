@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   getDatabase, 
   getCurrentUser, 
-  reviewReportStatus 
+  reviewReportStatus,
+  deleteReport
 } from '../utils/mockDatabase';
 import { 
   FileSpreadsheet, 
@@ -14,7 +15,8 @@ import {
   RefreshCw,
   Search,
   Download,
-  Calendar
+  Calendar,
+  Trash2
 } from 'lucide-react';
 import ReportModal from '../components/ReportModal';
 import * as XLSX from 'xlsx';
@@ -65,6 +67,18 @@ export default function AdminReports({ searchFilter }) {
     if (res.success) {
       triggerToast(`Report ${status} successfully!`);
       window.dispatchEvent(new Event('database_updated'));
+    }
+  };
+
+  const handleDeleteReport = (reportId) => {
+    if (window.confirm("Are you sure you want to permanently delete this report? This action cannot be undone.")) {
+      const res = deleteReport(reportId);
+      if (res.success) {
+        triggerToast("Report successfully deleted.");
+        window.dispatchEvent(new Event('database_updated'));
+      } else {
+        alert(res.error || "Failed to delete report.");
+      }
     }
   };
 
@@ -405,6 +419,15 @@ export default function AdminReports({ searchFilter }) {
                             <X className="h-4 w-4" />
                           </button>
                         </>
+                      )}
+                      {currentUser?.role === 'admin' && (
+                        <button
+                          onClick={() => handleDeleteReport(rep.id)}
+                          title="Delete Report"
+                          className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/15 hover:bg-rose-500/20 cursor-pointer"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       )}
                     </div>
                   </td>

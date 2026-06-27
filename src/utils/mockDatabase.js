@@ -739,6 +739,17 @@ export const deleteProject = (projectId) => {
   return { success: true };
 };
 
+export const deleteReport = (reportId) => {
+  const db = getDatabase();
+  const index = db.reports.findIndex(r => r.id === reportId);
+  if (index === -1) {
+    return { success: false, error: "Report not found." };
+  }
+  db.reports.splice(index, 1);
+  saveDatabase(db);
+  return { success: true };
+};
+
 // Announcement posting
 export const postAnnouncement = (title, content, senderName) => {
   const db = getDatabase();
