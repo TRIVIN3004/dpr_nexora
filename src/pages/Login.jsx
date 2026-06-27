@@ -55,13 +55,13 @@ export default function Login({ onLoginSuccess }) {
     setSuccessMessage('');
     if (role === 'admin') {
       setEmail('trivin@nexora.com');
-      setPassword('nexora123');
+      setPassword('123456');
     } else if (role === 'member') {
       setEmail('aakashraj@nexora.com');
-      setPassword('nexora123');
+      setPassword('123456');
     } else if (role === 'member2') {
       setEmail('gopika@nexora.com');
-      setPassword('nexora123');
+      setPassword('123456');
     }
   };
 

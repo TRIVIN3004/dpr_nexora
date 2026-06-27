@@ -6,7 +6,7 @@ const DEFAULT_USERS = [
     id: "EMP-001",
     name: "Trivin",
     email: "trivin@nexora.com",
-    password: "nexora123",
+    password: "123456",
     role: "admin",
     department: "Management",
     assignedProjects: ["All"],
@@ -18,7 +18,7 @@ const DEFAULT_USERS = [
     id: "EMP-002",
     name: "Aakashraj",
     email: "aakashraj@nexora.com",
-    password: "nexora123",
+    password: "123456",
     role: "member",
     department: "Engineering",
     assignedProjects: ["Nexora ERP", "CloudSync"],
@@ -30,7 +30,7 @@ const DEFAULT_USERS = [
     id: "EMP-003",
     name: "Gopika",
     email: "gopika@nexora.com",
-    password: "nexora123",
+    password: "123456",
     role: "member",
     department: "Design",
     assignedProjects: ["CyberShield"],
@@ -42,7 +42,7 @@ const DEFAULT_USERS = [
     id: "EMP-004",
     name: "Akshaya",
     email: "akshaya@nexora.com",
-    password: "nexora123",
+    password: "123456",
     role: "member",
     department: "Engineering",
     assignedProjects: ["AI Analyst"],
@@ -54,7 +54,7 @@ const DEFAULT_USERS = [
     id: "EMP-005",
     name: "Amirtha",
     email: "amirtha@nexora.com",
-    password: "nexora123",
+    password: "123456",
     role: "member",
     department: "Engineering",
     assignedProjects: ["Nexora ERP"],
@@ -66,7 +66,7 @@ const DEFAULT_USERS = [
     id: "EMP-006",
     name: "Pavithraa",
     email: "pavithraa@nexora.com",
-    password: "nexora123",
+    password: "123456",
     role: "member",
     department: "Quality Assurance",
     assignedProjects: ["CloudSync"],
@@ -78,7 +78,7 @@ const DEFAULT_USERS = [
     id: "EMP-007",
     name: "Sujitha",
     email: "sujitha@nexora.com",
-    password: "nexora123",
+    password: "123456",
     role: "member",
     department: "Engineering",
     assignedProjects: ["CyberShield"],
@@ -90,7 +90,7 @@ const DEFAULT_USERS = [
     id: "EMP-008",
     name: "Sangamithra",
     email: "sangamithra@nexora.com",
-    password: "nexora123",
+    password: "123456",
     role: "member",
     department: "Design",
     assignedProjects: ["AI Analyst"],
@@ -102,7 +102,7 @@ const DEFAULT_USERS = [
     id: "EMP-009",
     name: "VishnuHasan",
     email: "vishnuhasan@nexora.com",
-    password: "nexora123",
+    password: "123456",
     role: "member",
     department: "Engineering",
     assignedProjects: ["Nexora ERP", "CyberShield"],
@@ -114,7 +114,7 @@ const DEFAULT_USERS = [
     id: "EMP-010",
     name: "Aaryan",
     email: "aaryan@nexora.com",
-    password: "nexora123",
+    password: "123456",
     role: "member",
     department: "Engineering",
     assignedProjects: ["CloudSync"],
@@ -126,7 +126,7 @@ const DEFAULT_USERS = [
     id: "EMP-011",
     name: "Ajaykumar",
     email: "ajaykumar@nexora.com",
-    password: "nexora123",
+    password: "123456",
     role: "member",
     department: "Quality Assurance",
     assignedProjects: ["AI Analyst"],
@@ -138,7 +138,7 @@ const DEFAULT_USERS = [
     id: "EMP-012",
     name: "Pathmavathi",
     email: "pathmavathi@nexora.com",
-    password: "nexora123",
+    password: "123456",
     role: "member",
     department: "Management",
     assignedProjects: ["Nexora ERP"],
@@ -150,7 +150,7 @@ const DEFAULT_USERS = [
     id: "EMP-013",
     name: "Pooja",
     email: "pooja@nexora.com",
-    password: "nexora123",
+    password: "123456",
     role: "member",
     department: "Design",
     assignedProjects: ["CyberShield"],
@@ -162,7 +162,7 @@ const DEFAULT_USERS = [
     id: "EMP-014",
     name: "Aarathana",
     email: "aarathana@nexora.com",
-    password: "nexora123",
+    password: "123456",
     role: "member",
     department: "Engineering",
     assignedProjects: ["CloudSync"],
@@ -174,7 +174,7 @@ const DEFAULT_USERS = [
     id: "EMP-015",
     name: "Gokulashri",
     email: "gokulashri@nexora.com",
-    password: "nexora123",
+    password: "123456",
     role: "member",
     department: "Engineering",
     assignedProjects: ["AI Analyst"],
@@ -186,7 +186,7 @@ const DEFAULT_USERS = [
     id: "EMP-016",
     name: "Karthikeyan",
     email: "karthikeyan@nexora.com",
-    password: "nexora123",
+    password: "123456",
     role: "member",
     department: "Engineering",
     assignedProjects: ["Nexora ERP", "CloudSync"],
@@ -198,7 +198,7 @@ const DEFAULT_USERS = [
     id: "EMP-017",
     name: "Logesh",
     email: "logesh@nexora.com",
-    password: "nexora123",
+    password: "123456",
     role: "member",
     department: "Quality Assurance",
     assignedProjects: ["CyberShield"],
@@ -210,7 +210,7 @@ const DEFAULT_USERS = [
     id: "EMP-018",
     name: "Sanjay Kumar",
     email: "sanjaykumar@nexora.com",
-    password: "nexora123",
+    password: "123456",
     role: "member",
     department: "Engineering",
     assignedProjects: ["AI Analyst"],
@@ -222,7 +222,7 @@ const DEFAULT_USERS = [
     id: "EMP-019",
     name: "Sanjay",
     email: "sanjay@nexora.com",
-    password: "nexora123",
+    password: "123456",
     role: "member",
     department: "Design",
     assignedProjects: ["Nexora ERP"],
@@ -234,7 +234,7 @@ const DEFAULT_USERS = [
     id: "EMP-020",
     name: "Vishwa",
     email: "vishwa@nexora.com",
-    password: "nexora123",
+    password: "123456",
     role: "member",
     department: "Engineering",
     assignedProjects: ["CloudSync"],
@@ -246,7 +246,7 @@ const DEFAULT_USERS = [
     id: "EMP-021",
     name: "Shakthi",
     email: "shakthi@nexora.com",
-    password: "nexora123",
+    password: "123456",
     role: "member",
     department: "Engineering",
     assignedProjects: ["CyberShield", "AI Analyst"],
@@ -478,7 +478,8 @@ export const initDatabase = () => {
   if (dbExist) {
     try {
       const parsed = JSON.parse(dbExist);
-      if (!parsed.users.some(u => u.email === "trivin@nexora.com")) {
+      // Reset if Trivin is missing or if users are still holding the old password string
+      if (!parsed.users.some(u => u.email === "trivin@nexora.com") || parsed.users.some(u => u.password === "nexora123")) {
         needsReset = true;
       }
     } catch (e) {
@@ -495,7 +496,9 @@ export const initDatabase = () => {
       notifications: DEFAULT_NOTIFICATIONS
     };
     localStorage.setItem("nexora_dpr_db", JSON.stringify(db));
-    localStorage.setItem("nexora_current_user", JSON.stringify(DEFAULT_USERS[0])); // Starts as Trivin (Admin)
+    
+    // Explicitly do NOT set "nexora_current_user" to enforce login screen view on fresh start
+    localStorage.removeItem("nexora_current_user");
   }
 };
 
@@ -629,7 +632,7 @@ export const addTeamMember = (memberData) => {
   const db = getDatabase();
   const newMember = {
     id: memberData.id || `EMP-${Math.floor(100 + Math.random() * 900)}`,
-    password: "nexora123", // Default password
+    password: "123456", // Default password
     mustChangePassword: true,
     avatar: memberData.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
     role: "member",

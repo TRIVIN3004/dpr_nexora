@@ -18,7 +18,7 @@ export default function ForcePasswordChange({ currentUser, onPasswordChanged }) 
       setError("New password must be at least 6 characters long.");
       return;
     }
-    if (newPassword === 'nexora123') {
+    if (newPassword === '123456') {
       setError("Please choose a different password than the common default password.");
       return;
     }
