@@ -478,8 +478,8 @@ export const initDatabase = () => {
   if (dbExist) {
     try {
       const parsed = JSON.parse(dbExist);
-      // Reset if Trivin is missing or if users are still holding the old password string
-      if (!parsed.users.some(u => u.email === "trivin@nexora.com") || parsed.users.some(u => u.password === "nexora123")) {
+      // Reset if Trivin is missing, or database is not version 2
+      if (!parsed.users.some(u => u.email === "trivin@nexora.com") || parsed.version !== 2) {
         needsReset = true;
       }
     } catch (e) {
@@ -489,6 +489,7 @@ export const initDatabase = () => {
 
   if (!dbExist || needsReset) {
     const db = {
+      version: 2,
       users: DEFAULT_USERS,
       projects: DEFAULT_PROJECTS,
       reports: DEFAULT_REPORTS,
