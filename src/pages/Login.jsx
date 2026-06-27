@@ -228,38 +228,6 @@ export default function Login({ onLoginSuccess }) {
             </div>
           </form>
         )}
-
-        {/* Quick Testing Credential Access Buttons */}
-        <div className="mt-8 pt-6 border-t border-slate-800/60">
-          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest text-center mb-3.5 flex items-center justify-center gap-1.5">
-            <ShieldAlert className="h-3.5 w-3.5 text-nexora-purple" />
-            Quick Credential Auto-Fill
-          </p>
-          <div className="grid grid-cols-3 gap-2.5">
-            <button
-              type="button"
-              onClick={() => handleQuickFill('admin')}
-              className="px-2 py-2 text-[10px] font-bold rounded-lg border border-indigo-500/20 bg-indigo-500/5 hover:bg-indigo-500/10 text-indigo-400 transition-all duration-200 cursor-pointer text-center"
-            >
-              Admin (Trivin)
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickFill('member')}
-              className="px-2 py-2 text-[10px] font-bold rounded-lg border border-purple-500/20 bg-purple-500/5 hover:bg-purple-500/10 text-purple-400 transition-all duration-200 cursor-pointer text-center"
-            >
-              Aakashraj
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickFill('member2')}
-              className="px-2 py-2 text-[10px] font-bold rounded-lg border border-pink-500/20 bg-pink-500/5 hover:bg-pink-500/10 text-pink-400 transition-all duration-200 cursor-pointer text-center"
-            >
-              Gopika
-            </button>
-          </div>
-        </div>
-
       </motion.div>
     </div>
   );
