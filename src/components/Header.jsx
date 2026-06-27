@@ -108,10 +108,11 @@ export default function Header({ onSearchChange, searchValue, pageTitle, onLogou
             onChange={(e) => handleSwitchRole(e.target.value)}
             className="bg-transparent text-slate-200 border-none font-semibold focus:outline-none cursor-pointer"
           >
-            <option value="trivin@nexora.com" className="bg-slate-900 text-slate-200">Admin (Trivin)</option>
-            <option value="aakashraj@nexora.com" className="bg-slate-900 text-slate-200">Aakashraj (Member)</option>
-            <option value="gopika@nexora.com" className="bg-slate-900 text-slate-200">Gopika (Member)</option>
-            <option value="akshaya@nexora.com" className="bg-slate-900 text-slate-200">Akshaya (Member)</option>
+            {db?.users.map(u => (
+              <option key={u.id} value={u.email} className="bg-slate-900 text-slate-200">
+                {u.role === 'admin' ? `Admin (${u.name})` : `${u.name} (Member)`}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -221,20 +222,16 @@ export default function Header({ onSearchChange, searchValue, pageTitle, onLogou
                   <div className="p-1">
                     <div className="lg:hidden flex flex-col p-2 gap-1 border-b border-slate-800/40">
                       <span className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider">Switch Profile:</span>
-                      <button 
-                        onClick={() => handleSwitchRole('trivin@nexora.com')}
-                        className={`text-xs text-left p-1.5 rounded-lg flex items-center justify-between ${user?.email === 'trivin@nexora.com' ? 'text-nexora-purple' : 'text-slate-400'}`}
-                      >
-                        Trivin (Admin)
-                        {user?.email === 'trivin@nexora.com' && <Check className="h-3 w-3" />}
-                      </button>
-                      <button 
-                        onClick={() => handleSwitchRole('aakashraj@nexora.com')}
-                        className={`text-xs text-left p-1.5 rounded-lg flex items-center justify-between ${user?.email === 'aakashraj@nexora.com' ? 'text-nexora-purple' : 'text-slate-400'}`}
-                      >
-                        Aakashraj (Member)
-                        {user?.email === 'aakashraj@nexora.com' && <Check className="h-3 w-3" />}
-                      </button>
+                      {db?.users.slice(0, 6).map(u => (
+                        <button 
+                          key={u.id}
+                          onClick={() => handleSwitchRole(u.email)}
+                          className={`text-xs text-left p-1.5 rounded-lg flex items-center justify-between ${user?.email === u.email ? 'text-nexora-purple' : 'text-slate-400'}`}
+                        >
+                          {u.name} ({u.role === 'admin' ? 'Admin' : 'Member'})
+                          {user?.email === u.email && <Check className="h-3 w-3" />}
+                        </button>
+                      ))}
                     </div>
 
                     <button 
