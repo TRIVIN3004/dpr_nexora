@@ -135,12 +135,12 @@ export default function Analytics() {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        labels: { color: '#94a3b8', font: { family: 'Inter', size: 10 } }
+        labels: { color: '#334155', font: { family: 'Inter', size: 10 } }
       }
     },
     scales: {
-      x: { grid: { color: 'rgba(255, 255, 255, 0.04)' }, ticks: { color: '#64748b', font: { size: 9 } } },
-      y: { grid: { color: 'rgba(255, 255, 255, 0.04)' }, ticks: { color: '#64748b', font: { size: 9 } } }
+      x: { grid: { color: 'rgba(0, 0, 0, 0.04)' }, ticks: { color: '#475569', font: { size: 9 } } },
+      y: { grid: { color: 'rgba(0, 0, 0, 0.04)' }, ticks: { color: '#475569', font: { size: 9 } } }
     }
   };
 

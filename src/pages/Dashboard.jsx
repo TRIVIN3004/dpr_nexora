@@ -229,12 +229,12 @@ export default function Dashboard({ searchFilter, onNavigate }) {
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          labels: { color: '#94a3b8', font: { size: 10, family: 'Inter' } }
+          labels: { color: '#334155', font: { size: 10, family: 'Inter' } }
         }
       },
       scales: {
-        x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#64748b', font: { size: 10 } } },
-        y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#64748b', font: { size: 10 } } }
+        x: { grid: { color: 'rgba(0, 0, 0, 0.05)' }, ticks: { color: '#475569', font: { size: 10 } } },
+        y: { grid: { color: 'rgba(0, 0, 0, 0.05)' }, ticks: { color: '#475569', font: { size: 10 } } }
       }
     };
 
