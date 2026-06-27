@@ -715,6 +715,30 @@ export const addProject = (projectData) => {
   return { success: true, project: newProj };
 };
 
+export const deleteProject = (projectId) => {
+  const db = getDatabase();
+  const project = db.projects.find(p => p.id === projectId);
+  if (!project) {
+    return { success: false, error: "Project not found." };
+  }
+  
+  db.projects = db.projects.filter(p => p.id !== projectId);
+  
+  // Also clean up this project allocation from all user accounts
+  db.users = db.users.map(u => {
+    if (u.assignedProjects) {
+      u.assignedProjects = u.assignedProjects.filter(name => name !== project.name);
+      if (u.assignedProjects.length === 0) {
+        u.assignedProjects = ['Nexora ERP'];
+      }
+    }
+    return u;
+  });
+
+  saveDatabase(db);
+  return { success: true };
+};
+
 // Announcement posting
 export const postAnnouncement = (title, content, senderName) => {
   const db = getDatabase();

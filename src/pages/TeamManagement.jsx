@@ -4,7 +4,8 @@ import {
   addTeamMember, 
   editTeamMember, 
   deleteTeamMember,
-  addProject
+  addProject,
+  deleteProject
 } from '../utils/mockDatabase';
 import { 
   UserPlus, 
@@ -157,6 +158,18 @@ export default function TeamManagement() {
       window.dispatchEvent(new Event('database_updated'));
     } else {
       alert(res.error || 'Failed to add project.');
+    }
+  };
+
+  const handleDeleteProject = (projectId, projectName) => {
+    if (window.confirm(`Are you sure you want to delete the project "${projectName}"? This will also remove it from all member allocations.`)) {
+      const res = deleteProject(projectId);
+      if (res.success) {
+        triggerToast(`Project "${projectName}" deleted!`);
+        window.dispatchEvent(new Event('database_updated'));
+      } else {
+        alert(res.error || 'Failed to delete project.');
+      }
     }
   };
 
@@ -527,6 +540,28 @@ export default function TeamManagement() {
                 Create Project
               </button>
             </form>
+
+            {/* Existing Projects List */}
+            <div className="border-t border-slate-800 pt-4 space-y-2.5 text-left">
+              <h4 className="font-semibold text-slate-350 text-[10px] uppercase tracking-wider">Existing Projects ({projects.length})</h4>
+              <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                {projects.map(p => (
+                  <div key={p.id} className="flex justify-between items-center bg-slate-900/50 px-3 py-2 rounded-xl border border-slate-800/40">
+                    <div>
+                      <p className="font-bold text-slate-200 text-xs">{p.name}</p>
+                      <p className="text-[9px] text-slate-500 line-clamp-1">{p.description}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteProject(p.id, p.name)}
+                      className="p-1 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
