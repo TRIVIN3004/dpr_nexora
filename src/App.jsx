@@ -56,9 +56,19 @@ export default function App() {
 
     window.addEventListener('switch_tab', handleSwitchTab);
 
+    // Listen for database changes to sync active user state
+    const handleDatabaseUpdated = () => {
+      const activeUser = getCurrentUser();
+      if (activeUser) {
+        setUser(activeUser);
+      }
+    };
+    window.addEventListener('database_updated', handleDatabaseUpdated);
+
     return () => {
       window.removeEventListener('hashchange', handleHashRouting);
       window.removeEventListener('switch_tab', handleSwitchTab);
+      window.removeEventListener('database_updated', handleDatabaseUpdated);
     };
   }, []);
 

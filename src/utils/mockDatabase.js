@@ -675,6 +675,15 @@ export const editTeamMember = (memberId, memberData) => {
       ...memberData
     };
     
+    // Sync active session if the edited user is the current active session
+    const currentUser = getCurrentUser();
+    if (currentUser && currentUser.id === memberId) {
+      setCurrentUser({
+        ...currentUser,
+        ...memberData
+      });
+    }
+
     saveDatabase(db);
     return { success: true, member: db.users[memberIndex] };
   }
