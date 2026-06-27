@@ -246,7 +246,7 @@ export default function TeamManagement() {
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAddModal(false)} />
-          <div className="relative w-full max-w-md rounded-2xl glass-panel p-6 shadow-glass border border-slate-800 bg-[#0c1125] z-10 space-y-4">
+          <div className="relative w-full max-w-md rounded-2xl glass-panel p-6 shadow-glass border border-slate-800 bg-slate-950 z-10 space-y-4">
             <div className="flex justify-between items-center border-b border-slate-800 pb-3">
               <h3 className="text-sm font-bold text-slate-200 flex items-center gap-1.5">
                 <UserPlus className="h-4.5 w-4.5 text-nexora-purple" />
@@ -357,7 +357,7 @@ export default function TeamManagement() {
       {showEditModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setShowEditModal(false); resetForm(); }} />
-          <div className="relative w-full max-w-md rounded-2xl glass-panel p-6 shadow-glass border border-slate-800 bg-[#0c1125] z-10 space-y-4">
+          <div className="relative w-full max-w-md rounded-2xl glass-panel p-6 shadow-glass border border-slate-800 bg-slate-950 z-10 space-y-4">
             <div className="flex justify-between items-center border-b border-slate-800 pb-3">
               <h3 className="text-sm font-bold text-slate-200 flex items-center gap-1.5">
                 <Edit2 className="h-4 w-4 text-nexora-blue" />

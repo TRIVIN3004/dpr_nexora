@@ -53,12 +53,12 @@ export default function ForcePasswordChange({ currentUser, onPasswordChanged }) 
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-[#030712]">
+    <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-slate-900">
       {/* Background glowing gradients */}
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-nexora-purple/10 blur-[100px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[500px] h-[500px] rounded-full bg-nexora-blue/10 blur-[120px] pointer-events-none" />
 
-      <div className="w-full max-w-md rounded-3xl glass-panel p-8 shadow-glass border border-slate-800 bg-[#070b16]/75 relative z-10 text-left space-y-6">
+      <div className="w-full max-w-md rounded-3xl glass-panel p-8 shadow-glass border border-slate-800 bg-slate-950/75 relative z-10 text-left space-y-6">
         
         {/* Header */}
         <div className="text-center">

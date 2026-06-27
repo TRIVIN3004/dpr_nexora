@@ -48,7 +48,7 @@ export default function Sidebar({ currentTab, onTabChange, isCollapsed, setIsCol
   const filteredItems = navItems.filter(item => item.roles.includes(user?.role));
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-[#070b16]/90 backdrop-blur-xl border-r border-darkBg-border/40 select-none">
+    <div className="flex flex-col h-full bg-slate-950/90 backdrop-blur-xl border-r border-darkBg-border/40 select-none">
       
       {/* Brand Logo Header */}
       <div className="flex h-16 items-center justify-between px-6 border-b border-darkBg-border/30">
@@ -65,7 +65,7 @@ export default function Sidebar({ currentTab, onTabChange, isCollapsed, setIsCol
               exit={{ opacity: 0, x: -10 }}
               className="flex flex-col"
             >
-              <span className="text-sm font-bold bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
+              <span className="text-sm font-bold bg-gradient-to-r from-slate-50 via-slate-100 to-slate-200 bg-clip-text text-transparent">
                 Nexora Tech
               </span>
               <span className="text-[9px] text-slate-500 font-medium tracking-widest uppercase">

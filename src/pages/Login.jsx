@@ -77,7 +77,7 @@ export default function Login({ onLoginSuccess }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md rounded-3xl glass-panel p-8 shadow-glass border border-slate-800 bg-[#070b16]/75 relative z-10 text-left"
+        className="w-full max-w-md rounded-3xl glass-panel p-8 shadow-glass border border-slate-800 bg-slate-950/75 relative z-10 text-left"
       >
         {/* Brand logo */}
         <div className="flex flex-col items-center text-center mb-8">

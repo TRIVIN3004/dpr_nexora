@@ -260,7 +260,7 @@ export default function AdminReports({ searchFilter }) {
               value={selectedEmployee}
               onChange={(e) => setSelectedEmployee(e.target.value)}
               disabled={currentUser?.role !== 'admin'}
-              className="w-full px-3 py-2 text-xs rounded-xl glass-input focus:outline-none bg-[#0c1125] cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 text-xs rounded-xl glass-input focus:outline-none bg-slate-950 cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed"
             >
               <option value="">All Employees</option>
               {users.map(u => (
@@ -275,7 +275,7 @@ export default function AdminReports({ searchFilter }) {
             <select
               value={selectedProject}
               onChange={(e) => setSelectedProject(e.target.value)}
-              className="w-full px-3 py-2 text-xs rounded-xl glass-input focus:outline-none bg-[#0c1125] cursor-pointer"
+              className="w-full px-3 py-2 text-xs rounded-xl glass-input focus:outline-none bg-slate-950 cursor-pointer"
             >
               <option value="">All Projects</option>
               {projects.map(p => (
@@ -290,7 +290,7 @@ export default function AdminReports({ searchFilter }) {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="w-full px-3 py-2 text-xs rounded-xl glass-input focus:outline-none bg-[#0c1125] cursor-pointer"
+              className="w-full px-3 py-2 text-xs rounded-xl glass-input focus:outline-none bg-slate-950 cursor-pointer"
             >
               <option value="">All Statuses</option>
               <option value="Approved">Approved</option>

@@ -138,7 +138,7 @@ export default function ReportModal({ report, isOpen, onClose, currentUser, onAc
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="relative w-full max-w-2xl overflow-hidden rounded-2xl glass-panel shadow-glass border border-slate-800 bg-[#0c1125] z-10 max-h-[90vh] flex flex-col"
+          className="relative w-full max-w-2xl overflow-hidden rounded-2xl glass-panel shadow-glass border border-slate-800 bg-slate-950 z-10 max-h-[90vh] flex flex-col"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/40">

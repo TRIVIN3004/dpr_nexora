@@ -257,7 +257,7 @@ export default function DprForm({ onActionSuccess }) {
                 required
                 value={projectName}
                 onChange={(e) => setProjectName(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-xl glass-input focus:outline-none bg-[#0b0f19] cursor-pointer"
+                className="w-full px-3 py-2 text-xs rounded-xl glass-input focus:outline-none bg-slate-950 cursor-pointer"
               >
                 <option value="">Select Project</option>
                 {currentUser.assignedProjects.includes('All') 
@@ -320,7 +320,7 @@ export default function DprForm({ onActionSuccess }) {
               <select
                 value={workStatus}
                 onChange={(e) => setWorkStatus(e.target.value)}
-                className="w-full px-3 py-2.5 text-xs rounded-xl glass-input focus:outline-none bg-[#0b0f19] cursor-pointer"
+                className="w-full px-3 py-2.5 text-xs rounded-xl glass-input focus:outline-none bg-slate-950 cursor-pointer"
               >
                 <option value="Not Started">Not Started</option>
                 <option value="In Progress">In Progress</option>
