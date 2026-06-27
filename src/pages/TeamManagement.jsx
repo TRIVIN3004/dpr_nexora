@@ -3,7 +3,8 @@ import {
   getDatabase, 
   addTeamMember, 
   editTeamMember, 
-  deleteTeamMember 
+  deleteTeamMember,
+  addProject
 } from '../utils/mockDatabase';
 import { 
   UserPlus, 
@@ -28,6 +29,11 @@ export default function TeamManagement() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
+  
+  // Project creation form states
+  const [showAddProjectModal, setShowAddProjectModal] = useState(false);
+  const [newProjectName, setNewProjectName] = useState('');
+  const [newProjectDescription, setNewProjectDescription] = useState('');
 
   // Form values
   const [name, setName] = useState('');
@@ -135,6 +141,25 @@ export default function TeamManagement() {
     );
   };
 
+  const handleAddProjectSubmit = (e) => {
+    e.preventDefault();
+    if (!newProjectName.trim()) return;
+    const res = addProject({
+      name: newProjectName.trim(),
+      description: newProjectDescription.trim() || 'No description provided.',
+      status: 'Active'
+    });
+    if (res.success) {
+      triggerToast(`Project "${newProjectName}" added!`);
+      setNewProjectName('');
+      setNewProjectDescription('');
+      setShowAddProjectModal(false);
+      window.dispatchEvent(new Event('database_updated'));
+    } else {
+      alert(res.error || 'Failed to add project.');
+    }
+  };
+
   const resetForm = () => {
     setName('');
     setEmail('');
@@ -162,13 +187,22 @@ export default function TeamManagement() {
           <h3 className="text-sm font-bold text-slate-200">Team Member Management Registry</h3>
           <p className="text-xs text-slate-500 mt-1 font-medium">Create, edit and manage project allocations for your crew</p>
         </div>
-        <button
-          onClick={() => { resetForm(); setShowAddModal(true); }}
-          className="px-4 py-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-nexora-purple to-nexora-blue text-white shadow-glow-purple hover:brightness-110 transition-all flex items-center gap-1.5 cursor-pointer"
-        >
-          <UserPlus className="h-4 w-4" />
-          Add Member
-        </button>
+        <div className="flex gap-2.5">
+          <button
+            onClick={() => setShowAddProjectModal(true)}
+            className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-300 hover:bg-slate-100 transition-all flex items-center gap-1.5 cursor-pointer text-slate-700 bg-white shadow-premium"
+          >
+            <Plus className="h-4 w-4" />
+            Add Project
+          </button>
+          <button
+            onClick={() => { resetForm(); setShowAddModal(true); }}
+            className="px-4 py-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-nexora-purple to-nexora-blue text-white hover:brightness-110 transition-all flex items-center gap-1.5 cursor-pointer shadow-premium"
+          >
+            <UserPlus className="h-4 w-4" />
+            Add Member
+          </button>
+        </div>
       </div>
 
       {/* Team registry list */}
@@ -443,6 +477,54 @@ export default function TeamManagement() {
                 className="w-full py-2.5 rounded-xl font-semibold bg-gradient-to-r from-nexora-blue to-nexora-indigo text-white hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer flex justify-center items-center gap-1"
               >
                 Save Details
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* ADD PROJECT MODAL */}
+      {showAddProjectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAddProjectModal(false)} />
+          <div className="relative w-full max-w-md rounded-2xl glass-panel p-6 shadow-glass border border-slate-800 bg-slate-950 z-10 space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+              <h3 className="text-sm font-bold text-slate-200 flex items-center gap-1.5">
+                <Plus className="h-4.5 w-4.5 text-nexora-purple" />
+                Add New Project
+              </h3>
+              <button onClick={() => setShowAddProjectModal(false)} className="text-slate-400 hover:text-white">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddProjectSubmit} className="space-y-4 text-xs text-left">
+              <div className="space-y-1">
+                <label className="text-slate-400 font-semibold">Project Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={newProjectName}
+                  onChange={(e) => setNewProjectName(e.target.value)}
+                  placeholder="e.g. Mobile App, Nexora ERP, NextGen"
+                  className="w-full px-3 py-2.5 rounded-xl glass-input focus:outline-none"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-slate-400 font-semibold">Description</label>
+                <textarea
+                  rows="3"
+                  value={newProjectDescription}
+                  onChange={(e) => setNewProjectDescription(e.target.value)}
+                  placeholder="Subtle details about project milestones..."
+                  className="w-full px-3 py-2.5 rounded-xl glass-input focus:outline-none resize-none"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2.5 rounded-xl font-semibold bg-gradient-to-r from-nexora-purple to-nexora-blue text-white hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer flex justify-center items-center gap-1"
+              >
+                Create Project
               </button>
             </form>
           </div>
