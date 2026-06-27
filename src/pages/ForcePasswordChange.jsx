@@ -40,11 +40,11 @@ export default function ForcePasswordChange({ currentUser, onPasswordChanged }) 
         confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
         
         // Sync session user
-        const localStorageUser = { ...currentUser, password: newPassword, mustChangePassword: false };
-        localStorage.setItem("nexora_current_user", JSON.stringify(localStorageUser));
+        const sessionStorageUser = { ...currentUser, password: newPassword, mustChangePassword: false };
+        sessionStorage.setItem("nexora_current_user", JSON.stringify(sessionStorageUser));
         
         if (onPasswordChanged) {
-          onPasswordChanged(localStorageUser);
+          onPasswordChanged(sessionStorageUser);
         }
       } else {
         setError(res.error || "An error occurred. Please try again.");

@@ -498,7 +498,7 @@ export const initDatabase = () => {
     localStorage.setItem("nexora_dpr_db", JSON.stringify(db));
     
     // Explicitly do NOT set "nexora_current_user" to enforce login screen view on fresh start
-    localStorage.removeItem("nexora_current_user");
+    sessionStorage.removeItem("nexora_current_user");
   }
 };
 
@@ -513,14 +513,14 @@ export const saveDatabase = (db) => {
 
 export const getCurrentUser = () => {
   initDatabase();
-  return JSON.parse(localStorage.getItem("nexora_current_user"));
+  return JSON.parse(sessionStorage.getItem("nexora_current_user"));
 };
 
 export const setCurrentUser = (user) => {
   if (user) {
-    localStorage.setItem("nexora_current_user", JSON.stringify(user));
+    sessionStorage.setItem("nexora_current_user", JSON.stringify(user));
   } else {
-    localStorage.removeItem("nexora_current_user");
+    sessionStorage.removeItem("nexora_current_user");
   }
 };
 

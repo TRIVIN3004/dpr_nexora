@@ -50,7 +50,7 @@ export default function Settings() {
       // Sync sessions user object
       const db = getDatabase();
       const updatedUser = db.users.find(u => u.id === currentUser.id);
-      localStorage.setItem("nexora_current_user", JSON.stringify(updatedUser));
+      sessionStorage.setItem("nexora_current_user", JSON.stringify(updatedUser));
       
       triggerToast("Profile details updated successfully!");
       window.dispatchEvent(new Event('database_updated'));
@@ -75,7 +75,7 @@ export default function Settings() {
       // Sync session
       const db = getDatabase();
       const updatedUser = db.users.find(u => u.id === currentUser.id);
-      localStorage.setItem("nexora_current_user", JSON.stringify(updatedUser));
+      sessionStorage.setItem("nexora_current_user", JSON.stringify(updatedUser));
 
       triggerToast("Password reset successfully!");
       setCurrPassword('');
