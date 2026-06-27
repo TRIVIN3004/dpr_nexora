@@ -253,6 +253,30 @@ const DEFAULT_USERS = [
     avatar: "https://images.unsplash.com/photo-1601412436009-d964bd02edbc?w=150",
     phone: "+1 (555) 019-4810",
     mustChangePassword: true
+  },
+  {
+    id: "EMP-022",
+    name: "Farman",
+    email: "farman@nexora.com",
+    password: "123456",
+    role: "member",
+    department: "Engineering",
+    assignedProjects: ["Nexora ERP"],
+    avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
+    phone: "+1 (555) 019-9182",
+    mustChangePassword: true
+  },
+  {
+    id: "EMP-023",
+    name: "Gokul",
+    email: "gokul@nexora.com",
+    password: "123456",
+    role: "member",
+    department: "Engineering",
+    assignedProjects: ["CloudSync"],
+    avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150",
+    phone: "+1 (555) 019-8139",
+    mustChangePassword: true
   }
 ];
 
@@ -478,8 +502,8 @@ export const initDatabase = () => {
   if (dbExist) {
     try {
       const parsed = JSON.parse(dbExist);
-      // Reset if Trivin is missing, or database is not version 2
-      if (!parsed.users.some(u => u.email === "trivin@nexora.com") || parsed.version !== 2) {
+      // Reset if Trivin is missing, or database is not version 3
+      if (!parsed.users.some(u => u.email === "trivin@nexora.com") || parsed.version !== 3) {
         needsReset = true;
       }
     } catch (e) {
@@ -489,7 +513,7 @@ export const initDatabase = () => {
 
   if (!dbExist || needsReset) {
     const db = {
-      version: 2,
+      version: 3,
       users: DEFAULT_USERS,
       projects: DEFAULT_PROJECTS,
       reports: DEFAULT_REPORTS,
