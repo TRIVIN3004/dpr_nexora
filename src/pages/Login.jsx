@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mail, Lock, AlertCircle, Eye, EyeOff, ShieldAlert } from 'lucide-react';
 import { loginUser, simulatePasswordReset } from '../utils/mockDatabase';
 import { motion } from 'framer-motion';
@@ -15,6 +15,14 @@ export default function Login({ onLoginSuccess }) {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const prefillEmail = sessionStorage.getItem("login_prefill_email");
+    if (prefillEmail) {
+      setEmail(prefillEmail);
+      sessionStorage.removeItem("login_prefill_email");
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

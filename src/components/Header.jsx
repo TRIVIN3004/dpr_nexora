@@ -60,15 +60,10 @@ export default function Header({ onSearchChange, searchValue, pageTitle, onLogou
   };
 
   const handleSwitchRole = (targetEmail) => {
-    const database = getDatabase();
-    const targetUser = database.users.find(u => u.email === targetEmail);
-    if (targetUser) {
-      setCurrentUser(targetUser);
-      setUser(targetUser);
-      setNotifications(database.notifications.filter(n => n.userId === targetUser.id));
-      setShowProfileDropdown(false);
-      window.dispatchEvent(new Event('database_updated'));
-      if (onUserChanged) onUserChanged(targetUser);
+    sessionStorage.setItem("login_prefill_email", targetEmail);
+    setShowProfileDropdown(false);
+    if (onLogout) {
+      onLogout();
     }
   };
 
