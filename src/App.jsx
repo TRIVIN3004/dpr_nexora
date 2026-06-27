@@ -131,7 +131,7 @@ export default function App() {
   // If user is not authenticated, show login page
   if (!user) {
     return (
-      <div className="min-h-screen w-full bg-[#030712]">
+      <div className="min-h-screen w-full bg-slate-900">
         <Login onLoginSuccess={handleLoginSuccess} />
       </div>
     );
@@ -151,7 +151,7 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen w-full bg-[#030712] overflow-hidden text-slate-200">
+    <div className="flex h-screen w-full bg-slate-900 overflow-hidden text-slate-100">
       
       {/* Toast Alert popup */}
       <AnimatePresence>
