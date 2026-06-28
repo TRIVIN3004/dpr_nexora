@@ -6,7 +6,7 @@ import {
   markNotificationRead, 
   markAllNotificationsRead,
   setCurrentUser 
-} from '../utils/mockDatabase';
+} from '../utils/database';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Header({ onSearchChange, searchValue, pageTitle, onLogout, onUserChanged }) {
@@ -20,16 +20,20 @@ export default function Header({ onSearchChange, searchValue, pageTitle, onLogou
     const currUser = getCurrentUser();
     setUser(currUser);
 
-    const database = getDatabase();
-    setDb(database);
-    if (currUser) {
-      setNotifications(database.notifications.filter(n => n.userId === currUser.id));
-    }
+    const loadData = async () => {
+      const database = await getDatabase();
+      setDb(database);
+      if (currUser) {
+        setNotifications(database.notifications.filter(n => n.userId === currUser.id));
+      }
+    };
+
+    loadData();
 
     // Set up a listener for storage events to update UI state across dashboard updates
-    const handleStorageChange = () => {
+    const handleStorageChange = async () => {
       const updatedUser = getCurrentUser();
-      const updatedDb = getDatabase();
+      const updatedDb = await getDatabase();
       setUser(updatedUser);
       setDb(updatedDb);
       if (updatedUser) {
@@ -47,14 +51,14 @@ export default function Header({ onSearchChange, searchValue, pageTitle, onLogou
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const handleNotificationClick = (id) => {
-    markNotificationRead(id);
+  const handleNotificationClick = async (id) => {
+    await markNotificationRead(id);
     window.dispatchEvent(new Event('database_updated'));
   };
 
-  const handleMarkAllRead = () => {
+  const handleMarkAllRead = async () => {
     if (user) {
-      markAllNotificationsRead(user.id);
+      await markAllNotificationsRead(user.id);
       window.dispatchEvent(new Event('database_updated'));
     }
   };

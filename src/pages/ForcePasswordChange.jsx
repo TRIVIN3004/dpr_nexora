@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ShieldAlert, Lock, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
-import { editTeamMember } from '../utils/mockDatabase';
+import { editTeamMember } from '../utils/database';
 import confetti from 'canvas-confetti';
 
 export default function ForcePasswordChange({ currentUser, onPasswordChanged }) {
@@ -28,9 +28,9 @@ export default function ForcePasswordChange({ currentUser, onPasswordChanged }) 
     }
 
     setIsLoading(true);
-    setTimeout(() => {
+    setTimeout(async () => {
       // Update password and clear force change flag in database
-      const res = editTeamMember(currentUser.id, { 
+      const res = await editTeamMember(currentUser.id, { 
         password: newPassword,
         mustChangePassword: false 
       });

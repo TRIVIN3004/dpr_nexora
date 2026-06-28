@@ -18,7 +18,7 @@ import {
   getDatabase, 
   submitDailyReport, 
   updateDailyReport 
-} from '../utils/mockDatabase';
+} from '../utils/database';
 import confetti from 'canvas-confetti';
 
 export default function DprForm({ onActionSuccess }) {
@@ -44,13 +44,13 @@ export default function DprForm({ onActionSuccess }) {
   const [editingReportId, setEditingReportId] = useState(null);
   const [existingStatus, setExistingStatus] = useState('');
 
-  const loadOrCreate = () => {
+  const loadOrCreate = async () => {
     const user = getCurrentUser();
     setCurrentUser(user);
     if (!user) return;
 
     // Check if the user has already submitted a report for TODAY
-    const db = getDatabase();
+    const db = await getDatabase();
     const todayStr = new Date().toISOString().split('T')[0];
     const todayReport = db.reports.find(r => r.employeeEmail === user.email && r.date === todayStr);
 
@@ -134,7 +134,7 @@ export default function DprForm({ onActionSuccess }) {
     setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!projectName) {
@@ -164,7 +164,7 @@ export default function DprForm({ onActionSuccess }) {
         alert("This report has already been reviewed by the admin and cannot be modified.");
         return;
       }
-      const res = updateDailyReport(editingReportId, payload);
+      const res = await updateDailyReport(editingReportId, payload);
       if (res.success) {
         confetti({ particleCount: 80, spread: 60, origin: { y: 0.8 } });
         if (onActionSuccess) onActionSuccess("Daily Progress Report updated successfully!");
@@ -173,7 +173,7 @@ export default function DprForm({ onActionSuccess }) {
         alert(res.error);
       }
     } else {
-      const res = submitDailyReport(payload);
+      const res = await submitDailyReport(payload);
       if (res.success) {
         confetti({ particleCount: 120, spread: 80, origin: { y: 0.8 } });
         if (onActionSuccess) onActionSuccess("Daily Progress Report submitted successfully!");

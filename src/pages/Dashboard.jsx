@@ -20,7 +20,7 @@ import {
   getCurrentUser, 
   postAnnouncement, 
   reviewReportStatus 
-} from '../utils/mockDatabase';
+} from '../utils/database';
 import { motion } from 'framer-motion';
 
 // Chart JS registration
@@ -62,9 +62,10 @@ export default function Dashboard({ searchFilter, onNavigate }) {
   const [annContent, setAnnContent] = useState('');
   const [toast, setToast] = useState('');
 
-  const loadData = () => {
+  const loadData = async () => {
     setCurrentUser(getCurrentUser());
-    setDb(getDatabase());
+    const data = await getDatabase();
+    setDb(data);
   };
 
   useEffect(() => {
@@ -90,19 +91,19 @@ export default function Dashboard({ searchFilter, onNavigate }) {
     setTimeout(() => setToast(''), 3000);
   };
 
-  const handleQuickReview = (reportId, status) => {
+  const handleQuickReview = async (reportId, status) => {
     const feedbackMsg = status === 'Approved' ? 'Approved via Quick Review.' : 'Rejected via Quick Review.';
-    const res = reviewReportStatus(reportId, status, feedbackMsg, currentUser.name);
+    const res = await reviewReportStatus(reportId, status, feedbackMsg, currentUser.name);
     if (res.success) {
       triggerToast(`Report ${status} successfully!`);
       window.dispatchEvent(new Event('database_updated'));
     }
   };
 
-  const handlePostAnnouncement = (e) => {
+  const handlePostAnnouncement = async (e) => {
     e.preventDefault();
     if (!annTitle.trim() || !annContent.trim()) return;
-    const res = postAnnouncement(annTitle, annContent, currentUser.name);
+    const res = await postAnnouncement(annTitle, annContent, currentUser.name);
     if (res.success) {
       triggerToast('Announcement published successfully!');
       setAnnTitle('');

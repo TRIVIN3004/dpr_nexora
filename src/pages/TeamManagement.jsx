@@ -6,7 +6,7 @@ import {
   deleteTeamMember,
   addProject,
   deleteProject
-} from '../utils/mockDatabase';
+} from '../utils/database';
 import { 
   UserPlus, 
   Edit2, 
@@ -44,8 +44,8 @@ export default function TeamManagement() {
   const [phone, setPhone] = useState('');
   const [assignedProjects, setAssignedProjects] = useState([]);
 
-  const loadData = () => {
-    const db = getDatabase();
+  const loadData = async () => {
+    const db = await getDatabase();
     if (db) {
       setMembers(db.users.filter(u => u.role !== 'admin'));
       setProjects(db.projects);
@@ -64,7 +64,7 @@ export default function TeamManagement() {
     setTimeout(() => setToast(''), 3000);
   };
 
-  const handleAddSubmit = (e) => {
+  const handleAddSubmit = async (e) => {
     e.preventDefault();
     if (!name || !email || !empId) return;
 
@@ -77,7 +77,7 @@ export default function TeamManagement() {
       assignedProjects: assignedProjects.length > 0 ? assignedProjects : ['Nexora ERP']
     };
 
-    const res = addTeamMember(payload);
+    const res = await addTeamMember(payload);
     if (res.success) {
       triggerToast(`Account created for ${name}!`);
       setShowAddModal(false);
@@ -88,7 +88,7 @@ export default function TeamManagement() {
     }
   };
 
-  const handleEditSubmit = (e) => {
+  const handleEditSubmit = async (e) => {
     e.preventDefault();
     if (!name || !email) return;
 
@@ -100,7 +100,7 @@ export default function TeamManagement() {
       assignedProjects: assignedProjects.length > 0 ? assignedProjects : ['Nexora ERP']
     };
 
-    const res = editTeamMember(selectedMember.id, payload);
+    const res = await editTeamMember(selectedMember.id, payload);
     if (res.success) {
       triggerToast(`Account details updated!`);
       setShowEditModal(false);
@@ -111,9 +111,9 @@ export default function TeamManagement() {
     }
   };
 
-  const handleDelete = (id, name) => {
+  const handleDelete = async (id, name) => {
     if (window.confirm(`Are you sure you want to remove team member ${name}? This action cannot be undone.`)) {
-      const res = deleteTeamMember(id);
+      const res = await deleteTeamMember(id);
       if (res.success) {
         triggerToast(`Removed ${name} from registry.`);
         window.dispatchEvent(new Event('database_updated'));
@@ -142,10 +142,10 @@ export default function TeamManagement() {
     );
   };
 
-  const handleAddProjectSubmit = (e) => {
+  const handleAddProjectSubmit = async (e) => {
     e.preventDefault();
     if (!newProjectName.trim()) return;
-    const res = addProject({
+    const res = await addProject({
       name: newProjectName.trim(),
       description: newProjectDescription.trim() || 'No description provided.',
       status: 'Active'
@@ -161,9 +161,9 @@ export default function TeamManagement() {
     }
   };
 
-  const handleDeleteProject = (projectId, projectName) => {
+  const handleDeleteProject = async (projectId, projectName) => {
     if (window.confirm(`Are you sure you want to delete the project "${projectName}"? This will also remove it from all member allocations.`)) {
-      const res = deleteProject(projectId);
+      const res = await deleteProject(projectId);
       if (res.success) {
         triggerToast(`Project "${projectName}" deleted!`);
         window.dispatchEvent(new Event('database_updated'));

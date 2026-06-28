@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getCurrentUser, editTeamMember, getDatabase, saveDatabase } from '../utils/mockDatabase';
+import { getCurrentUser, editTeamMember, getDatabase } from '../utils/database';
 import { User, Shield, Bell, Key, Sparkles, Building2, CheckCircle2 } from 'lucide-react';
 
 export default function Settings() {
@@ -43,12 +43,12 @@ export default function Settings() {
     setTimeout(() => setToast(''), 3000);
   };
 
-  const handleProfileSave = (e) => {
+  const handleProfileSave = async (e) => {
     e.preventDefault();
-    const res = editTeamMember(currentUser.id, { name, email, phone });
+    const res = await editTeamMember(currentUser.id, { name, email, phone });
     if (res.success) {
       // Sync sessions user object
-      const db = getDatabase();
+      const db = await getDatabase();
       const updatedUser = db.users.find(u => u.id === currentUser.id);
       sessionStorage.setItem("nexora_current_user", JSON.stringify(updatedUser));
       
@@ -59,7 +59,7 @@ export default function Settings() {
     }
   };
 
-  const handlePasswordSave = (e) => {
+  const handlePasswordSave = async (e) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
       alert("New password and confirmation do not match.");
@@ -70,10 +70,10 @@ export default function Settings() {
       return;
     }
 
-    const res = editTeamMember(currentUser.id, { password: newPassword });
+    const res = await editTeamMember(currentUser.id, { password: newPassword });
     if (res.success) {
       // Sync session
-      const db = getDatabase();
+      const db = await getDatabase();
       const updatedUser = db.users.find(u => u.id === currentUser.id);
       sessionStorage.setItem("nexora_current_user", JSON.stringify(updatedUser));
 

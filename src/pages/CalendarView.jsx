@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getDatabase, getCurrentUser } from '../utils/mockDatabase';
+import { getDatabase, getCurrentUser } from '../utils/database';
 import { ChevronLeft, ChevronRight, Eye, Calendar as CalIcon, Clock, Layers } from 'lucide-react';
 import ReportModal from '../components/ReportModal';
 
@@ -13,9 +13,9 @@ export default function CalendarView() {
   const [selectedDateStr, setSelectedDateStr] = useState('');
   const [inspectReport, setInspectReport] = useState(null);
 
-  const loadData = () => {
+  const loadData = async () => {
     setCurrentUser(getCurrentUser());
-    const db = getDatabase();
+    const db = await getDatabase();
     if (db) setReports(db.reports);
   };
 

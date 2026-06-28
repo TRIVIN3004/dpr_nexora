@@ -10,7 +10,7 @@ import CalendarView from './pages/CalendarView';
 import TeamManagement from './pages/TeamManagement';
 import Settings from './pages/Settings';
 import ForcePasswordChange from './pages/ForcePasswordChange';
-import { getCurrentUser, setCurrentUser } from './utils/mockDatabase';
+import { getCurrentUser, setCurrentUser } from './utils/database';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function App() {

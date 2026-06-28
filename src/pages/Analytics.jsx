@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getDatabase } from '../utils/mockDatabase';
+import { getDatabase } from '../utils/database';
 import { Bar, Line, Doughnut } from 'react-chartjs-2';
 import { BarChart3, TrendingUp, Layers, Award } from 'lucide-react';
 import StatCard from '../components/StatCard';
@@ -8,10 +8,13 @@ export default function Analytics() {
   const [db, setDb] = useState(null);
 
   useEffect(() => {
-    setDb(getDatabase());
-    const handleUpdate = () => setDb(getDatabase());
-    window.addEventListener('database_updated', handleUpdate);
-    return () => window.removeEventListener('database_updated', handleUpdate);
+    const loadData = async () => {
+      const data = await getDatabase();
+      setDb(data);
+    };
+    loadData();
+    window.addEventListener('database_updated', loadData);
+    return () => window.removeEventListener('database_updated', loadData);
   }, []);
 
   if (!db) {

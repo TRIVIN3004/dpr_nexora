@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Lock, AlertCircle, Eye, EyeOff, ShieldAlert } from 'lucide-react';
-import { loginUser, simulatePasswordReset } from '../utils/mockDatabase';
+import { loginUser, simulatePasswordReset } from '../utils/database';
 import { motion } from 'framer-motion';
 
 export default function Login({ onLoginSuccess }) {
@@ -30,8 +30,8 @@ export default function Login({ onLoginSuccess }) {
     setSuccessMessage('');
     setIsLoading(true);
 
-    setTimeout(() => {
-      const res = loginUser(email, password);
+    setTimeout(async () => {
+      const res = await loginUser(email, password);
       setIsLoading(false);
       if (res.success) {
         onLoginSuccess(res.user);
@@ -47,8 +47,8 @@ export default function Login({ onLoginSuccess }) {
     setSuccessMessage('');
     setIsLoading(true);
 
-    setTimeout(() => {
-      const res = simulatePasswordReset(forgotEmail);
+    setTimeout(async () => {
+      const res = await simulatePasswordReset(forgotEmail);
       setIsLoading(false);
       if (res.success) {
         setSuccessMessage(res.message);

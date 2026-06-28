@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Calendar, User, Briefcase, Clock, Percent, AlertCircle, FileText, CheckCircle2, XCircle, Edit, Download } from 'lucide-react';
-import { reviewReportStatus } from '../utils/mockDatabase';
+import { reviewReportStatus } from '../utils/database';
 import { motion, AnimatePresence } from 'framer-motion';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -17,7 +17,7 @@ export default function ReportModal({ report, isOpen, onClose, currentUser, onAc
   const handleReview = async (status) => {
     setIsSubmitting(true);
     try {
-      const res = reviewReportStatus(report.id, status, feedback, currentUser.name);
+      const res = await reviewReportStatus(report.id, status, feedback, currentUser.name);
       if (res.success) {
         if (onActionSuccess) onActionSuccess(`Report ${status.toLowerCase()} successfully!`);
         onClose();

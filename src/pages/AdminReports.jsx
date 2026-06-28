@@ -4,7 +4,7 @@ import {
   getCurrentUser, 
   reviewReportStatus,
   deleteReport
-} from '../utils/mockDatabase';
+} from '../utils/database';
 import { 
   FileSpreadsheet, 
   FileText, 
@@ -39,9 +39,9 @@ export default function AdminReports({ searchFilter }) {
   const [selectedReport, setSelectedReport] = useState(null);
   const [toast, setToast] = useState('');
 
-  const loadData = () => {
+  const loadData = async () => {
     setCurrentUser(getCurrentUser());
-    const db = getDatabase();
+    const db = await getDatabase();
     if (db) {
       setReports(db.reports);
       setUsers(db.users.filter(u => u.role !== 'admin'));
@@ -61,18 +61,18 @@ export default function AdminReports({ searchFilter }) {
     setTimeout(() => setToast(''), 3000);
   };
 
-  const handleReview = (id, status) => {
+  const handleReview = async (id, status) => {
     const defaultFeedback = status === 'Approved' ? 'Approved.' : 'Rejected.';
-    const res = reviewReportStatus(id, status, defaultFeedback, currentUser?.name || 'Admin');
+    const res = await reviewReportStatus(id, status, defaultFeedback, currentUser?.name || 'Admin');
     if (res.success) {
       triggerToast(`Report ${status} successfully!`);
       window.dispatchEvent(new Event('database_updated'));
     }
   };
 
-  const handleDeleteReport = (reportId) => {
+  const handleDeleteReport = async (reportId) => {
     if (window.confirm("Are you sure you want to permanently delete this report? This action cannot be undone.")) {
-      const res = deleteReport(reportId);
+      const res = await deleteReport(reportId);
       if (res.success) {
         triggerToast("Report successfully deleted.");
         window.dispatchEvent(new Event('database_updated'));
