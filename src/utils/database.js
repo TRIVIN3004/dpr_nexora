@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 let supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+console.log(JSON.stringify(import.meta.env.VITE_SUPABASE_URL));
 const supabasePublishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 if (!supabaseUrl || !supabasePublishableKey) {
