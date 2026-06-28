@@ -10,6 +10,8 @@ if (!supabaseUrl || !supabasePublishableKey) {
 // Sanitize URL if it contains rest/v1/ at the end to prevent rest/v1/rest/v1 issues
 supabaseUrl = supabaseUrl.replace(/\/rest\/v1\/?$/, "");
 
+console.log("Supabase URL:", supabaseUrl);
+
 export const supabase = createClient(supabaseUrl, supabasePublishableKey);
 
 console.log("Nexora DPR: Successfully initialized Supabase database connection.");
