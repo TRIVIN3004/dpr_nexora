@@ -14,7 +14,8 @@ console.log("Supabase URL:", supabaseUrl);
 
 export const supabase = createClient(supabaseUrl, supabasePublishableKey);
 
-console.log("Nexora DPR: Successfully initialized Supabase database connection.");
+console.log("DATABASE VERSION 2.0");
+console.log("Supabase URL =", supabaseUrl);
 
 // Session management helpers (using browser sessionStorage directly)
 export const getCurrentUser = () => {
