@@ -8,11 +8,7 @@ if (!supabaseUrl || !supabasePublishableKey) {
 }
 
 // Sanitize URL if it contains rest/v1/ at the end to prevent rest/v1/rest/v1 issues
-if (supabaseUrl.endsWith('/rest/v1')) {
-  supabaseUrl = supabaseUrl.slice(0, -8);
-} else if (supabaseUrl.endsWith('/rest/v1/')) {
-  supabaseUrl = supabaseUrl.slice(0, -9);
-}
+supabaseUrl = supabaseUrl.replace(/\/rest\/v1\/?$/, "");
 
 export const supabase = createClient(supabaseUrl, supabasePublishableKey);
 
