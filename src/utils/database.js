@@ -41,25 +41,59 @@ export const initDatabase = () => {
 };
 
 export const loginUser = async (email, password) => {
+  console.log("LOGIN START");
+  console.log("Email:", email);
+  console.log("Password:", password);
+
   try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email)
-      .single();
-    
-    if (error || !data) {
-      return { success: false, error: "Invalid email or password." };
+    console.log("Supabase URL:", supabase.supabaseUrl);
+
+    const result = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", email);
+
+    console.log("FULL RESULT:", result);
+
+    if (result.error) {
+      console.error(result.error);
+      return {
+        success: false,
+        error: result.error.message,
+      };
     }
-    
-    // Plain text password comparison matching existing behavior
-    if (data.password === password) {
-      setCurrentUser(data);
-      return { success: true, user: data };
+
+    if (!result.data.length) {
+      return {
+        success: false,
+        error: "User not found",
+      };
     }
-    return { success: false, error: "Invalid email or password." };
-  } catch (err) {
-    return { success: false, error: err.message };
+
+    const user = result.data[0];
+
+    console.log(user);
+
+    if (user.password !== password) {
+      return {
+        success: false,
+        error: "Wrong password",
+      };
+    }
+
+    setCurrentUser(user);
+
+    return {
+      success: true,
+      user,
+    };
+  } catch (e) {
+    console.error(e);
+
+    return {
+      success: false,
+      error: e.message,
+    };
   }
 };
 
