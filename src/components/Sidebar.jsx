@@ -14,7 +14,7 @@ import {
   Terminal
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getCurrentUser } from '../utils/mockDatabase';
+import { getCurrentUser } from '../utils/database';
 
 export default function Sidebar({ currentTab, onTabChange, isCollapsed, setIsCollapsed, mobileOpen, setMobileOpen }) {
   const [user, setUser] = useState(null);
