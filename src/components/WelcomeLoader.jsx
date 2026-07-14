@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
 
 export default function WelcomeLoader() {
   const [progress, setProgress] = useState(0);
@@ -69,9 +68,9 @@ export default function WelcomeLoader() {
             className="absolute inset-2 rounded-full border border-t-transparent border-r-nexora-blue border-b-transparent border-l-nexora-purple opacity-65"
           />
           
-          {/* Logo center icon */}
-          <div className="p-3.5 rounded-full bg-slate-900/80 border border-slate-800 text-nexora-purple shadow-inner relative z-10">
-            <Sparkles className="h-6 w-6 animate-pulse" />
+          {/* Logo center image */}
+          <div className="p-3.5 rounded-full bg-slate-900/90 border border-slate-800 shadow-inner relative z-10 h-16 w-16 flex items-center justify-center">
+            <img src="/logo.png" alt="Nexora Logo" className="h-9 w-9 object-contain" />
           </div>
         </div>
 
@@ -81,7 +80,7 @@ export default function WelcomeLoader() {
             variants={logoTextVariants}
             initial="initial"
             animate="animate"
-            className="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-slate-350 tracking-widest font-sans drop-shadow-[0_0_12px_rgba(255,255,255,0.1)] mr-[-0.45em]"
+            className="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-slate-300 tracking-widest font-sans drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] mr-[-0.45em]"
           >
             NEXORA
           </motion.h1>
