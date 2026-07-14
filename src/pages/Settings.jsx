@@ -1,6 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { getCurrentUser, editTeamMember, getDatabase } from '../utils/database';
-import { User, Shield, Bell, Key, Sparkles, Building2, CheckCircle2 } from 'lucide-react';
+import { User, Shield, Bell, Key, Sparkles, Building2, CheckCircle2, Camera } from 'lucide-react';
+
+const PRESET_AVATARS = [
+  { id: '1', name: 'Man 1', url: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150' },
+  { id: '2', name: 'Woman 1', url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150' },
+  { id: '3', name: 'Man 2', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150' },
+  { id: '4', name: 'Woman 2', url: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150' },
+  { id: '5', name: 'Woman 3', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150' },
+  { id: '6', name: 'Woman 4', url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150' },
+  { id: '7', name: 'Woman 5', url: 'https://images.unsplash.com/photo-1554151228-14d9def656e4?w=150' },
+  { id: '8', name: 'Woman 6', url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150' },
+  { id: '9', name: 'Man 3', url: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150' },
+  { id: '10', name: 'Abstract Gradient', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150' }
+];
 
 export default function Settings() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -10,6 +23,7 @@ export default function Settings() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
 
   // Password reset States
   const [currPassword, setCurrPassword] = useState('');
@@ -33,6 +47,7 @@ export default function Settings() {
       setName(user.name);
       setEmail(user.email);
       setPhone(user.phone || '');
+      setAvatarUrl(user.avatar || '');
     }
   }, []);
 
@@ -45,7 +60,7 @@ export default function Settings() {
 
   const handleProfileSave = async (e) => {
     e.preventDefault();
-    const res = await editTeamMember(currentUser.id, { name, email, phone });
+    const res = await editTeamMember(currentUser.id, { name, email, phone, avatar: avatarUrl });
     if (res.success) {
       // Sync sessions user object
       const db = await getDatabase();
@@ -57,6 +72,37 @@ export default function Settings() {
     } else {
       alert(res.error);
     }
+  };
+
+  const handleAvatarFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxDim = 200; // 200x200 pixels is perfect for a compact profile picture
+        
+        canvas.width = maxDim;
+        canvas.height = maxDim;
+        
+        const ctx = canvas.getContext('2d');
+        const minDim = Math.min(img.width, img.height);
+        
+        // Crop the image into a perfect square from the center
+        const startX = (img.width - minDim) / 2;
+        const startY = (img.height - minDim) / 2;
+        
+        ctx.drawImage(img, startX, startY, minDim, minDim, 0, 0, maxDim, maxDim);
+        
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85); // Compress to 85% JPEG quality
+        setAvatarUrl(dataUrl);
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
   };
 
   const handlePasswordSave = async (e) => {
@@ -136,6 +182,63 @@ export default function Settings() {
             </h4>
 
             <form onSubmit={handleProfileSave} className="space-y-4 text-xs">
+              
+              {/* Profile Picture Section */}
+              <div className="flex flex-col md:flex-row items-start gap-4 p-4 rounded-xl bg-slate-900/40 border border-slate-800/40">
+                <div className="relative group mx-auto md:mx-0 flex-shrink-0 cursor-pointer">
+                  <img
+                    src={avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'}
+                    alt="Profile Avatar"
+                    className="h-16 w-16 rounded-full object-cover border border-slate-750 shadow-md group-hover:opacity-75 transition-opacity"
+                  />
+                  <label className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white text-[9px] font-bold">
+                    <Camera className="h-4 w-4 mb-0.5" />
+                    Change
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarFileChange}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+                <div className="space-y-2.5 flex-grow w-full">
+                  <div>
+                    <h5 className="text-[11px] font-bold text-slate-300">Profile Picture</h5>
+                    <p className="text-[10px] text-slate-500 mt-0.5">Click the avatar to upload a local picture, or select a preset below.</p>
+                  </div>
+                  
+                  {/* Preset Avatars */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {PRESET_AVATARS.map((preset) => (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => setAvatarUrl(preset.url)}
+                        title={preset.name}
+                        className={`h-7 w-7 rounded-full overflow-hidden border cursor-pointer transition-all ${
+                          avatarUrl === preset.url ? 'border-nexora-purple scale-110 ring-1 ring-nexora-purple/50' : 'border-slate-800 hover:border-slate-600'
+                        }`}
+                      >
+                        <img src={preset.url} alt={preset.name} className="h-full w-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Remote URL input option */}
+                  <div className="space-y-0.5">
+                    <label className="text-[10px] text-slate-400 font-medium">Or enter external image URL</label>
+                    <input
+                      type="text"
+                      placeholder="https://example.com/avatar.png"
+                      value={avatarUrl}
+                      onChange={(e) => setAvatarUrl(e.target.value)}
+                      className="w-full px-3 py-1.5 rounded-lg glass-input text-[11px] focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-slate-400 font-semibold">Display Name</label>
