@@ -10,10 +10,12 @@ import CalendarView from './pages/CalendarView';
 import TeamManagement from './pages/TeamManagement';
 import Settings from './pages/Settings';
 import ForcePasswordChange from './pages/ForcePasswordChange';
+import WelcomeLoader from './components/WelcomeLoader';
 import { getCurrentUser, setCurrentUser } from './utils/database';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function App() {
+  const [isWelcomeLoading, setIsWelcomeLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [searchValue, setSearchValue] = useState('');
@@ -24,6 +26,13 @@ export default function App() {
 
   // Success notifications
   const [globalToast, setGlobalToast] = useState('');
+
+  useEffect(() => {
+    const welcomeTimer = setTimeout(() => {
+      setIsWelcomeLoading(false);
+    }, 3000);
+    return () => clearTimeout(welcomeTimer);
+  }, []);
 
   useEffect(() => {
     // Check session
@@ -138,98 +147,111 @@ export default function App() {
     }
   };
 
-  // If user is not authenticated, show login page
-  if (!user) {
-    return (
-      <div className="min-h-screen w-full bg-slate-900">
-        <Login onLoginSuccess={handleLoginSuccess} />
-      </div>
-    );
-  }
-
-  // Force password change on first login
-  if (user && user.mustChangePassword) {
-    return (
-      <ForcePasswordChange 
-        currentUser={user} 
-        onPasswordChanged={(updatedUser) => {
-          setUser(updatedUser);
-          showToast("Password updated. Welcome to Nexora DPR Portal!");
-        }} 
-      />
-    );
-  }
-
+  // If welcome loader is active, render it
   return (
-    <div className="flex h-screen w-full bg-slate-900 overflow-hidden text-slate-100">
-      
-      {/* Toast Alert popup */}
-      <AnimatePresence>
-        {globalToast && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.9 }}
-            className="fixed top-5 right-5 z-50 px-4 py-2.5 rounded-xl bg-slate-900 border border-nexora-purple shadow-glow-purple text-xs text-slate-100 font-semibold flex items-center gap-2"
+    <>
+      <AnimatePresence mode="wait">
+        {isWelcomeLoading && (
+          <motion.div
+            key="welcome-loader"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="fixed inset-0 z-[9999]"
           >
-            <span className="h-2 w-2 rounded-full bg-nexora-purple animate-ping" />
-            {globalToast}
+            <WelcomeLoader />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Responsive Sidebar component */}
-      <Sidebar 
-        currentTab={currentTab} 
-        onTabChange={onTabSelect}
-        isCollapsed={isSidebarCollapsed}
-        setIsCollapsed={setIsSidebarCollapsed}
-        mobileOpen={mobileSidebarOpen}
-        setMobileOpen={setMobileSidebarOpen}
-      />
+      {!isWelcomeLoading && !user && (
+        <div className="min-h-screen w-full bg-slate-900">
+          <Login onLoginSuccess={handleLoginSuccess} />
+        </div>
+      )}
 
-      {/* Main viewport workspace wrapper */}
-      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-        
-        {/* Header navigation bar */}
-        <Header 
-          pageTitle={getPageTitle()} 
-          onSearchChange={setSearchValue}
-          searchValue={searchValue}
-          onLogout={handleLogout}
-          onUserChanged={handleUserSessionSwapped}
+      {!isWelcomeLoading && user && user.mustChangePassword && (
+        <ForcePasswordChange 
+          currentUser={user} 
+          onPasswordChanged={(updatedUser) => {
+            setUser(updatedUser);
+            showToast("Password updated. Welcome to Nexora DPR Portal!");
+          }} 
         />
+      )}
 
-        {/* Content viewport area */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-950/25 flex flex-col justify-between">
+      {!isWelcomeLoading && user && !user.mustChangePassword && (
+        <div className="flex h-screen w-full bg-slate-900 overflow-hidden text-slate-100">
           
-          {/* Animated Page Transitions */}
-          <div className="flex-1">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentTab}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.2 }}
-                className="h-full"
+          {/* Toast Alert popup */}
+          <AnimatePresence>
+            {globalToast && (
+              <motion.div 
+                initial={{ opacity: 0, y: -20, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                className="fixed top-5 right-5 z-50 px-4 py-2.5 rounded-xl bg-slate-900 border border-nexora-purple shadow-glow-purple text-xs text-slate-100 font-semibold flex items-center gap-2"
               >
-                {renderTabContent()}
+                <span className="h-2 w-2 rounded-full bg-nexora-purple animate-ping" />
+                {globalToast}
               </motion.div>
-            </AnimatePresence>
+            )}
+          </AnimatePresence>
+
+          {/* Responsive Sidebar component */}
+          <Sidebar 
+            currentTab={currentTab} 
+            onTabChange={onTabSelect}
+            isCollapsed={isSidebarCollapsed}
+            setIsCollapsed={setIsSidebarCollapsed}
+            mobileOpen={mobileSidebarOpen}
+            setMobileOpen={setMobileSidebarOpen}
+          />
+
+          {/* Main viewport workspace wrapper */}
+          <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+            
+            {/* Header navigation bar */}
+            <Header 
+              pageTitle={getPageTitle()} 
+              onSearchChange={setSearchValue}
+              searchValue={searchValue}
+              onLogout={handleLogout}
+              onUserChanged={handleUserSessionSwapped}
+            />
+
+            {/* Content viewport area */}
+            <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-950/25 flex flex-col justify-between">
+              
+              {/* Animated Page Transitions */}
+              <div className="flex-1">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentTab}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.2 }}
+                    className="h-full"
+                  >
+                    {renderTabContent()}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              {/* Premium layout footer */}
+              <footer className="mt-8 pt-6 border-t border-darkBg-border/20 text-center select-none text-[10px] tracking-widest font-semibold text-slate-600 uppercase flex flex-col sm:flex-row justify-between items-center gap-2">
+                <span>© {new Date().getFullYear()} Nexora Technologies</span>
+                <span className="bg-gradient-to-r from-nexora-blue to-nexora-purple bg-clip-text text-transparent">
+                  Building Tomorrow, Today.
+                </span>
+              </footer>
+
+            </main>
           </div>
 
-          {/* Premium layout footer */}
-          <footer className="mt-8 pt-6 border-t border-darkBg-border/20 text-center select-none text-[10px] tracking-widest font-semibold text-slate-600 uppercase flex flex-col sm:flex-row justify-between items-center gap-2">
-            <span>© {new Date().getFullYear()} Nexora Technologies</span>
-            <span className="bg-gradient-to-r from-nexora-blue to-nexora-purple bg-clip-text text-transparent">
-              Building Tomorrow, Today.
-            </span>
-          </footer>
-
-        </main>
-      </div>
-
-    </div>
+        </div>
+      )}
+    </>
   );
 }
