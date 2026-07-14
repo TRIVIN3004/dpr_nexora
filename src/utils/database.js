@@ -422,6 +422,22 @@ export const deleteProject = async (projectId) => {
   }
 };
 
+export const editProject = async (projectId, projectData) => {
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .update(projectData)
+      .eq('id', projectId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { success: true, project: data };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+};
+
 export const deleteReport = async (reportId) => {
   try {
     const { error } = await supabase

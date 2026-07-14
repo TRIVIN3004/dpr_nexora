@@ -76,9 +76,9 @@ export default function Analytics() {
   };
 
   // Chart 2: Project completion rates (average % completed per project)
-  const projectNames = db.projects.map(p => p.name);
-  const avgProgressPerProject = projectNames.map(name => {
-    const projReports = db.reports.filter(r => r.projectName === name);
+  const projectNames = db.projects.map(p => p.status === 'Completed' ? `${p.name} (Completed)` : p.name);
+  const avgProgressPerProject = db.projects.map(p => {
+    const projReports = db.reports.filter(r => r.projectName === p.name);
     return projReports.length 
       ? Math.round(projReports.reduce((acc, r) => acc + r.percentageCompleted, 0) / projReports.length)
       : 0;

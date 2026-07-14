@@ -43,6 +43,7 @@ export default function DprForm({ onActionSuccess }) {
   const [editMode, setEditMode] = useState(false);
   const [editingReportId, setEditingReportId] = useState(null);
   const [existingStatus, setExistingStatus] = useState('');
+  const [projects, setProjects] = useState([]);
 
   const loadOrCreate = async () => {
     const user = getCurrentUser();
@@ -51,6 +52,7 @@ export default function DprForm({ onActionSuccess }) {
 
     // Check if the user has already submitted a report for TODAY
     const db = await getDatabase();
+    setProjects(db.projects || []);
     const todayStr = new Date().toISOString().split('T')[0];
     const todayReport = db.reports.find(r => r.employeeEmail === user.email && r.date === todayStr);
 
@@ -77,8 +79,15 @@ export default function DprForm({ onActionSuccess }) {
       setExistingStatus('');
       
       // Reset fields
-      if (user.assignedProjects.length > 0 && user.assignedProjects[0] !== 'All') {
-        setProjectName(user.assignedProjects[0]);
+      const myActiveProjects = user.assignedProjects.includes('All')
+        ? (db.projects || []).filter(p => p.status !== 'Completed').map(p => p.name)
+        : user.assignedProjects.filter(pName => {
+            const dbProj = (db.projects || []).find(p => p.name === pName);
+            return !dbProj || dbProj.status !== 'Completed';
+          });
+
+      if (myActiveProjects.length > 0) {
+        setProjectName(myActiveProjects[0]);
       } else {
         setProjectName('');
       }
@@ -261,12 +270,17 @@ export default function DprForm({ onActionSuccess }) {
               >
                 <option value="">Select Project</option>
                 {currentUser.assignedProjects.includes('All') 
-                  ? ['Nexora ERP', 'CloudSync', 'CyberShield', 'AI Analyst'].map((p, idx) => (
-                      <option key={idx} value={p}>{p}</option>
+                  ? projects.filter(p => p.status !== 'Completed').map((p) => (
+                      <option key={p.id} value={p.name}>{p.name}</option>
                     ))
-                  : currentUser.assignedProjects.map((p, idx) => (
-                      <option key={idx} value={p}>{p}</option>
-                    ))
+                  : currentUser.assignedProjects
+                      .filter(pName => {
+                        const p = projects.find(proj => proj.name === pName);
+                        return !p || p.status !== 'Completed';
+                      })
+                      .map((pName, idx) => (
+                        <option key={idx} value={pName}>{pName}</option>
+                      ))
                 }
               </select>
             </div>

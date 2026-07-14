@@ -293,7 +293,9 @@ export default function AdminReports({ searchFilter }) {
             >
               <option value="">All Projects</option>
               {projects.map(p => (
-                <option key={p.id} value={p.name}>{p.name}</option>
+                <option key={p.id} value={p.name}>
+                  {p.name}{p.status === 'Completed' ? ' (Completed)' : ''}
+                </option>
               ))}
             </select>
           </div>

@@ -5,7 +5,8 @@ import {
   editTeamMember, 
   deleteTeamMember,
   addProject,
-  deleteProject
+  deleteProject,
+  editProject
 } from '../utils/database';
 import { 
   UserPlus, 
@@ -170,6 +171,17 @@ export default function TeamManagement() {
       } else {
         alert(res.error || 'Failed to delete project.');
       }
+    }
+  };
+
+  const handleToggleProjectStatus = async (projectId, projectName, currentStatus) => {
+    const nextStatus = currentStatus === 'Completed' ? 'In Progress' : 'Completed';
+    const res = await editProject(projectId, { status: nextStatus });
+    if (res.success) {
+      triggerToast(`Project "${projectName}" marked as ${nextStatus}!`);
+      window.dispatchEvent(new Event('database_updated'));
+    } else {
+      alert(res.error || 'Failed to update project status.');
     }
   };
 
@@ -547,17 +559,40 @@ export default function TeamManagement() {
               <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
                 {projects.map(p => (
                   <div key={p.id} className="flex justify-between items-center bg-slate-900/50 px-3 py-2 rounded-xl border border-slate-800/40">
-                    <div>
-                      <p className="font-bold text-slate-200 text-xs">{p.name}</p>
+                    <div className="flex-1 min-w-0 pr-2">
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-slate-200 text-xs truncate">{p.name}</p>
+                        <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded-full border ${
+                          p.status === 'Completed'
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                            : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                        }`}>
+                          {p.status || 'In Progress'}
+                        </span>
+                      </div>
                       <p className="text-[9px] text-slate-500 line-clamp-1">{p.description}</p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteProject(p.id, p.name)}
-                      className="p-1 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleProjectStatus(p.id, p.name, p.status)}
+                        title={p.status === 'Completed' ? "Mark as In Progress" : "Mark as Completed"}
+                        className={`p-1 rounded-lg transition-all cursor-pointer ${
+                          p.status === 'Completed'
+                            ? 'text-emerald-400 hover:bg-emerald-500/10'
+                            : 'text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10'
+                        }`}
+                      >
+                        <CheckCircle className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteProject(p.id, p.name)}
+                        className="p-1 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

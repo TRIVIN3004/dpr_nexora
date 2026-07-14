@@ -128,7 +128,8 @@ export default function Dashboard({ searchFilter, onNavigate }) {
   const renderAdminDashboard = () => {
     // Math indicators
     const totalMembers = db.users.filter(u => u.role !== 'admin').length;
-    const activeProjects = db.projects.length;
+    const activeProjects = db.projects.filter(p => p.status !== 'Completed').length;
+    const completedProjectsCount = db.projects.filter(p => p.status === 'Completed').length;
     
     const todayStr = new Date().toISOString().split('T')[0];
     const todayReports = db.reports.filter(r => r.date === todayStr);
@@ -174,9 +175,9 @@ export default function Dashboard({ searchFilter, onNavigate }) {
     };
 
     // Chart 2 Data: Project Progress (Share of reports per project name)
-    const projectNames = db.projects.map(p => p.name);
-    const reportsCountPerProject = projectNames.map(name => 
-      db.reports.filter(r => r.projectName === name).length
+    const projectNames = db.projects.map(p => p.status === 'Completed' ? `${p.name} (Completed)` : p.name);
+    const reportsCountPerProject = db.projects.map(p => 
+      db.reports.filter(r => r.projectName === p.name).length
     );
 
     const doughnutChartData = {
@@ -245,7 +246,7 @@ export default function Dashboard({ searchFilter, onNavigate }) {
         {/* KPI Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard title="Team Members" value={totalMembers} change="+2 new members" changeType="positive" icon={Users} delay={0.05} />
-          <StatCard title="Active Projects" value={activeProjects} change="All targets active" changeType="neutral" icon={Layers} delay={0.1} />
+          <StatCard title="Active Projects" value={activeProjects} change={`${completedProjectsCount} completed project${completedProjectsCount === 1 ? '' : 's'}`} changeType="positive" icon={Layers} delay={0.1} />
           <StatCard title="Submitted Today" value={`${submittedToday}/${totalMembers}`} change={`${pendingToday} pending review`} changeType="negative" icon={CheckSquare} delay={0.15} />
           <StatCard title="Average Progress" value={`${avgProgress}%`} change={`+4.2% since yesterday`} changeType="positive" icon={TrendingUp} delay={0.2} />
         </div>
@@ -429,12 +430,17 @@ export default function Dashboard({ searchFilter, onNavigate }) {
     
     const recentActivity = myReports.slice(0, 4);
 
+    // Calculate active vs completed assigned projects
+    const myProjects = db.projects.filter(p => currentUser.assignedProjects.includes(p.name) || currentUser.assignedProjects.includes('All'));
+    const activeAssignedProjects = myProjects.filter(p => p.status !== 'Completed').length;
+    const completedAssignedProjects = myProjects.filter(p => p.status === 'Completed').length;
+
     return (
       <div className="space-y-6">
         
         {/* KPI Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard title="Assigned Projects" value={currentUser.assignedProjects.length} change="Connected to workflow" changeType="neutral" icon={Layers} delay={0.05} />
+          <StatCard title="Assigned Projects" value={activeAssignedProjects} change={`${completedAssignedProjects} completed project${completedAssignedProjects === 1 ? '' : 's'}`} changeType="positive" icon={Layers} delay={0.05} />
           <StatCard title="Reports Logged" value={submittedCount} change="Since account start" changeType="neutral" icon={CheckSquare} delay={0.1} />
           <StatCard title="Approval Rate" value={`${rate}%`} change={`${approvedCount} reports approved`} changeType="positive" icon={TrendingUp} delay={0.15} />
           <StatCard title="Logged Hours" value={`${myReports.reduce((sum, r) => sum + r.hoursWorked, 0)}h`} change="Weekly tracking active" changeType="neutral" icon={Clock} delay={0.2} />
