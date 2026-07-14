@@ -2,7 +2,7 @@ import React from 'react';
 import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export default function StatCard({ title, value, change, changeType, icon: Icon, delay }) {
+export default function StatCard({ title, value, change, changeType, icon: Icon, delay, onClick }) {
   const isPositive = changeType === 'positive';
   const isNegative = changeType === 'negative';
 
@@ -11,8 +11,11 @@ export default function StatCard({ title, value, change, changeType, icon: Icon,
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: delay || 0 }}
-      whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      className="relative overflow-hidden rounded-2xl glass-panel p-5 shadow-glass transition-all hover:shadow-glass-hover group"
+      whileHover={onClick ? { y: -4, scale: 1.01, transition: { duration: 0.2 } } : { y: -4, transition: { duration: 0.2 } }}
+      onClick={onClick}
+      className={`relative overflow-hidden rounded-2xl glass-panel p-5 shadow-glass transition-all hover:shadow-glass-hover group ${
+        onClick ? 'cursor-pointer hover:border-slate-700/80 active:scale-[0.99]' : ''
+      }`}
     >
       {/* Background soft glow animation */}
       <div className="absolute top-0 right-0 -mr-6 -mt-6 h-20 w-20 rounded-full bg-nexora-purple/5 blur-xl group-hover:bg-nexora-purple/10 transition-colors duration-300" />

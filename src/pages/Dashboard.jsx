@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import StatCard from '../components/StatCard';
 import ReportModal from '../components/ReportModal';
+import ProjectsModal from '../components/ProjectsModal';
 import { 
   getDatabase, 
   getCurrentUser, 
@@ -56,6 +57,7 @@ export default function Dashboard({ searchFilter, onNavigate }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [db, setDb] = useState(null);
   const [selectedReport, setSelectedReport] = useState(null);
+  const [showProjectsModal, setShowProjectsModal] = useState(false);
   
   // Quick announcement composer state
   const [annTitle, setAnnTitle] = useState('');
@@ -246,7 +248,7 @@ export default function Dashboard({ searchFilter, onNavigate }) {
         {/* KPI Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard title="Team Members" value={totalMembers} change="+2 new members" changeType="positive" icon={Users} delay={0.05} />
-          <StatCard title="Active Projects" value={activeProjects} change={`${completedProjectsCount} completed project${completedProjectsCount === 1 ? '' : 's'}`} changeType="positive" icon={Layers} delay={0.1} />
+          <StatCard title="Active Projects" value={activeProjects} change={`${completedProjectsCount} completed project${completedProjectsCount === 1 ? '' : 's'}`} changeType="positive" icon={Layers} delay={0.1} onClick={() => setShowProjectsModal(true)} />
           <StatCard title="Submitted Today" value={`${submittedToday}/${totalMembers}`} change={`${pendingToday} pending review`} changeType="negative" icon={CheckSquare} delay={0.15} />
           <StatCard title="Average Progress" value={`${avgProgress}%`} change={`+4.2% since yesterday`} changeType="positive" icon={TrendingUp} delay={0.2} />
         </div>
@@ -440,7 +442,7 @@ export default function Dashboard({ searchFilter, onNavigate }) {
         
         {/* KPI Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard title="Assigned Projects" value={activeAssignedProjects} change={`${completedAssignedProjects} completed project${completedAssignedProjects === 1 ? '' : 's'}`} changeType="positive" icon={Layers} delay={0.05} />
+          <StatCard title="Assigned Projects" value={activeAssignedProjects} change={`${completedAssignedProjects} completed project${completedAssignedProjects === 1 ? '' : 's'}`} changeType="positive" icon={Layers} delay={0.05} onClick={() => setShowProjectsModal(true)} />
           <StatCard title="Reports Logged" value={submittedCount} change="Since account start" changeType="neutral" icon={CheckSquare} delay={0.1} />
           <StatCard title="Approval Rate" value={`${rate}%`} change={`${approvedCount} reports approved`} changeType="positive" icon={TrendingUp} delay={0.15} />
           <StatCard title="Logged Hours" value={`${myReports.reduce((sum, r) => sum + r.hoursWorked, 0)}h`} change="Weekly tracking active" changeType="neutral" icon={Clock} delay={0.2} />
@@ -550,6 +552,13 @@ export default function Dashboard({ searchFilter, onNavigate }) {
           }}
         />
       )}
+
+      {/* Projects list registry modal */}
+      <ProjectsModal
+        isOpen={showProjectsModal}
+        projects={db.projects || []}
+        onClose={() => setShowProjectsModal(false)}
+      />
     </>
   );
 }
