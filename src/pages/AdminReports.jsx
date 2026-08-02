@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   getDatabase, 
   getCurrentUser, 
@@ -24,10 +24,37 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 export default function AdminReports({ searchFilter }) {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [reports, setReports] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [projects, setProjects] = useState([]);
+  const [currentUser, setCurrentUser] = useState(() => getCurrentUser());
+  const [reports, setReports] = useState(() => {
+    try {
+      const saved = localStorage.getItem('nexora_dashboard_cache');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.reports) return parsed.reports;
+      }
+    } catch (e) {}
+    return [];
+  });
+  const [users, setUsers] = useState(() => {
+    try {
+      const saved = localStorage.getItem('nexora_dashboard_cache');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.users) return parsed.users.filter(u => u.role !== 'admin');
+      }
+    } catch (e) {}
+    return [];
+  });
+  const [projects, setProjects] = useState(() => {
+    try {
+      const saved = localStorage.getItem('nexora_dashboard_cache');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.projects) return parsed.projects;
+      }
+    } catch (e) {}
+    return [];
+  });
   
   // Filter states
   const [selectedEmployee, setSelectedEmployee] = useState('');
@@ -41,11 +68,16 @@ export default function AdminReports({ searchFilter }) {
 
   const loadData = async () => {
     setCurrentUser(getCurrentUser());
-    const db = await getDatabase();
-    if (db) {
-      setReports(db.reports);
-      setUsers(db.users.filter(u => u.role !== 'admin'));
-      setProjects(db.projects);
+    try {
+      const db = await getDatabase();
+      if (db) {
+        setReports(db.reports || []);
+        setUsers((db.users || []).filter(u => u.role !== 'admin'));
+        setProjects(db.projects || []);
+        try { localStorage.setItem('nexora_dashboard_cache', JSON.stringify(db)); } catch(e){}
+      }
+    } catch (err) {
+      console.warn("AdminReports background sync note:", err);
     }
   };
 
@@ -89,28 +121,31 @@ export default function AdminReports({ searchFilter }) {
     setSelectedDate('');
   };
 
-  // Filter logic
-  const filteredReports = reports.filter(rep => {
-    // Role-based scoping (Admins see all; team members see only theirs)
-    const isOwner = currentUser?.role === 'admin' || rep.employeeEmail === currentUser?.email;
-    if (!isOwner) return false;
+  // Filter logic (memoized to prevent calculation delays)
+  const filteredReports = useMemo(() => {
+    if (!reports) return [];
+    return reports.filter(rep => {
+      // Role-based scoping (Admins see all; team members see only theirs)
+      const isOwner = currentUser?.role === 'admin' || rep.employeeEmail === currentUser?.email;
+      if (!isOwner) return false;
 
-    // Search query from header
-    const searchMatch = searchFilter 
-      ? (rep.employeeName.toLowerCase().includes(searchFilter.toLowerCase()) ||
-         rep.projectName.toLowerCase().includes(searchFilter.toLowerCase()) ||
-         rep.taskCompletedToday.toLowerCase().includes(searchFilter.toLowerCase()) ||
-         rep.id.toLowerCase().includes(searchFilter.toLowerCase()))
-      : true;
+      // Search query from header
+      const searchMatch = searchFilter 
+        ? (rep.employeeName.toLowerCase().includes(searchFilter.toLowerCase()) ||
+           rep.projectName.toLowerCase().includes(searchFilter.toLowerCase()) ||
+           rep.taskCompletedToday.toLowerCase().includes(searchFilter.toLowerCase()) ||
+           rep.id.toLowerCase().includes(searchFilter.toLowerCase()))
+        : true;
 
-    // Direct selectors
-    const employeeMatch = selectedEmployee ? rep.employeeEmail === selectedEmployee : true;
-    const projectMatch = selectedProject ? rep.projectName === selectedProject : true;
-    const statusMatch = selectedStatus ? rep.status === selectedStatus : true;
-    const dateMatch = selectedDate ? rep.date === selectedDate : true;
+      // Direct selectors
+      const employeeMatch = selectedEmployee ? rep.employeeEmail === selectedEmployee : true;
+      const projectMatch = selectedProject ? rep.projectName === selectedProject : true;
+      const statusMatch = selectedStatus ? rep.status === selectedStatus : true;
+      const dateMatch = selectedDate ? rep.date === selectedDate : true;
 
-    return searchMatch && employeeMatch && projectMatch && statusMatch && dateMatch;
-  });
+      return searchMatch && employeeMatch && projectMatch && statusMatch && dateMatch;
+    });
+  }, [reports, currentUser, searchFilter, selectedEmployee, selectedProject, selectedStatus, selectedDate]);
 
   // Export to Excel sheet
   const handleExportExcel = () => {

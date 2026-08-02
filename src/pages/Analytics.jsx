@@ -5,16 +5,33 @@ import { BarChart3, TrendingUp, Layers, Award } from 'lucide-react';
 import StatCard from '../components/StatCard';
 
 export default function Analytics() {
-  const [db, setDb] = useState(null);
+  const [db, setDb] = useState(() => {
+    try {
+      const saved = localStorage.getItem('nexora_dashboard_cache');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.users) return parsed;
+      }
+    } catch (e) {}
+    return null;
+  });
 
   useEffect(() => {
     const loadData = async () => {
-      const data = await getDatabase();
-      setDb(data);
+      try {
+        const data = await getDatabase();
+        if (data) {
+          setDb(data);
+          try { localStorage.setItem('nexora_dashboard_cache', JSON.stringify(data)); } catch(e){}
+        }
+      } catch (err) {
+        console.warn("Analytics background sync note:", err);
+      }
     };
     loadData();
-    window.addEventListener('database_updated', loadData);
-    return () => window.removeEventListener('database_updated', loadData);
+    const handleUpdate = () => loadData();
+    window.addEventListener('database_updated', handleUpdate);
+    return () => window.removeEventListener('database_updated', handleUpdate);
   }, []);
 
   if (!db) {
