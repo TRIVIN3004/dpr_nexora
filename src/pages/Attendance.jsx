@@ -130,12 +130,18 @@ export default function Attendance() {
     const currUser = getCurrentUser();
     setCurrentUser(currUser);
 
-    // 1. Instant Cache Hydration (0ms load - No Spinner Delay!)
+    // 1. Instant Cache Hydration (0ms load - Protect against empty arrays)
     try {
       const savedUsers = localStorage.getItem('nexora_users_cache');
       const savedRecords = localStorage.getItem('nexora_attendance_cache');
-      if (savedUsers) setUsers(JSON.parse(savedUsers));
-      if (savedRecords) setRecords(JSON.parse(savedRecords));
+      if (savedUsers) {
+        const parsed = JSON.parse(savedUsers);
+        if (Array.isArray(parsed) && parsed.length > 0) setUsers(parsed);
+      }
+      if (savedRecords) {
+        const parsedR = JSON.parse(savedRecords);
+        if (Array.isArray(parsedR) && parsedR.length > 0) setRecords(parsedR);
+      }
     } catch (e) {}
 
     // Open page view instantly
@@ -143,19 +149,23 @@ export default function Attendance() {
 
     // 2. Fast Parallel Background Fetch
     try {
-      const [usersRes, projectsRes, attRecords, attSettings] = await Promise.all([
-        supabase.from('users').select('*').order('id', { ascending: true }),
-        supabase.from('projects').select('*').order('id', { ascending: true }),
+      const [dbData, attRecords, attSettings] = await Promise.all([
+        getDatabase(),
         getAttendanceRecords(),
         getAttendanceSettings()
       ]);
 
-      if (usersRes.data) {
-        setUsers(usersRes.data);
-        try { localStorage.setItem('nexora_users_cache', JSON.stringify(usersRes.data)); } catch(e){}
+      if (dbData && dbData.users && dbData.users.length > 0) {
+        setUsers(dbData.users);
+        try { localStorage.setItem('nexora_users_cache', JSON.stringify(dbData.users)); } catch(e){}
       }
-      if (projectsRes.data) setProjects(projectsRes.data);
-      if (attRecords) setRecords(attRecords);
+      if (dbData && dbData.projects && dbData.projects.length > 0) {
+        setProjects(dbData.projects);
+      }
+      if (attRecords && attRecords.length > 0) {
+        setRecords(attRecords);
+        try { localStorage.setItem('nexora_attendance_cache', JSON.stringify(attRecords)); } catch(e){}
+      }
       if (attSettings) {
         setSettings(attSettings);
         setSettingsForm(attSettings);
