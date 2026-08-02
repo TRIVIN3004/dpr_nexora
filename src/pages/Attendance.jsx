@@ -1076,24 +1076,25 @@ export default function Attendance() {
 
       {/* SETTINGS TAB */}
       {activeTab === 'settings' && isAdmin && (
-        <form onSubmit={handleSaveSettings} className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-6 max-w-3xl">
-          <div className="border-b border-slate-200 pb-4">
-            <h3 className="text-base font-bold text-slate-900">Attendance Policy Parameters</h3>
-            <p className="text-xs text-slate-500 font-medium">Configure global office timings, late entries, working days, and policy threshold percentages.</p>
+        <form onSubmit={handleSaveSettings} className="p-6 rounded-2xl border shadow-sm space-y-6 max-w-3xl" style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1' }}>
+          <div className="border-b pb-4" style={{ borderColor: '#cbd5e1' }}>
+            <h3 className="text-base font-extrabold" style={{ color: '#000000' }}>Attendance Policy Parameters</h3>
+            <p className="text-xs font-semibold" style={{ color: '#334155' }}>Configure global office timings, late entries, working days, and policy threshold percentages.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Office End Time (Reference)</label>
+              <label className="block text-xs font-extrabold mb-1" style={{ color: '#1e293b' }}>Office End Time (Reference)</label>
               <input 
                 type="time" 
                 value={settingsForm.officeEndTime} 
                 onChange={(e) => setSettingsForm({ ...settingsForm, officeEndTime: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-indigo-500"
+                className="w-full px-3 py-2 rounded-xl text-xs focus:outline-none focus:border-indigo-600 font-extrabold"
+                style={{ backgroundColor: '#ffffff', color: '#000000', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
               />
             </div>
             <div className="flex items-center pt-5">
-              <span className="text-xs text-emerald-700 font-semibold bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-200">
+              <span className="text-xs font-extrabold px-3 py-2 rounded-xl border" style={{ backgroundColor: '#ecfdf5', color: '#064e3b', borderColor: '#a7f3d0' }}>
                 ✓ Flexible Entry Enabled (No Office Start Time Restriction)
               </span>
             </div>
@@ -1101,40 +1102,44 @@ export default function Attendance() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Required Minimum %</label>
+              <label className="block text-xs font-extrabold mb-1" style={{ color: '#1e293b' }}>Required Minimum %</label>
               <input 
                 type="number" 
                 value={settingsForm.minimumAttendancePct} 
                 onChange={(e) => setSettingsForm({ ...settingsForm, minimumAttendancePct: Number(e.target.value) })}
-                className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-indigo-500"
+                className="w-full px-3 py-2 rounded-xl text-xs focus:outline-none focus:border-indigo-600 font-extrabold"
+                style={{ backgroundColor: '#ffffff', color: '#000000', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Warning Threshold %</label>
+              <label className="block text-xs font-extrabold mb-1" style={{ color: '#1e293b' }}>Warning Threshold %</label>
               <input 
                 type="number" 
                 value={settingsForm.warningPercentage} 
                 onChange={(e) => setSettingsForm({ ...settingsForm, warningPercentage: Number(e.target.value) })}
-                className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-indigo-500"
+                className="w-full px-3 py-2 rounded-xl text-xs focus:outline-none focus:border-indigo-600 font-extrabold"
+                style={{ backgroundColor: '#ffffff', color: '#000000', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Termination Threshold %</label>
+              <label className="block text-xs font-extrabold mb-1" style={{ color: '#1e293b' }}>Termination Threshold %</label>
               <input 
                 type="number" 
                 value={settingsForm.terminationPercentage} 
                 onChange={(e) => setSettingsForm({ ...settingsForm, terminationPercentage: Number(e.target.value) })}
-                className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-indigo-500"
+                className="w-full px-3 py-2 rounded-xl text-xs focus:outline-none focus:border-indigo-600 font-extrabold"
+                style={{ backgroundColor: '#ffffff', color: '#000000', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
               />
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-200 flex justify-end">
+          <div className="pt-4 border-t flex justify-end" style={{ borderColor: '#cbd5e1' }}>
             <button
               type="submit"
-              className="py-2.5 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm cursor-pointer"
+              className="py-2.5 px-6 rounded-xl text-white text-xs font-extrabold shadow-sm cursor-pointer"
+              style={{ backgroundColor: '#4f46e5', color: '#ffffff' }}
             >
               Save Policy Configuration
             </button>
