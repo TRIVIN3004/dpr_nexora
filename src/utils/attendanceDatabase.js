@@ -137,39 +137,52 @@ export const updateAttendanceSettings = async (newSettings) => {
   }
 };
 
-// 3. Get Attendance Records
+// 3. Get Attendance Records (Instant Cache-First Pattern)
 export const getAttendanceRecords = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('attendance')
-      .select('*')
-      .order('date', { ascending: false });
+  // Read from localStorage cache instantly
+  if (!localAttendanceCache) {
+    try {
+      const saved = localStorage.getItem('nexora_attendance_cache');
+      if (saved) localAttendanceCache = JSON.parse(saved);
+    } catch (e) {}
+  }
 
-    if (!error && data && data.length > 0) {
-      localAttendanceCache = data;
-      return data;
-    }
+  // Trigger Supabase fetch in background asynchronously
+  const fetchSupabase = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('attendance')
+        .select('*')
+        .order('date', { ascending: false });
 
-    // If table empty or error, fetch users and generate seed cache
-    if (!localAttendanceCache) {
-      const { data: users } = await supabase.from('users').select('*');
-      localAttendanceCache = seedSampleAttendanceData(users || []);
-
-      // Async push seed records to Supabase in background
-      try {
-        await supabase.from('attendance').upsert(localAttendanceCache);
-      } catch (e) {
-        // ignore fallback
+      if (!error && data && data.length > 0) {
+        localAttendanceCache = data;
+        try {
+          localStorage.setItem('nexora_attendance_cache', JSON.stringify(data));
+        } catch (e) {}
+        window.dispatchEvent(new Event('database_updated'));
       }
-    }
+    } catch (err) {}
+  };
 
-    return localAttendanceCache;
-  } catch (err) {
-    if (!localAttendanceCache) {
-      localAttendanceCache = seedSampleAttendanceData([]);
-    }
+  // Run fetchSupabase non-blocking
+  fetchSupabase();
+
+  if (localAttendanceCache && localAttendanceCache.length > 0) {
     return localAttendanceCache;
   }
+
+  // Fallback to seed cache if empty
+  if (!localAttendanceCache) {
+    try {
+      const { data: users } = await supabase.from('users').select('*');
+      localAttendanceCache = seedSampleAttendanceData(users || []);
+    } catch (e) {
+      localAttendanceCache = seedSampleAttendanceData([]);
+    }
+  }
+
+  return localAttendanceCache;
 };
 
 // 4. Mark Check-In (Staff / Self / QR / Face)

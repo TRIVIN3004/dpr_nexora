@@ -127,18 +127,19 @@ export default function Attendance() {
   };
 
   const loadData = async () => {
-    setLoading(true);
     const currUser = getCurrentUser();
     setCurrentUser(currUser);
 
-    const dbData = await getDatabase();
-    setUsers(dbData.users || []);
-    setProjects(dbData.projects || []);
+    // Parallel fetch for instant sub-second loading
+    const [dbData, attRecords, attSettings] = await Promise.all([
+      getDatabase(),
+      getAttendanceRecords(),
+      getAttendanceSettings()
+    ]);
 
-    const attRecords = await getAttendanceRecords();
-    setRecords(attRecords);
-
-    const attSettings = await getAttendanceSettings();
+    setUsers(dbData?.users || []);
+    setProjects(dbData?.projects || []);
+    setRecords(attRecords || []);
     setSettings(attSettings);
     if (attSettings) {
       setSettingsForm(attSettings);
