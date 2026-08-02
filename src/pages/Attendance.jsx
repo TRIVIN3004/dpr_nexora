@@ -398,10 +398,10 @@ export default function Attendance() {
             <CalendarCheck className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">
+            <h1 className="text-xl md:text-2xl font-black tracking-tight" style={{ color: '#0f172a' }}>
               Attendance Management
             </h1>
-            <p className="text-xs text-slate-500 font-medium">
+            <p className="text-xs font-semibold text-slate-600">
               Workforce monitoring, automated policy checks, and attendance analytics
             </p>
           </div>
