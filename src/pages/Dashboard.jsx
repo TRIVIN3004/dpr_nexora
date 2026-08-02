@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Users, 
   Layers, 
@@ -143,20 +143,22 @@ export default function Dashboard({ searchFilter, onNavigate }) {
   };
 
   // Filtered Reports (supporting search query from Header)
-  const filteredReportsList = db.reports.filter(rep => {
+  const filteredReportsList = useMemo(() => {
+    if (!db || !db.reports) return [];
     const term = searchFilter ? searchFilter.toLowerCase() : '';
-    if (!term) return true;
-    return (
+    if (!term) return db.reports;
+    return db.reports.filter(rep => (
       rep.employeeName.toLowerCase().includes(term) ||
       rep.projectName.toLowerCase().includes(term) ||
       rep.taskCompletedToday.toLowerCase().includes(term) ||
       rep.workStatus.toLowerCase().includes(term)
-    );
-  });
+    ));
+  }, [db, searchFilter]);
 
-  // RENDER ADMIN DASHBOARD WIDGETS
-  const renderAdminDashboard = () => {
-    // Math indicators
+  // Memoized calculations for Admin Dashboard KPIs & Charts
+  const adminStatsAndCharts = useMemo(() => {
+    if (!db) return null;
+
     const totalMembers = db.users.filter(u => u.role !== 'admin').length;
     const activeProjects = db.projects.filter(p => p.status !== 'Completed').length;
     const completedProjectsCount = db.projects.filter(p => p.status === 'Completed').length;
@@ -165,15 +167,12 @@ export default function Dashboard({ searchFilter, onNavigate }) {
     const todayReports = db.reports.filter(r => r.date === todayStr);
     const submittedToday = todayReports.length;
     const pendingToday = todayReports.filter(r => r.status === 'Pending').length;
-
     const completedTasksCount = db.reports.filter(r => r.workStatus === 'Completed').length;
     
-    // Average completion percentage for pending and approved items
     const avgProgress = Math.round(
       db.reports.reduce((acc, curr) => acc + curr.percentageCompleted, 0) / (db.reports.length || 1)
     );
 
-    // Chart 1 Data: Weekly Productivity (aggregate hours by date in the last 7 days)
     const datesLabels = [];
     const hoursData = [];
     for (let i = 6; i >= 0; i--) {
@@ -204,7 +203,6 @@ export default function Dashboard({ searchFilter, onNavigate }) {
       ]
     };
 
-    // Chart 2 Data: Project Progress (Share of reports per project name)
     const projectNames = db.projects.map(p => p.status === 'Completed' ? `${p.name} (Completed)` : p.name);
     const reportsCountPerProject = db.projects.map(p => 
       db.reports.filter(r => r.projectName === p.name).length
@@ -226,6 +224,34 @@ export default function Dashboard({ searchFilter, onNavigate }) {
         }
       ]
     };
+
+    return {
+      totalMembers,
+      activeProjects,
+      completedProjectsCount,
+      submittedToday,
+      pendingToday,
+      completedTasksCount,
+      avgProgress,
+      barChartData,
+      doughnutChartData
+    };
+  }, [db]);
+
+  // RENDER ADMIN DASHBOARD WIDGETS
+  const renderAdminDashboard = () => {
+    if (!adminStatsAndCharts) return null;
+
+    const {
+      totalMembers,
+      activeProjects,
+      completedProjectsCount,
+      submittedToday,
+      pendingToday,
+      avgProgress,
+      barChartData,
+      doughnutChartData
+    } = adminStatsAndCharts;
 
     // Chart 3 Data: Team Performance Trend (Average Completion % over the last 6 days)
     const completionTrends = [];

@@ -126,9 +126,9 @@ export const getDatabase = async () => {
   const [usersRes, projectsRes, reportsRes, announcementsRes, notificationsRes] = await Promise.all([
     supabase.from('users').select('*').order('id', { ascending: true }),
     supabase.from('projects').select('*').order('id', { ascending: true }),
-    supabase.from('reports').select('*').order('date', { ascending: false }).order('id', { ascending: false }),
-    supabase.from('announcements').select('*').order('date', { ascending: false }).order('id', { ascending: false }),
-    supabase.from('notifications').select('*').order('date', { ascending: false })
+    supabase.from('reports').select('*').order('date', { ascending: false }).order('id', { ascending: false }).limit(300),
+    supabase.from('announcements').select('*').order('date', { ascending: false }).order('id', { ascending: false }).limit(30),
+    supabase.from('notifications').select('*').order('date', { ascending: false }).limit(50)
   ]);
 
   if (usersRes.error) throw usersRes.error;
