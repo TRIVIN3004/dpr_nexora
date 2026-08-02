@@ -746,16 +746,16 @@ export default function Attendance() {
 
           <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-900 text-white font-bold border-b border-slate-200 uppercase tracking-wider">
+              <thead style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
                 <tr>
-                  <th className="p-3.5 text-white">Employee</th>
-                  <th className="p-3.5 text-white">Department</th>
-                  <th className="p-3.5 text-white">Assigned Project</th>
-                  <th className="p-3.5 text-white">Check-In</th>
-                  <th className="p-3.5 text-white">Check-Out</th>
-                  <th className="p-3.5 text-white">Status</th>
-                  <th className="p-3.5 text-white">Remarks</th>
-                  {isAdmin && <th className="p-3.5 text-right text-white">Admin Action</th>}
+                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Employee</th>
+                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Department</th>
+                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Assigned Project</th>
+                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Check-In</th>
+                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Check-Out</th>
+                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Status</th>
+                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Remarks</th>
+                  {isAdmin && <th className="p-3.5 text-right font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Admin Action</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 bg-white">
@@ -782,15 +782,19 @@ export default function Attendance() {
                       <td className="p-3.5 font-mono font-bold" style={{ color: '#0f172a' }}>{r?.checkInTime || '--:--'}</td>
                       <td className="p-3.5 font-mono font-bold" style={{ color: '#0f172a' }}>{r?.checkOutTime || '--:--'}</td>
                       <td className="p-3.5">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${
-                          isLate 
-                            ? 'bg-amber-100 text-amber-900 border-amber-300' 
-                            : isPresent 
-                            ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
-                            : 'bg-slate-900 text-white border-slate-800'
-                        }`}>
-                          {r?.status || 'Not Marked'}
-                        </span>
+                        {isPresent ? (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold border" style={{ backgroundColor: '#d1fae5', color: '#065f46', borderColor: '#6ee7b7' }}>
+                            Present
+                          </span>
+                        ) : isLate ? (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold border" style={{ backgroundColor: '#fef3c7', color: '#92400e', borderColor: '#fcd34d' }}>
+                            Present
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold border" style={{ backgroundColor: '#f1f5f9', color: '#0f172a', borderColor: '#cbd5e1' }}>
+                            Not Marked
+                          </span>
+                        )}
                       </td>
                       <td className="p-3.5 font-medium truncate max-w-xs" style={{ color: '#475569' }}>{r?.remarks || 'N/A'}</td>
                       {isAdmin && (
@@ -800,7 +804,8 @@ export default function Attendance() {
                               setSelectedRecord(r || { employeeId: u.id, employeeName: u.name, date: todayStr, status: 'Present' });
                               setShowAdminModal(true);
                             }}
-                            className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold cursor-pointer shadow-xs"
+                            className="px-3.5 py-1.5 rounded-lg text-white text-[11px] font-extrabold cursor-pointer shadow-xs"
+                            style={{ backgroundColor: '#0f172a', color: '#ffffff' }}
                           >
                             Edit
                           </button>
@@ -945,17 +950,17 @@ export default function Attendance() {
 
           <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-900 text-white font-bold border-b border-slate-200 uppercase tracking-wider">
+              <thead style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
                 <tr>
-                  <th className="p-3.5 text-white">Date</th>
-                  <th className="p-3.5 text-white">Employee</th>
-                  <th className="p-3.5 text-white">Department</th>
-                  <th className="p-3.5 text-white">Project</th>
-                  <th className="p-3.5 text-white">Check-In</th>
-                  <th className="p-3.5 text-white">Check-Out</th>
-                  <th className="p-3.5 text-white">Status</th>
-                  <th className="p-3.5 text-white">Method</th>
-                  <th className="p-3.5 text-white">Remarks</th>
+                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Date</th>
+                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Employee</th>
+                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Department</th>
+                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Project</th>
+                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Check-In</th>
+                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Check-Out</th>
+                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Status</th>
+                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Method</th>
+                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Remarks</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 bg-white">
@@ -968,13 +973,15 @@ export default function Attendance() {
                     <td className="p-3.5 font-mono font-bold" style={{ color: '#0f172a' }}>{r.checkInTime || '--:--'}</td>
                     <td className="p-3.5 font-mono font-bold" style={{ color: '#0f172a' }}>{r.checkOutTime || '--:--'}</td>
                     <td className="p-3.5">
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${
-                        r.status === 'Late' ? 'bg-amber-100 text-amber-900 border-amber-300' :
-                        r.status === 'Present' ? 'bg-emerald-100 text-emerald-900 border-emerald-300' :
-                        'bg-rose-100 text-rose-900 border-rose-300'
-                      }`}>
-                        {r.status}
-                      </span>
+                      {r.status === 'Present' || r.status === 'Late' ? (
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold border" style={{ backgroundColor: '#d1fae5', color: '#065f46', borderColor: '#6ee7b7' }}>
+                          Present
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold border" style={{ backgroundColor: '#fee2e2', color: '#9f1239', borderColor: '#fca5a5' }}>
+                          {r.status}
+                        </span>
+                      )}
                     </td>
                     <td className="p-3.5 font-medium" style={{ color: '#475569' }}>{r.markedBy || 'Self'}</td>
                     <td className="p-3.5 font-medium truncate max-w-xs" style={{ color: '#475569' }}>{r.remarks || 'N/A'}</td>
