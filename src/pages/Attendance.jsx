@@ -620,63 +620,63 @@ export default function Attendance() {
       {activeTab === 'todays' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-slate-900">
+            <h3 className="text-sm font-extrabold" style={{ color: '#0f172a' }}>
               Live Workforce Roster - {todayStr}
             </h3>
-            <span className="text-xs text-slate-600 font-mono">
+            <span className="text-xs font-mono font-bold" style={{ color: '#334155' }}>
               {presentTodayCount} Present / {absentTodayCount} Absent
             </span>
           </div>
 
           <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200 uppercase tracking-wider">
+              <thead className="bg-slate-900 text-white font-bold border-b border-slate-200 uppercase tracking-wider">
                 <tr>
-                  <th className="p-3.5">Employee</th>
-                  <th className="p-3.5">Department</th>
-                  <th className="p-3.5">Assigned Project</th>
-                  <th className="p-3.5">Check-In</th>
-                  <th className="p-3.5">Check-Out</th>
-                  <th className="p-3.5">Status</th>
-                  <th className="p-3.5">Remarks</th>
-                  {isAdmin && <th className="p-3.5 text-right">Admin Action</th>}
+                  <th className="p-3.5 text-white">Employee</th>
+                  <th className="p-3.5 text-white">Department</th>
+                  <th className="p-3.5 text-white">Assigned Project</th>
+                  <th className="p-3.5 text-white">Check-In</th>
+                  <th className="p-3.5 text-white">Check-Out</th>
+                  <th className="p-3.5 text-white">Status</th>
+                  <th className="p-3.5 text-white">Remarks</th>
+                  {isAdmin && <th className="p-3.5 text-right text-white">Admin Action</th>}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="divide-y divide-slate-200 bg-white">
                 {users.map((u) => {
                   const r = records.find(rec => rec.employeeId === u.id && rec.date === todayStr);
                   const isPresent = r?.status === 'Present';
                   const isLate = r?.status === 'Late';
 
                   return (
-                    <tr key={u.id} className="hover:bg-slate-50 transition-colors">
+                    <tr key={u.id} className="hover:bg-slate-50 transition-colors bg-white">
                       <td className="p-3.5 flex items-center gap-3">
                         <img 
                           src={u.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150"} 
                           alt={u.name} 
-                          className="h-8 w-8 rounded-full object-cover border border-slate-200"
+                          className="h-8 w-8 rounded-full object-cover border border-slate-300"
                         />
                         <div>
-                          <span className="font-bold text-slate-900 block">{u.name}</span>
-                          <span className="text-[10px] text-slate-500 font-mono">{u.id}</span>
+                          <span className="font-extrabold text-sm block" style={{ color: '#090d16' }}>{u.name}</span>
+                          <span className="text-[10px] font-mono font-bold" style={{ color: '#475569' }}>{u.id}</span>
                         </div>
                       </td>
-                      <td className="p-3.5 text-slate-700">{u.department || 'Engineering'}</td>
-                      <td className="p-3.5 text-slate-700">{(u.assignedProjects && u.assignedProjects[0]) || 'Nexora ERP'}</td>
-                      <td className="p-3.5 font-mono text-slate-800">{r?.checkInTime || '--:--'}</td>
-                      <td className="p-3.5 font-mono text-slate-800">{r?.checkOutTime || '--:--'}</td>
+                      <td className="p-3.5 font-semibold" style={{ color: '#334155' }}>{u.department || 'Engineering'}</td>
+                      <td className="p-3.5 font-semibold" style={{ color: '#334155' }}>{(u.assignedProjects && u.assignedProjects[0]) || 'Nexora ERP'}</td>
+                      <td className="p-3.5 font-mono font-bold" style={{ color: '#0f172a' }}>{r?.checkInTime || '--:--'}</td>
+                      <td className="p-3.5 font-mono font-bold" style={{ color: '#0f172a' }}>{r?.checkOutTime || '--:--'}</td>
                       <td className="p-3.5">
                         <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${
                           isLate 
-                            ? 'bg-amber-100 text-amber-800 border-amber-300' 
+                            ? 'bg-amber-100 text-amber-900 border-amber-300' 
                             : isPresent 
-                            ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                            : 'bg-slate-100 text-slate-600 border-slate-200'
+                            ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
+                            : 'bg-slate-900 text-white border-slate-800'
                         }`}>
                           {r?.status || 'Not Marked'}
                         </span>
                       </td>
-                      <td className="p-3.5 text-slate-600 truncate max-w-xs">{r?.remarks || 'N/A'}</td>
+                      <td className="p-3.5 font-medium truncate max-w-xs" style={{ color: '#475569' }}>{r?.remarks || 'N/A'}</td>
                       {isAdmin && (
                         <td className="p-3.5 text-right">
                           <button
@@ -684,7 +684,7 @@ export default function Attendance() {
                               setSelectedRecord(r || { employeeId: u.id, employeeName: u.name, date: todayStr, status: 'Present' });
                               setShowAdminModal(true);
                             }}
-                            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-[11px] font-semibold cursor-pointer"
+                            className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold cursor-pointer shadow-xs"
                           >
                             Edit
                           </button>
@@ -703,7 +703,7 @@ export default function Attendance() {
       {activeTab === 'calendar' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-            <h3 className="text-sm font-bold text-slate-900">
+            <h3 className="text-sm font-bold" style={{ color: '#0f172a' }}>
               Interactive Attendance Calendar - {calendarDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
             </h3>
             <div className="flex items-center gap-2">
@@ -722,7 +722,7 @@ export default function Attendance() {
             </div>
           </div>
 
-          <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-600">
+          <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold" style={{ color: '#334155' }}>
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
               <div key={day} className="p-2 bg-slate-100 rounded-xl border border-slate-200">{day}</div>
             ))}
@@ -751,7 +751,7 @@ export default function Attendance() {
                   {rec ? (
                     <div className="text-[10px] font-bold truncate">
                       <span>{rec.status}</span>
-                      <span className="block font-mono text-[9px] text-slate-600">{rec.checkInTime}</span>
+                      <span className="block font-mono text-[9px]" style={{ color: '#334155' }}>{rec.checkInTime}</span>
                     </div>
                   ) : (
                     <span className="text-[9px] text-slate-400">--</span>
@@ -775,14 +775,14 @@ export default function Attendance() {
                   placeholder="Search Employee..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-800 focus:outline-none focus:border-indigo-500"
+                  className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:border-indigo-500 font-semibold"
                 />
               </div>
 
               <select
                 value={filterDepartment}
                 onChange={(e) => setFilterDepartment(e.target.value)}
-                className="px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-800 focus:outline-none"
+                className="px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none font-semibold"
               >
                 {departmentsList.map(d => <option key={d} value={d}>Dept: {d}</option>)}
               </select>
@@ -790,7 +790,7 @@ export default function Attendance() {
               <select
                 value={filterProject}
                 onChange={(e) => setFilterProject(e.target.value)}
-                className="px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-800 focus:outline-none"
+                className="px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none font-semibold"
               >
                 {projectsListOptions.map(p => <option key={p} value={p}>Project: {p}</option>)}
               </select>
@@ -798,7 +798,7 @@ export default function Attendance() {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-800 focus:outline-none"
+                className="px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none font-semibold"
               >
                 <option value="All">Status: All</option>
                 <option value="Present">Present</option>
@@ -829,39 +829,39 @@ export default function Attendance() {
 
           <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200 uppercase tracking-wider">
+              <thead className="bg-slate-900 text-white font-bold border-b border-slate-200 uppercase tracking-wider">
                 <tr>
-                  <th className="p-3.5">Date</th>
-                  <th className="p-3.5">Employee</th>
-                  <th className="p-3.5">Department</th>
-                  <th className="p-3.5">Project</th>
-                  <th className="p-3.5">Check-In</th>
-                  <th className="p-3.5">Check-Out</th>
-                  <th className="p-3.5">Status</th>
-                  <th className="p-3.5">Method</th>
-                  <th className="p-3.5">Remarks</th>
+                  <th className="p-3.5 text-white">Date</th>
+                  <th className="p-3.5 text-white">Employee</th>
+                  <th className="p-3.5 text-white">Department</th>
+                  <th className="p-3.5 text-white">Project</th>
+                  <th className="p-3.5 text-white">Check-In</th>
+                  <th className="p-3.5 text-white">Check-Out</th>
+                  <th className="p-3.5 text-white">Status</th>
+                  <th className="p-3.5 text-white">Method</th>
+                  <th className="p-3.5 text-white">Remarks</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="divide-y divide-slate-200 bg-white">
                 {filteredHistory.slice(0, 50).map((r) => (
-                  <tr key={r.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="p-3.5 font-mono text-slate-800">{r.date}</td>
-                    <td className="p-3.5 font-bold text-slate-900">{r.employeeName} ({r.employeeId})</td>
-                    <td className="p-3.5 text-slate-700">{r.department || 'N/A'}</td>
-                    <td className="p-3.5 text-slate-700">{r.project || 'N/A'}</td>
-                    <td className="p-3.5 font-mono text-slate-800">{r.checkInTime || '--:--'}</td>
-                    <td className="p-3.5 font-mono text-slate-800">{r.checkOutTime || '--:--'}</td>
+                  <tr key={r.id} className="hover:bg-slate-50 transition-colors bg-white">
+                    <td className="p-3.5 font-mono font-bold" style={{ color: '#0f172a' }}>{r.date}</td>
+                    <td className="p-3.5 font-extrabold" style={{ color: '#090d16' }}>{r.employeeName} ({r.employeeId})</td>
+                    <td className="p-3.5 font-semibold" style={{ color: '#334155' }}>{r.department || 'N/A'}</td>
+                    <td className="p-3.5 font-semibold" style={{ color: '#334155' }}>{r.project || 'N/A'}</td>
+                    <td className="p-3.5 font-mono font-bold" style={{ color: '#0f172a' }}>{r.checkInTime || '--:--'}</td>
+                    <td className="p-3.5 font-mono font-bold" style={{ color: '#0f172a' }}>{r.checkOutTime || '--:--'}</td>
                     <td className="p-3.5">
                       <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${
-                        r.status === 'Late' ? 'bg-amber-100 text-amber-800 border-amber-300' :
-                        r.status === 'Present' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' :
-                        'bg-rose-100 text-rose-800 border-rose-300'
+                        r.status === 'Late' ? 'bg-amber-100 text-amber-900 border-amber-300' :
+                        r.status === 'Present' ? 'bg-emerald-100 text-emerald-900 border-emerald-300' :
+                        'bg-rose-100 text-rose-900 border-rose-300'
                       }`}>
                         {r.status}
                       </span>
                     </td>
-                    <td className="p-3.5 text-slate-600">{r.markedBy || 'Self'}</td>
-                    <td className="p-3.5 text-slate-600 truncate max-w-xs">{r.remarks || 'N/A'}</td>
+                    <td className="p-3.5 font-medium" style={{ color: '#475569' }}>{r.markedBy || 'Self'}</td>
+                    <td className="p-3.5 font-medium truncate max-w-xs" style={{ color: '#475569' }}>{r.remarks || 'N/A'}</td>
                   </tr>
                 ))}
               </tbody>
