@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { supabase, getDatabase } from '../utils/database';
 import { 
-  getDatabase, 
   addTeamMember, 
   editTeamMember, 
   deleteTeamMember,
@@ -23,7 +23,16 @@ import {
 } from 'lucide-react';
 
 export default function TeamManagement() {
-  const [members, setMembers] = useState([]);
+  const [members, setMembers] = useState(() => {
+    try {
+      const saved = localStorage.getItem('nexora_users_cache');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed.filter(u => u.role !== 'admin');
+      }
+    } catch (e) {}
+    return [];
+  });
   const [projects, setProjects] = useState([]);
   const [toast, setToast] = useState('');
 
@@ -46,10 +55,43 @@ export default function TeamManagement() {
   const [assignedProjects, setAssignedProjects] = useState([]);
 
   const loadData = async () => {
-    const db = await getDatabase();
-    if (db) {
-      setMembers(db.users.filter(u => u.role !== 'admin'));
-      setProjects(db.projects);
+    // 1. Instant Cache Hydration
+    try {
+      const saved = localStorage.getItem('nexora_users_cache');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMembers(parsed.filter(u => u.role !== 'admin'));
+        }
+      }
+    } catch (e) {}
+
+    // 2. Parallel background fetch for sub-second loading
+    try {
+      const [usersRes, projectsRes] = await Promise.all([
+        supabase.from('users').select('*').order('id', { ascending: true }),
+        supabase.from('projects').select('*').order('id', { ascending: true })
+      ]);
+
+      if (usersRes.data && usersRes.data.length > 0) {
+        setMembers(usersRes.data.filter(u => u.role !== 'admin'));
+        try { localStorage.setItem('nexora_users_cache', JSON.stringify(usersRes.data)); } catch(e){}
+      } else {
+        // Fallback to getDatabase if table empty
+        const db = await getDatabase();
+        if (db && db.users && db.users.length > 0) {
+          setMembers(db.users.filter(u => u.role !== 'admin'));
+          setProjects(db.projects || []);
+        }
+      }
+
+      if (projectsRes.data && projectsRes.data.length > 0) {
+        setProjects(projectsRes.data);
+      }
+    } catch (err) {
+      console.warn("Background fetch note:", err);
+      const db = await getDatabase();
+      if (db && db.users) setMembers(db.users.filter(u => u.role !== 'admin'));
     }
   };
 
@@ -200,32 +242,34 @@ export default function TeamManagement() {
       
       {/* Toast popup */}
       {toast && (
-        <div className="fixed top-5 right-5 z-50 px-4 py-2.5 rounded-xl bg-slate-900 border border-nexora-purple shadow-glow-purple text-xs text-slate-200 animate-slide-in flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-nexora-purple animate-ping" />
+        <div className="fixed top-5 right-5 z-50 px-4 py-2.5 rounded-xl bg-slate-900 shadow-lg text-xs text-white font-semibold flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-indigo-400 animate-ping" />
           {toast}
         </div>
       )}
 
       {/* Header bar */}
-      <div className="flex justify-between items-center bg-slate-950/20 p-5 rounded-2xl glass-panel border border-slate-800/40">
+      <div className="flex justify-between items-center bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
         <div>
-          <h3 className="text-sm font-bold text-slate-200">Team Member Management Registry</h3>
-          <p className="text-xs text-slate-500 mt-1 font-medium">Create, edit and manage project allocations for your crew</p>
+          <h3 className="text-base font-extrabold" style={{ color: '#000000' }}>Team Member Management Registry</h3>
+          <p className="text-xs font-semibold text-slate-500 mt-1">Create, edit and manage project allocations for your crew</p>
         </div>
         <div className="flex gap-2.5">
           <button
             onClick={() => setShowAddProjectModal(true)}
-            className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-300 hover:bg-slate-100 transition-all flex items-center gap-1.5 cursor-pointer text-slate-700 bg-white shadow-premium"
+            className="px-4 py-2 text-xs font-bold rounded-xl border border-slate-300 hover:bg-slate-100 transition-all flex items-center gap-1.5 cursor-pointer text-slate-800 bg-white shadow-xs"
+            style={{ color: '#0f172a' }}
           >
-            <Plus className="h-4 w-4" />
-            Add Project
+            <Plus className="h-4 w-4 text-indigo-600" />
+            <span>Add Project</span>
           </button>
           <button
             onClick={() => { resetForm(); setShowAddModal(true); }}
-            className="px-4 py-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-nexora-purple to-nexora-blue text-white hover:brightness-110 transition-all flex items-center gap-1.5 cursor-pointer shadow-premium"
+            className="px-4 py-2 text-xs font-extrabold rounded-xl text-white shadow-sm flex items-center gap-1.5 cursor-pointer"
+            style={{ backgroundColor: '#4f46e5', color: '#ffffff' }}
           >
-            <UserPlus className="h-4 w-4" />
-            Add Member
+            <UserPlus className="h-4 w-4 text-white" />
+            <span>Add Member</span>
           </button>
         </div>
       </div>
@@ -235,21 +279,21 @@ export default function TeamManagement() {
         {members.map(member => (
           <div 
             key={member.id}
-            className="glass-panel p-5 rounded-2xl shadow-glass flex flex-col justify-between border border-slate-800/50 hover:border-slate-700/60 transition-all duration-300 relative group"
+            className="bg-white p-5 rounded-2xl shadow-sm flex flex-col justify-between border border-slate-200 hover:border-indigo-200 transition-all duration-200 relative group"
           >
             {/* Action buttons */}
             <div className="absolute top-4 right-4 flex gap-1">
               <button
                 onClick={() => triggerOpenEdit(member)}
                 title="Edit Details"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/40 transition-all cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 transition-all cursor-pointer"
               >
                 <Edit2 className="h-3.5 w-3.5" />
               </button>
               <button
                 onClick={() => handleDelete(member.id, member.name)}
                 title="Remove Member"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
@@ -259,36 +303,37 @@ export default function TeamManagement() {
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <img 
-                  src={member.avatar} 
+                  src={member.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150"} 
                   alt={member.name} 
-                  className="h-11 w-11 rounded-full object-cover border border-slate-800 bg-slate-900"
+                  className="h-11 w-11 rounded-full object-cover border border-slate-300"
                 />
                 <div>
-                  <h4 className="text-sm font-bold text-slate-200">{member.name}</h4>
-                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{member.id} • {member.department}</span>
+                  <h4 className="text-sm font-extrabold" style={{ color: '#000000' }}>{member.name}</h4>
+                  <span className="text-[10px] font-bold uppercase tracking-wider block" style={{ color: '#475569' }}>{member.id} • {member.department}</span>
                 </div>
               </div>
 
               {/* Attributes stack */}
-              <div className="space-y-2 border-t border-slate-850 pt-3">
-                <div className="flex items-center gap-2 text-xs text-slate-400">
-                  <Mail className="h-3.5 w-3.5 text-slate-500" />
+              <div className="space-y-2 border-t border-slate-100 pt-3">
+                <div className="flex items-center gap-2 text-xs font-semibold" style={{ color: '#334155' }}>
+                  <Mail className="h-3.5 w-3.5 text-indigo-600" />
                   <span className="truncate">{member.email}</span>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-slate-400">
-                  <Phone className="h-3.5 w-3.5 text-slate-500" />
+                <div className="flex items-center gap-2 text-xs font-semibold" style={{ color: '#334155' }}>
+                  <Phone className="h-3.5 w-3.5 text-indigo-600" />
                   <span>{member.phone || '+1 (555) 000-0000'}</span>
                 </div>
               </div>
 
               {/* Projects chips list */}
-              <div className="space-y-1.5 pt-1.5 border-t border-slate-850">
-                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest block">Project Allocation</span>
+              <div className="space-y-1.5 pt-1.5 border-t border-slate-100">
+                <span className="text-[9px] font-extrabold uppercase tracking-widest block" style={{ color: '#475569' }}>Project Allocation</span>
                 <div className="flex flex-wrap gap-1">
-                  {member.assignedProjects.map((p, idx) => (
+                  {(member.assignedProjects || ['Nexora ERP']).map((p, idx) => (
                     <span 
                       key={idx} 
-                      className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 text-[9px] font-bold border border-indigo-500/10"
+                      className="px-2 py-0.5 rounded text-[10px] font-extrabold border"
+                      style={{ backgroundColor: '#eef2ff', color: '#3730a3', borderColor: '#c7d2fe' }}
                     >
                       {p}
                     </span>
@@ -303,50 +348,52 @@ export default function TeamManagement() {
 
       {/* ADD MEMBER MODAL */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAddModal(false)} />
-          <div className="relative w-full max-w-md rounded-2xl glass-panel p-6 shadow-glass border border-slate-800 bg-slate-950 z-10 space-y-4">
-            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-              <h3 className="text-sm font-bold text-slate-200 flex items-center gap-1.5">
-                <UserPlus className="h-4.5 w-4.5 text-nexora-purple" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-200 z-10 space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+              <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-1.5">
+                <UserPlus className="h-4.5 w-4.5 text-indigo-600" />
                 Add New Team Member
               </h3>
-              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-700">
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             <form onSubmit={handleAddSubmit} className="space-y-4 text-xs">
               <div className="space-y-1">
-                <label className="text-slate-400 font-semibold">Employee ID *</label>
+                <label className="text-slate-700 font-extrabold">Employee ID *</label>
                 <input
                   type="text"
                   required
                   value={empId}
                   onChange={(e) => setEmpId(e.target.value)}
                   placeholder="e.g. EMP-105"
-                  className="w-full px-3 py-2.5 rounded-xl glass-input focus:outline-none"
+                  className="w-full px-3 py-2.5 rounded-xl border focus:outline-none focus:border-indigo-600 font-extrabold text-slate-900 bg-white"
+                  style={{ color: '#000000', backgroundColor: '#ffffff', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-slate-400 font-semibold">Full Name *</label>
+                  <label className="text-slate-700 font-extrabold">Full Name *</label>
                   <input
                     type="text"
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Jane Doe"
-                    className="w-full px-3 py-2.5 rounded-xl glass-input focus:outline-none"
+                    className="w-full px-3 py-2.5 rounded-xl border focus:outline-none focus:border-indigo-600 font-extrabold text-slate-900 bg-white"
+                    style={{ color: '#000000', backgroundColor: '#ffffff', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-slate-400 font-semibold">Department</label>
+                  <label className="text-slate-700 font-extrabold">Department</label>
                   <select
                     value={department}
                     onChange={(e) => setDepartment(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl glass-input focus:outline-none bg-[#0c1125] cursor-pointer"
+                    className="w-full px-3 py-2.5 rounded-xl border focus:outline-none focus:border-indigo-600 font-extrabold text-slate-900 bg-white cursor-pointer"
+                    style={{ color: '#000000', backgroundColor: '#ffffff', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
                   >
                     <option value="Engineering">Engineering</option>
                     <option value="Design">Design</option>
@@ -358,32 +405,34 @@ export default function TeamManagement() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-slate-400 font-semibold">Email *</label>
+                  <label className="text-slate-700 font-extrabold">Email *</label>
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="e.g. jane@nexora.com"
-                    className="w-full px-3 py-2.5 rounded-xl glass-input focus:outline-none"
+                    className="w-full px-3 py-2.5 rounded-xl border focus:outline-none focus:border-indigo-600 font-extrabold text-slate-900 bg-white"
+                    style={{ color: '#000000', backgroundColor: '#ffffff', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-slate-400 font-semibold">Phone Number</label>
+                  <label className="text-slate-700 font-extrabold">Phone Number</label>
                   <input
                     type="text"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="e.g. +1 (555) 019-3382"
-                    className="w-full px-3 py-2.5 rounded-xl glass-input focus:outline-none"
+                    className="w-full px-3 py-2.5 rounded-xl border focus:outline-none focus:border-indigo-600 font-extrabold text-slate-900 bg-white"
+                    style={{ color: '#000000', backgroundColor: '#ffffff', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
                   />
                 </div>
               </div>
 
               {/* Project assignments checklist */}
               <div className="space-y-1.5">
-                <label className="text-slate-400 font-semibold block">Project Allocations</label>
-                <div className="grid grid-cols-2 gap-2 p-3.5 bg-slate-950/40 rounded-xl border border-slate-800">
+                <label className="text-slate-700 font-extrabold block">Project Allocations</label>
+                <div className="grid grid-cols-2 gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200">
                   {projects.map((p) => (
                     <button
                       key={p.id}
@@ -391,8 +440,8 @@ export default function TeamManagement() {
                       onClick={() => toggleProjectSelect(p.name)}
                       className={`py-1.5 px-2 rounded-lg border text-[10px] text-center font-bold transition-all cursor-pointer ${
                         assignedProjects.includes(p.name)
-                          ? 'bg-nexora-purple/10 text-nexora-purple border-nexora-purple/20'
-                          : 'bg-transparent text-slate-400 border-slate-850 hover:border-slate-800'
+                          ? 'bg-indigo-600 text-white border-indigo-600'
+                          : 'bg-white text-slate-700 border-slate-300 hover:border-slate-400'
                       }`}
                     >
                       {p.name}
@@ -403,7 +452,8 @@ export default function TeamManagement() {
 
               <button
                 type="submit"
-                className="w-full py-2.5 rounded-xl font-semibold bg-gradient-to-r from-nexora-purple to-nexora-blue text-white shadow-glow-purple hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer flex justify-center items-center gap-1"
+                className="w-full py-2.5 rounded-xl font-extrabold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-all cursor-pointer flex justify-center items-center gap-1"
+                style={{ backgroundColor: '#4f46e5', color: '#ffffff' }}
               >
                 Create Team Account
               </button>
@@ -414,15 +464,14 @@ export default function TeamManagement() {
 
       {/* EDIT MEMBER MODAL */}
       {showEditModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setShowEditModal(false); resetForm(); }} />
-          <div className="relative w-full max-w-md rounded-2xl glass-panel p-6 shadow-glass border border-slate-800 bg-slate-950 z-10 space-y-4">
-            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-              <h3 className="text-sm font-bold text-slate-200 flex items-center gap-1.5">
-                <Edit2 className="h-4 w-4 text-nexora-blue" />
-                Edit Team Member details
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-200 z-10 space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+              <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-1.5">
+                <Edit2 className="h-4 w-4 text-indigo-600" />
+                Edit Team Member Details
               </h3>
-              <button onClick={() => { setShowEditModal(false); resetForm(); }} className="text-slate-400 hover:text-white">
+              <button onClick={() => { setShowEditModal(false); resetForm(); }} className="text-slate-400 hover:text-slate-700">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -430,21 +479,23 @@ export default function TeamManagement() {
             <form onSubmit={handleEditSubmit} className="space-y-4 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-slate-400 font-semibold">Full Name *</label>
+                  <label className="text-slate-700 font-extrabold">Full Name *</label>
                   <input
                     type="text"
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl glass-input focus:outline-none"
+                    className="w-full px-3 py-2.5 rounded-xl border focus:outline-none focus:border-indigo-600 font-extrabold text-slate-900 bg-white"
+                    style={{ color: '#000000', backgroundColor: '#ffffff', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-slate-400 font-semibold">Department</label>
+                  <label className="text-slate-700 font-extrabold">Department</label>
                   <select
                     value={department}
                     onChange={(e) => setDepartment(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl glass-input focus:outline-none bg-[#0c1125]"
+                    className="w-full px-3 py-2.5 rounded-xl border focus:outline-none focus:border-indigo-600 font-extrabold text-slate-900 bg-white"
+                    style={{ color: '#000000', backgroundColor: '#ffffff', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
                   >
                     <option value="Engineering">Engineering</option>
                     <option value="Design">Design</option>
@@ -456,30 +507,32 @@ export default function TeamManagement() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-slate-400 font-semibold">Email *</label>
+                  <label className="text-slate-700 font-extrabold">Email *</label>
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl glass-input focus:outline-none"
+                    className="w-full px-3 py-2.5 rounded-xl border focus:outline-none focus:border-indigo-600 font-extrabold text-slate-900 bg-white"
+                    style={{ color: '#000000', backgroundColor: '#ffffff', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-slate-400 font-semibold">Phone Number</label>
+                  <label className="text-slate-700 font-extrabold">Phone Number</label>
                   <input
                     type="text"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl glass-input focus:outline-none"
+                    className="w-full px-3 py-2.5 rounded-xl border focus:outline-none focus:border-indigo-600 font-extrabold text-slate-900 bg-white"
+                    style={{ color: '#000000', backgroundColor: '#ffffff', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
                   />
                 </div>
               </div>
 
               {/* Project assignments checklist */}
               <div className="space-y-1.5">
-                <label className="text-slate-400 font-semibold block">Project Allocations</label>
-                <div className="grid grid-cols-2 gap-2 p-3.5 bg-slate-950/40 rounded-xl border border-slate-800">
+                <label className="text-slate-700 font-extrabold block">Project Allocations</label>
+                <div className="grid grid-cols-2 gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200">
                   {projects.map((p) => (
                     <button
                       key={p.id}
@@ -487,8 +540,8 @@ export default function TeamManagement() {
                       onClick={() => toggleProjectSelect(p.name)}
                       className={`py-1.5 px-2 rounded-lg border text-[10px] text-center font-bold transition-all cursor-pointer ${
                         assignedProjects.includes(p.name)
-                          ? 'bg-nexora-purple/10 text-nexora-purple border-nexora-purple/20'
-                          : 'bg-transparent text-slate-400 border-slate-850 hover:border-slate-800'
+                          ? 'bg-indigo-600 text-white border-indigo-600'
+                          : 'bg-white text-slate-700 border-slate-300 hover:border-slate-400'
                       }`}
                     >
                       {p.name}
@@ -499,7 +552,8 @@ export default function TeamManagement() {
 
               <button
                 type="submit"
-                className="w-full py-2.5 rounded-xl font-semibold bg-gradient-to-r from-nexora-blue to-nexora-indigo text-white hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer flex justify-center items-center gap-1"
+                className="w-full py-2.5 rounded-xl font-extrabold text-white transition-all cursor-pointer flex justify-center items-center gap-1"
+                style={{ backgroundColor: '#4f46e5', color: '#ffffff' }}
               >
                 Save Details
               </button>
@@ -507,70 +561,73 @@ export default function TeamManagement() {
           </div>
         </div>
       )}
+
       {/* ADD PROJECT MODAL */}
       {showAddProjectModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAddProjectModal(false)} />
-          <div className="relative w-full max-w-md rounded-2xl glass-panel p-6 shadow-glass border border-slate-800 bg-slate-950 z-10 space-y-4">
-            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-              <h3 className="text-sm font-bold text-slate-200 flex items-center gap-1.5">
-                <Plus className="h-4.5 w-4.5 text-nexora-purple" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-200 z-10 space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+              <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-1.5">
+                <Plus className="h-4.5 w-4.5 text-indigo-600" />
                 Add New Project
               </h3>
-              <button onClick={() => setShowAddProjectModal(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setShowAddProjectModal(false)} className="text-slate-400 hover:text-slate-700">
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             <form onSubmit={handleAddProjectSubmit} className="space-y-4 text-xs text-left">
               <div className="space-y-1">
-                <label className="text-slate-400 font-semibold">Project Name *</label>
+                <label className="text-slate-700 font-extrabold">Project Name *</label>
                 <input
                   type="text"
                   required
                   value={newProjectName}
                   onChange={(e) => setNewProjectName(e.target.value)}
                   placeholder="e.g. Mobile App, Nexora ERP, NextGen"
-                  className="w-full px-3 py-2.5 rounded-xl glass-input focus:outline-none"
+                  className="w-full px-3 py-2.5 rounded-xl border focus:outline-none focus:border-indigo-600 font-extrabold text-slate-900 bg-white"
+                  style={{ color: '#000000', backgroundColor: '#ffffff', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-slate-400 font-semibold">Description</label>
+                <label className="text-slate-700 font-extrabold">Description</label>
                 <textarea
                   rows="3"
                   value={newProjectDescription}
                   onChange={(e) => setNewProjectDescription(e.target.value)}
                   placeholder="Subtle details about project milestones..."
-                  className="w-full px-3 py-2.5 rounded-xl glass-input focus:outline-none resize-none"
+                  className="w-full px-3 py-2.5 rounded-xl border focus:outline-none focus:border-indigo-600 font-extrabold text-slate-900 bg-white resize-none"
+                  style={{ color: '#000000', backgroundColor: '#ffffff', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full py-2.5 rounded-xl font-semibold bg-gradient-to-r from-nexora-purple to-nexora-blue text-white hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer flex justify-center items-center gap-1"
+                className="w-full py-2.5 rounded-xl font-extrabold text-white transition-all cursor-pointer flex justify-center items-center gap-1"
+                style={{ backgroundColor: '#4f46e5', color: '#ffffff' }}
               >
                 Create Project
               </button>
             </form>
 
             {/* Existing Projects List */}
-            <div className="border-t border-slate-800 pt-4 space-y-2.5 text-left">
-              <h4 className="font-semibold text-slate-350 text-[10px] uppercase tracking-wider">Existing Projects ({projects.length})</h4>
+            <div className="border-t border-slate-200 pt-4 space-y-2.5 text-left">
+              <h4 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-wider">Existing Projects ({projects.length})</h4>
               <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
                 {projects.map(p => (
-                  <div key={p.id} className="flex justify-between items-center bg-slate-900/50 px-3 py-2 rounded-xl border border-slate-800/40">
+                  <div key={p.id} className="flex justify-between items-center bg-slate-50 px-3 py-2 rounded-xl border border-slate-200">
                     <div className="flex-1 min-w-0 pr-2">
                       <div className="flex items-center gap-2">
-                        <p className="font-bold text-slate-200 text-xs truncate">{p.name}</p>
+                        <p className="font-extrabold text-slate-900 text-xs truncate">{p.name}</p>
                         <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded-full border ${
                           p.status === 'Completed'
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                            : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                            ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                            : 'bg-amber-100 text-amber-800 border-amber-300'
                         }`}>
                           {p.status || 'In Progress'}
                         </span>
                       </div>
-                      <p className="text-[9px] text-slate-500 line-clamp-1">{p.description}</p>
+                      <p className="text-[9px] text-slate-600 line-clamp-1">{p.description}</p>
                     </div>
                     <div className="flex items-center gap-1">
                       <button
@@ -579,8 +636,8 @@ export default function TeamManagement() {
                         title={p.status === 'Completed' ? "Mark as In Progress" : "Mark as Completed"}
                         className={`p-1 rounded-lg transition-all cursor-pointer ${
                           p.status === 'Completed'
-                            ? 'text-emerald-400 hover:bg-emerald-500/10'
-                            : 'text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10'
+                            ? 'text-emerald-600 hover:bg-emerald-100'
+                            : 'text-slate-500 hover:text-emerald-600 hover:bg-emerald-100'
                         }`}
                       >
                         <CheckCircle className="h-3.5 w-3.5" />
@@ -588,7 +645,7 @@ export default function TeamManagement() {
                       <button
                         type="button"
                         onClick={() => handleDeleteProject(p.id, p.name)}
-                        className="p-1 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer"
+                        className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
