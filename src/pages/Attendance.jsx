@@ -338,6 +338,93 @@ export default function Attendance() {
     showToast('Excel Export downloaded!');
   };
 
+  const getTodayCategoryData = (categoryType) => {
+    return users.map(u => {
+      const r = records.find(rec => rec.employeeId === u.id && rec.date === todayStr);
+      let calculatedStatus = 'Absent';
+      if (r?.status === 'Present' || r?.status === 'Late') {
+        calculatedStatus = 'Present';
+      } else if (r?.status === 'Leave' || r?.status === 'Half Day') {
+        calculatedStatus = 'Leave';
+      } else if (r?.status === 'Absent') {
+        calculatedStatus = 'Absent';
+      } else {
+        calculatedStatus = 'Not Marked (Absent)';
+      }
+
+      return {
+        user: u,
+        record: r,
+        status: calculatedStatus
+      };
+    }).filter(item => {
+      if (categoryType === 'present') return item.status === 'Present';
+      if (categoryType === 'absent') return item.status === 'Absent' || item.status === 'Not Marked (Absent)';
+      if (categoryType === 'leave') return item.status === 'Leave';
+      return true;
+    });
+  };
+
+  const exportTodayPDF = (categoryType) => {
+    const list = getTodayCategoryData(categoryType);
+    const categoryTitle = categoryType.toUpperCase();
+    const doc = new jsPDF();
+
+    const fillColor = categoryType === 'present' ? [5, 150, 105] : categoryType === 'absent' ? [225, 29, 72] : categoryType === 'leave' ? [217, 119, 6] : [79, 70, 229];
+
+    doc.setFontSize(18);
+    doc.text(`Nexora Tech - Today's ${categoryTitle} Attendance List`, 14, 20);
+    doc.setFontSize(10);
+    doc.text(`Date: ${todayStr} | Total Count: ${list.length} Employees`, 14, 28);
+
+    const tableColumn = ["Employee ID", "Employee Name", "Department", "Assigned Project", "Check-In", "Check-Out", "Status", "Remarks"];
+    const tableRows = list.map(item => [
+      item.user.id,
+      item.user.name,
+      item.user.department || 'Engineering',
+      (item.user.assignedProjects && item.user.assignedProjects[0]) || 'Nexora ERP',
+      item.record?.checkInTime || '--:--',
+      item.record?.checkOutTime || '--:--',
+      item.status,
+      item.record?.remarks || 'N/A'
+    ]);
+
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 34,
+      theme: 'grid',
+      headStyles: { fillColor },
+      styles: { fontSize: 8 }
+    });
+
+    doc.save(`Today_${categoryTitle}_Attendance_${todayStr}.pdf`);
+    showToast(`Today's ${categoryTitle} PDF list downloaded!`);
+  };
+
+  const exportTodayExcel = (categoryType) => {
+    const list = getTodayCategoryData(categoryType);
+    const categoryTitle = categoryType.toUpperCase();
+
+    const exportData = list.map(item => ({
+      "Date": todayStr,
+      "Employee ID": item.user.id,
+      "Employee Name": item.user.name,
+      "Department": item.user.department || 'Engineering',
+      "Assigned Project": (item.user.assignedProjects && item.user.assignedProjects[0]) || 'Nexora ERP',
+      "Check-In Time": item.record?.checkInTime || '--:--',
+      "Check-Out Time": item.record?.checkOutTime || '--:--',
+      "Attendance Status": item.status,
+      "Remarks": item.record?.remarks || 'N/A'
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, `${categoryTitle}_Attendance`);
+    XLSX.writeFile(workbook, `Today_${categoryTitle}_Attendance_${todayStr}.xlsx`);
+    showToast(`Today's ${categoryTitle} Excel sheet downloaded!`);
+  };
+
   const monthlyChartData = {
     labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
     datasets: [
@@ -763,13 +850,97 @@ export default function Attendance() {
       {/* TODAY'S ATTENDANCE TAB */}
       {activeTab === 'todays' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-extrabold" style={{ color: '#0f172a' }}>
-              Live Workforce Roster - {todayStr}
-            </h3>
-            <span className="text-xs font-mono font-bold" style={{ color: '#334155' }}>
-              {presentTodayCount} Present / {absentTodayCount} Absent
-            </span>
+          
+          {/* Today's Category Export Toolbar */}
+          <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-base font-extrabold" style={{ color: '#000000' }}>
+                Live Workforce Roster - {todayStr}
+              </h3>
+              <p className="text-xs font-semibold text-slate-500 mt-0.5">
+                Export today's attendance lists separately by Present, Absent, or Leave status.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Present Export */}
+              <div className="flex items-center gap-1 bg-emerald-50 p-1.5 rounded-xl border border-emerald-200">
+                <span className="text-[11px] font-extrabold text-emerald-900 px-1.5">Present ({presentTodayCount})</span>
+                <button
+                  onClick={() => exportTodayPDF('present')}
+                  title="Download Present List PDF"
+                  className="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold flex items-center gap-1 cursor-pointer shadow-xs"
+                >
+                  <FileText className="h-3 w-3" /> PDF
+                </button>
+                <button
+                  onClick={() => exportTodayExcel('present')}
+                  title="Download Present List Excel"
+                  className="px-2 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[10px] font-extrabold flex items-center gap-1 cursor-pointer shadow-xs"
+                >
+                  <FileSpreadsheet className="h-3 w-3" /> Excel
+                </button>
+              </div>
+
+              {/* Absent Export */}
+              <div className="flex items-center gap-1 bg-rose-50 p-1.5 rounded-xl border border-rose-200">
+                <span className="text-[11px] font-extrabold text-rose-900 px-1.5">Absent ({absentTodayCount})</span>
+                <button
+                  onClick={() => exportTodayPDF('absent')}
+                  title="Download Absent List PDF"
+                  className="px-2 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-extrabold flex items-center gap-1 cursor-pointer shadow-xs"
+                >
+                  <FileText className="h-3 w-3" /> PDF
+                </button>
+                <button
+                  onClick={() => exportTodayExcel('absent')}
+                  title="Download Absent List Excel"
+                  className="px-2 py-1 rounded-lg bg-rose-700 hover:bg-rose-800 text-white text-[10px] font-extrabold flex items-center gap-1 cursor-pointer shadow-xs"
+                >
+                  <FileSpreadsheet className="h-3 w-3" /> Excel
+                </button>
+              </div>
+
+              {/* Leave Export */}
+              <div className="flex items-center gap-1 bg-amber-50 p-1.5 rounded-xl border border-amber-200">
+                <span className="text-[11px] font-extrabold text-amber-900 px-1.5">
+                  Leave ({records.filter(r => r.date === todayStr && (r.status === 'Leave' || r.status === 'Half Day')).length})
+                </span>
+                <button
+                  onClick={() => exportTodayPDF('leave')}
+                  title="Download Leave List PDF"
+                  className="px-2 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-extrabold flex items-center gap-1 cursor-pointer shadow-xs"
+                >
+                  <FileText className="h-3 w-3" /> PDF
+                </button>
+                <button
+                  onClick={() => exportTodayExcel('leave')}
+                  title="Download Leave List Excel"
+                  className="px-2 py-1 rounded-lg bg-amber-700 hover:bg-amber-800 text-white text-[10px] font-extrabold flex items-center gap-1 cursor-pointer shadow-xs"
+                >
+                  <FileSpreadsheet className="h-3 w-3" /> Excel
+                </button>
+              </div>
+
+              {/* Full Summary Export */}
+              <div className="flex items-center gap-1 bg-indigo-50 p-1.5 rounded-xl border border-indigo-200">
+                <span className="text-[11px] font-extrabold text-indigo-900 px-1.5">All Summary</span>
+                <button
+                  onClick={() => exportTodayPDF('all')}
+                  title="Download Complete Today Attendance PDF"
+                  className="px-2 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-extrabold flex items-center gap-1 cursor-pointer shadow-xs"
+                >
+                  <FileText className="h-3 w-3" /> PDF
+                </button>
+                <button
+                  onClick={() => exportTodayExcel('all')}
+                  title="Download Complete Today Attendance Excel"
+                  className="px-2 py-1 rounded-lg bg-indigo-700 hover:bg-indigo-800 text-white text-[10px] font-extrabold flex items-center gap-1 cursor-pointer shadow-xs"
+                >
+                  <FileSpreadsheet className="h-3 w-3" /> Excel
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
