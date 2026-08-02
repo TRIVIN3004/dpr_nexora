@@ -82,6 +82,13 @@ export const loginUser = async (email, password) => {
       };
     }
 
+    if (user.status === 'Terminated' || user.isTerminated) {
+      return {
+        success: false,
+        error: "Your account has been deactivated due to attendance below the company policy. Please contact the administrator."
+      };
+    }
+
     setCurrentUser(user);
 
     return {

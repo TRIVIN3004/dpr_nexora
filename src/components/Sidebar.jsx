@@ -11,7 +11,8 @@ import {
   Menu, 
   X,
   FilePlus,
-  Terminal
+  Terminal,
+  CalendarCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getCurrentUser } from '../utils/database';
@@ -38,6 +39,7 @@ export default function Sidebar({ currentTab, onTabChange, isCollapsed, setIsCol
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'member'] },
     { id: 'dpr-form', label: 'Submit DPR', icon: FilePlus, roles: ['member'] },
+    { id: 'attendance', label: 'Attendance', icon: CalendarCheck, roles: ['admin', 'member'] },
     { id: 'reports', label: 'Reports', icon: FileText, roles: ['admin', 'member'] },
     { id: 'analytics', label: 'Analytics', icon: BarChart3, roles: ['admin', 'member'] },
     { id: 'calendar', label: 'Calendar', icon: Calendar, roles: ['admin', 'member'] },

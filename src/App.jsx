@@ -9,6 +9,7 @@ import Analytics from './pages/Analytics';
 import CalendarView from './pages/CalendarView';
 import TeamManagement from './pages/TeamManagement';
 import Settings from './pages/Settings';
+import Attendance from './pages/Attendance';
 import ForcePasswordChange from './pages/ForcePasswordChange';
 import WelcomeLoader from './components/WelcomeLoader';
 import { getCurrentUser, setCurrentUser } from './utils/database';
@@ -42,7 +43,7 @@ export default function App() {
     // Support deep link or page reloading routing based on window location hash
     const handleHashRouting = () => {
       const hash = window.location.hash.replace('#', '');
-      const validTabs = ['dashboard', 'dpr-form', 'reports', 'analytics', 'calendar', 'team-management', 'settings'];
+      const validTabs = ['dashboard', 'dpr-form', 'attendance', 'reports', 'analytics', 'calendar', 'team-management', 'settings'];
       if (validTabs.includes(hash)) {
         // Double-check admin access limit
         if (hash === 'team-management' && currUser?.role !== 'admin') {
@@ -116,6 +117,7 @@ export default function App() {
     const titles = {
       'dashboard': 'Work Progress Dashboard',
       'dpr-form': 'Submit Daily Progress Report (DPR)',
+      'attendance': 'Attendance & Workforce Analytics',
       'reports': 'Daily Reports Registry',
       'analytics': 'Team Analytics Insights',
       'calendar': 'Monthly Submissions Calendar',
@@ -132,6 +134,8 @@ export default function App() {
         return <Dashboard searchFilter={searchValue} onNavigate={onTabSelect} />;
       case 'dpr-form':
         return <DprForm onActionSuccess={showToast} />;
+      case 'attendance':
+        return <Attendance />;
       case 'reports':
         return <AdminReports searchFilter={searchValue} />;
       case 'analytics':
