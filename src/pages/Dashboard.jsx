@@ -54,8 +54,17 @@ ChartJS.register(
 );
 
 export default function Dashboard({ searchFilter, onNavigate }) {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [db, setDb] = useState(null);
+  const [currentUser, setCurrentUser] = useState(() => getCurrentUser());
+  const [db, setDb] = useState(() => {
+    try {
+      const saved = localStorage.getItem('nexora_dashboard_cache');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.users) return parsed;
+      }
+    } catch (e) {}
+    return null;
+  });
   const [selectedReport, setSelectedReport] = useState(null);
   const [showProjectsModal, setShowProjectsModal] = useState(false);
   
@@ -65,9 +74,28 @@ export default function Dashboard({ searchFilter, onNavigate }) {
   const [toast, setToast] = useState('');
 
   const loadData = async () => {
-    setCurrentUser(getCurrentUser());
-    const data = await getDatabase();
-    setDb(data);
+    const user = getCurrentUser();
+    setCurrentUser(user);
+
+    // 1. Instant Cache Hydration
+    try {
+      const saved = localStorage.getItem('nexora_dashboard_cache');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.users) setDb(parsed);
+      }
+    } catch (e) {}
+
+    // 2. Non-blocking background sync
+    try {
+      const data = await getDatabase();
+      if (data && data.users) {
+        setDb(data);
+        try { localStorage.setItem('nexora_dashboard_cache', JSON.stringify(data)); } catch(e){}
+      }
+    } catch (err) {
+      console.warn("Dashboard background sync note:", err);
+    }
   };
 
   useEffect(() => {
