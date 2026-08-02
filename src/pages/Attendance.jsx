@@ -928,36 +928,48 @@ export default function Attendance() {
                   placeholder="Search Employee..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:border-indigo-500 font-semibold"
+                  className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border focus:outline-none focus:border-indigo-600 font-extrabold"
+                  style={{ backgroundColor: '#ffffff', color: '#000000', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
                 />
               </div>
 
               <select
                 value={filterDepartment}
                 onChange={(e) => setFilterDepartment(e.target.value)}
-                className="px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none font-semibold"
+                className="px-3 py-2 text-xs rounded-xl border focus:outline-none font-extrabold cursor-pointer"
+                style={{ backgroundColor: '#ffffff', color: '#000000', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
               >
-                {departmentsList.map(d => <option key={d} value={d}>Dept: {d}</option>)}
+                {departmentsList.map(d => (
+                  <option key={d} value={d} style={{ backgroundColor: '#ffffff', color: '#000000' }}>
+                    Dept: {d}
+                  </option>
+                ))}
               </select>
 
               <select
                 value={filterProject}
                 onChange={(e) => setFilterProject(e.target.value)}
-                className="px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none font-semibold"
+                className="px-3 py-2 text-xs rounded-xl border focus:outline-none font-extrabold cursor-pointer"
+                style={{ backgroundColor: '#ffffff', color: '#000000', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
               >
-                {projectsListOptions.map(p => <option key={p} value={p}>Project: {p}</option>)}
+                {projectsListOptions.map(p => (
+                  <option key={p} value={p} style={{ backgroundColor: '#ffffff', color: '#000000' }}>
+                    Project: {p}
+                  </option>
+                ))}
               </select>
 
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none font-semibold"
+                className="px-3 py-2 text-xs rounded-xl border focus:outline-none font-extrabold cursor-pointer"
+                style={{ backgroundColor: '#ffffff', color: '#000000', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
               >
-                <option value="All">Status: All</option>
-                <option value="Present">Present</option>
-                <option value="Late">Late</option>
-                <option value="Absent">Absent</option>
-                <option value="Leave">Leave</option>
+                <option value="All" style={{ backgroundColor: '#ffffff', color: '#000000' }}>Status: All</option>
+                <option value="Present" style={{ backgroundColor: '#ffffff', color: '#000000' }}>Present</option>
+                <option value="Late" style={{ backgroundColor: '#ffffff', color: '#000000' }}>Late</option>
+                <option value="Absent" style={{ backgroundColor: '#ffffff', color: '#000000' }}>Absent</option>
+                <option value="Leave" style={{ backgroundColor: '#ffffff', color: '#000000' }}>Leave</option>
               </select>
             </div>
 
