@@ -47,20 +47,20 @@ export const seedSampleAttendanceData = (users = []) => {
         checkOut = '';
         remarks = 'Unexcused Absence';
       } else if (u.id === 'EMP-006' && (i % 3 === 0)) {
-        status = 'Late';
+        status = 'Present';
         checkIn = '09:40';
         checkOut = '17:00';
-        remarks = 'Traffic Delay';
+        remarks = 'Flexible Check-In';
       } else if (u.id === 'EMP-006' && (i % 4 === 0)) {
         status = 'Absent';
         checkIn = '';
         checkOut = '';
         remarks = 'Personal Leave';
       } else if (idx % 7 === 0 && i % 5 === 0) {
-        status = 'Late';
+        status = 'Present';
         checkIn = '09:30';
         checkOut = '17:15';
-        remarks = 'Client Meeting';
+        remarks = 'Flexible Check-In';
       } else if (idx % 9 === 0 && i % 6 === 0) {
         status = 'Leave';
         checkIn = '';
@@ -354,15 +354,14 @@ export const calculateEmployeeStats = (employeeId, records = [], settings = loca
   let halfDays = 0;
 
   empRecords.forEach(r => {
-    if (r.status === 'Present') presentDays++;
-    else if (r.status === 'Late') lateDays++;
+    if (r.status === 'Present' || r.status === 'Late') presentDays++;
     else if (r.status === 'Absent') absentDays++;
     else if (r.status === 'Leave') leaveDays++;
     else if (r.status === 'Half Day') halfDays++;
   });
 
-  // Calculation formula: Present + Late + (HalfDay * 0.5) out of total working days
-  const effectivePresent = presentDays + lateDays + (halfDays * 0.5);
+  // Calculation formula: Present + (HalfDay * 0.5) out of total working days (No Late timing restrictions)
+  const effectivePresent = presentDays + (halfDays * 0.5);
   const attendancePct = Math.min(100, Math.round((effectivePresent / totalWorkingDays) * 100));
 
   // Determine Status Badge & Level

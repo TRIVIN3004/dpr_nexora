@@ -475,7 +475,7 @@ export default function Attendance() {
                 <AttendanceStatCard 
                   title="Present Days"
                   value={`${myStats.presentDays} Days`}
-                  subtitle="Full day attendance logged"
+                  subtitle="Flexible entry check-ins logged"
                   icon={UserCheck}
                   color="emerald"
                 />
@@ -489,7 +489,7 @@ export default function Attendance() {
                 <AttendanceStatCard 
                   title="Total Working Days"
                   value={`${myStats.totalWorkingDays} Days`}
-                  subtitle={`Late: ${myStats.lateDays} | Leave: ${myStats.leaveDays}`}
+                  subtitle={`Approved Leaves: ${myStats.leaveDays}`}
                   icon={CalendarCheck}
                   color="purple"
                 />
@@ -527,7 +527,6 @@ export default function Attendance() {
                     <span>Company Requirement: <strong className="text-emerald-700">75%</strong></span>
                   </div>
                   <div className="relative w-full h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
-                    {/* Target 75% threshold line */}
                     <div className="absolute top-0 bottom-0 left-[75%] w-0.5 bg-rose-500 z-10" title="75% Requirement Threshold" />
                     
                     <motion.div 
@@ -555,12 +554,12 @@ export default function Attendance() {
                     <span className="text-base font-extrabold text-slate-900 font-mono">{myStats.absentDays}</span>
                   </div>
                   <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase block">Late Entries</span>
-                    <span className="text-base font-extrabold text-slate-900 font-mono">{myStats.lateDays}</span>
-                  </div>
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
                     <span className="text-[10px] font-bold text-slate-500 uppercase block">Approved Leaves</span>
                     <span className="text-base font-extrabold text-slate-900 font-mono">{myStats.leaveDays}</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase block">Total Working Days</span>
+                    <span className="text-base font-extrabold text-slate-900 font-mono">{myStats.totalWorkingDays}</span>
                   </div>
                 </div>
               </div>
@@ -586,18 +585,18 @@ export default function Attendance() {
                   color="emerald"
                 />
                 <AttendanceStatCard 
-                  title="Late Entries Today"
-                  value={lateTodayCount}
-                  subtitle="Recorded late check-ins"
-                  icon={Clock3}
-                  color="amber"
+                  title="Absent Today"
+                  value={absentTodayCount}
+                  subtitle={`Out of ${staffUsers.length} active staff`}
+                  icon={XCircle}
+                  color="rose"
                 />
                 <AttendanceStatCard 
                   title="Policy Warnings / Terms"
                   value={`${warningsList.length} / ${terminatedList.length}`}
                   subtitle="Requires Admin Review"
                   icon={AlertTriangle}
-                  color="rose"
+                  color="amber"
                 />
               </div>
 
