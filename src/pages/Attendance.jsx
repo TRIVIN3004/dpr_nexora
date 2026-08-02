@@ -454,71 +454,188 @@ export default function Attendance() {
       {/* DASHBOARD TAB */}
       {activeTab === 'dashboard' && (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <AttendanceStatCard 
-              title="Attendance Rate"
-              value={`${avgAttendanceRate}%`}
-              subtitle="Company-wide Average"
-              icon={BarChart3}
-              color="purple"
-              badge="75% Minimum Req."
-              trend={{ label: 'Compliant', positive: avgAttendanceRate >= 75 }}
-            />
-            <AttendanceStatCard 
-              title="Present Today"
-              value={presentTodayCount}
-              subtitle={`Out of ${staffUsers.length} active staff`}
-              icon={UserCheck}
-              color="emerald"
-            />
-            <AttendanceStatCard 
-              title="Late Entries Today"
-              value={lateTodayCount}
-              subtitle="Past 09:15 AM threshold"
-              icon={Clock3}
-              color="amber"
-            />
-            <AttendanceStatCard 
-              title="Policy Warnings / Terms"
-              value={`${warningsList.length} / ${terminatedList.length}`}
-              subtitle="Requires Admin Review"
-              icon={AlertTriangle}
-              color="rose"
-            />
-          </div>
+          
+          {/* STAFF / MEMBER PERSONALIZED DASHBOARD VIEW */}
+          {!isAdmin ? (
+            <div className="space-y-6">
+              {/* Member Personal Stat Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <AttendanceStatCard 
+                  title="My Attendance Percentage"
+                  value={`${myStats.attendancePct}%`}
+                  subtitle={`Required Company Minimum: 75%`}
+                  icon={BarChart3}
+                  color={myStats.attendancePct >= 90 ? 'emerald' : myStats.attendancePct >= 75 ? 'blue' : myStats.attendancePct >= 50 ? 'amber' : 'rose'}
+                  badge={myStats.indicator.label}
+                  trend={{ 
+                    label: myStats.attendancePct >= 75 ? 'Compliant' : 'Below 75% Policy', 
+                    positive: myStats.attendancePct >= 75 
+                  }}
+                />
+                <AttendanceStatCard 
+                  title="Present Days"
+                  value={`${myStats.presentDays} Days`}
+                  subtitle="Full day attendance logged"
+                  icon={UserCheck}
+                  color="emerald"
+                />
+                <AttendanceStatCard 
+                  title="Absent Days"
+                  value={`${myStats.absentDays} Days`}
+                  subtitle="Unattended working days"
+                  icon={XCircle}
+                  color="rose"
+                />
+                <AttendanceStatCard 
+                  title="Total Working Days"
+                  value={`${myStats.totalWorkingDays} Days`}
+                  subtitle={`Late: ${myStats.lateDays} | Leave: ${myStats.leaveDays}`}
+                  icon={CalendarCheck}
+                  color="purple"
+                />
+              </div>
 
-          <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-3">
-            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-              Attendance Policy Tiers & Status Indicators
-            </h4>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-              <div className="p-3 rounded-xl bg-cyan-50 border border-cyan-200 text-center">
-                <span className="text-xs font-black text-cyan-700 block">95%+</span>
-                <span className="text-[10px] text-slate-600 uppercase font-bold">Excellent</span>
-              </div>
-              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
-                <span className="text-xs font-black text-emerald-700 block">90% - 94%</span>
-                <span className="text-[10px] text-slate-600 uppercase font-bold">Very Good</span>
-              </div>
-              <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-center">
-                <span className="text-xs font-black text-blue-700 block">75% - 89%</span>
-                <span className="text-[10px] text-slate-600 uppercase font-bold">Good</span>
-              </div>
-              <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-center">
-                <span className="text-xs font-black text-amber-700 block">50% - 74%</span>
-                <span className="text-[10px] text-slate-600 uppercase font-bold">Warning</span>
-              </div>
-              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-center">
-                <span className="text-xs font-black text-rose-700 block">&lt; 50%</span>
-                <span className="text-[10px] text-slate-600 uppercase font-bold">Terminated</span>
+              {/* Personal Policy Breakdown Progress Banner */}
+              <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                  <div>
+                    <h3 className="text-sm font-extrabold" style={{ color: '#0f172a' }}>
+                      My Attendance Policy Standing
+                    </h3>
+                    <p className="text-xs font-semibold text-slate-500">
+                      Nexora Technologies Employee Policy Compliance Tracker
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-600">Employment Status:</span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-extrabold border ${
+                      myStats.attendancePct >= 75 
+                        ? 'bg-emerald-100 text-emerald-800 border-emerald-300' 
+                        : myStats.attendancePct >= 50 
+                        ? 'bg-amber-100 text-amber-800 border-amber-300' 
+                        : 'bg-rose-100 text-rose-800 border-rose-300'
+                    }`}>
+                      {myStats.attendancePct >= 75 ? 'Active (Good Standing)' : myStats.attendancePct >= 50 ? 'Warning Notice' : 'Terminated'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs font-bold" style={{ color: '#334155' }}>
+                    <span>My Attendance: <strong className="text-indigo-600 font-extrabold">{myStats.attendancePct}%</strong></span>
+                    <span>Company Requirement: <strong className="text-emerald-700">75%</strong></span>
+                  </div>
+                  <div className="relative w-full h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                    {/* Target 75% threshold line */}
+                    <div className="absolute top-0 bottom-0 left-[75%] w-0.5 bg-rose-500 z-10" title="75% Requirement Threshold" />
+                    
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(100, myStats.attendancePct)}%` }}
+                      transition={{ duration: 1, ease: 'easeOut' }}
+                      className={`h-full rounded-full ${
+                        myStats.attendancePct >= 90 ? 'bg-gradient-to-r from-emerald-500 to-teal-500' :
+                        myStats.attendancePct >= 75 ? 'bg-gradient-to-r from-blue-500 to-indigo-600' :
+                        myStats.attendancePct >= 50 ? 'bg-gradient-to-r from-amber-500 to-orange-500' :
+                        'bg-gradient-to-r from-rose-500 to-red-600'
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                {/* Detailed Breakdown Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase block">Present Days</span>
+                    <span className="text-base font-extrabold text-slate-900 font-mono">{myStats.presentDays}</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase block">Absent Days</span>
+                    <span className="text-base font-extrabold text-slate-900 font-mono">{myStats.absentDays}</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase block">Late Entries</span>
+                    <span className="text-base font-extrabold text-slate-900 font-mono">{myStats.lateDays}</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase block">Approved Leaves</span>
+                    <span className="text-base font-extrabold text-slate-900 font-mono">{myStats.leaveDays}</span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            /* ADMIN WORKFORCE OVERVIEW DASHBOARD VIEW */
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <AttendanceStatCard 
+                  title="Attendance Rate"
+                  value={`${avgAttendanceRate}%`}
+                  subtitle="Company-wide Average"
+                  icon={BarChart3}
+                  color="purple"
+                  badge="75% Minimum Req."
+                  trend={{ label: 'Compliant', positive: avgAttendanceRate >= 75 }}
+                />
+                <AttendanceStatCard 
+                  title="Present Today"
+                  value={presentTodayCount}
+                  subtitle={`Out of ${staffUsers.length} active staff`}
+                  icon={UserCheck}
+                  color="emerald"
+                />
+                <AttendanceStatCard 
+                  title="Late Entries Today"
+                  value={lateTodayCount}
+                  subtitle="Recorded late check-ins"
+                  icon={Clock3}
+                  color="amber"
+                />
+                <AttendanceStatCard 
+                  title="Policy Warnings / Terms"
+                  value={`${warningsList.length} / ${terminatedList.length}`}
+                  subtitle="Requires Admin Review"
+                  icon={AlertTriangle}
+                  color="rose"
+                />
+              </div>
 
+              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-3">
+                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Attendance Policy Tiers & Status Indicators
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                  <div className="p-3 rounded-xl bg-cyan-50 border border-cyan-200 text-center">
+                    <span className="text-xs font-black text-cyan-700 block">95%+</span>
+                    <span className="text-[10px] text-slate-600 uppercase font-bold">Excellent</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
+                    <span className="text-xs font-black text-emerald-700 block">90% - 94%</span>
+                    <span className="text-[10px] text-slate-600 uppercase font-bold">Very Good</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-center">
+                    <span className="text-xs font-black text-blue-700 block">75% - 89%</span>
+                    <span className="text-[10px] text-slate-600 uppercase font-bold">Good</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-center">
+                    <span className="text-xs font-black text-amber-700 block">50% - 74%</span>
+                    <span className="text-[10px] text-slate-600 uppercase font-bold">Warning</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-center">
+                    <span className="text-xs font-black text-rose-700 block">&lt; 50%</span>
+                    <span className="text-[10px] text-slate-600 uppercase font-bold">Terminated</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Charts Visualizations Section */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
-              <h4 className="text-sm font-bold text-slate-900">
-                Monthly Attendance Trend
+              <h4 className="text-sm font-bold" style={{ color: '#0f172a' }}>
+                {isAdmin ? 'Monthly Attendance Trend' : 'My Monthly Attendance Trend'}
               </h4>
               <div className="h-64">
                 <Line 
@@ -537,7 +654,7 @@ export default function Attendance() {
             </div>
 
             <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
-              <h4 className="text-sm font-bold text-slate-900">
+              <h4 className="text-sm font-bold" style={{ color: '#0f172a' }}>
                 Department Distribution
               </h4>
               <div className="h-64 flex items-center justify-center">
