@@ -130,22 +130,39 @@ export default function Attendance() {
     const currUser = getCurrentUser();
     setCurrentUser(currUser);
 
-    // Parallel fetch for instant sub-second loading
-    const [dbData, attRecords, attSettings] = await Promise.all([
-      getDatabase(),
-      getAttendanceRecords(),
-      getAttendanceSettings()
-    ]);
+    // 1. Instant Cache Hydration (0ms load - No Spinner Delay!)
+    try {
+      const savedUsers = localStorage.getItem('nexora_users_cache');
+      const savedRecords = localStorage.getItem('nexora_attendance_cache');
+      if (savedUsers) setUsers(JSON.parse(savedUsers));
+      if (savedRecords) setRecords(JSON.parse(savedRecords));
+    } catch (e) {}
 
-    setUsers(dbData?.users || []);
-    setProjects(dbData?.projects || []);
-    setRecords(attRecords || []);
-    setSettings(attSettings);
-    if (attSettings) {
-      setSettingsForm(attSettings);
-    }
-
+    // Open page view instantly
     setLoading(false);
+
+    // 2. Fast Parallel Background Fetch
+    try {
+      const [usersRes, projectsRes, attRecords, attSettings] = await Promise.all([
+        supabase.from('users').select('*').order('id', { ascending: true }),
+        supabase.from('projects').select('*').order('id', { ascending: true }),
+        getAttendanceRecords(),
+        getAttendanceSettings()
+      ]);
+
+      if (usersRes.data) {
+        setUsers(usersRes.data);
+        try { localStorage.setItem('nexora_users_cache', JSON.stringify(usersRes.data)); } catch(e){}
+      }
+      if (projectsRes.data) setProjects(projectsRes.data);
+      if (attRecords) setRecords(attRecords);
+      if (attSettings) {
+        setSettings(attSettings);
+        setSettingsForm(attSettings);
+      }
+    } catch (err) {
+      console.warn("Background sync note:", err);
+    }
   };
 
   useEffect(() => {
