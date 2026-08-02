@@ -12,22 +12,27 @@ export default function AdminAttendanceModal({ isOpen, onClose, users = [], init
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (initialRecord) {
-      setEmployeeId(initialRecord.employeeId || '');
-      setDate(initialRecord.date || new Date().toISOString().split('T')[0]);
-      setStatus(initialRecord.status === 'Late' ? 'Present' : (initialRecord.status || 'Present'));
-      setCheckInTime(initialRecord.checkInTime || '09:00');
-      setCheckOutTime(initialRecord.checkOutTime || '17:00');
-      setRemarks(initialRecord.remarks || '');
-    } else if (users.length > 0) {
-      setEmployeeId(users[0].id);
-      setDate(new Date().toISOString().split('T')[0]);
-      setStatus('Present');
-      setCheckInTime('09:00');
-      setCheckOutTime('17:00');
-      setRemarks('Admin Manual Entry');
+    if (isOpen) {
+      if (initialRecord) {
+        setEmployeeId(initialRecord.employeeId || '');
+        setDate(initialRecord.date || new Date().toISOString().split('T')[0]);
+        setStatus(initialRecord.status === 'Late' ? 'Present' : (initialRecord.status || 'Present'));
+        setCheckInTime(initialRecord.checkInTime || '09:00');
+        setCheckOutTime(initialRecord.checkOutTime || '17:00');
+        setRemarks(initialRecord.remarks || '');
+      } else {
+        setEmployeeId(prev => prev || (users[0]?.id || ''));
+        setDate(new Date().toISOString().split('T')[0]);
+        setStatus('Present');
+        setCheckInTime('09:00');
+        setCheckOutTime('17:00');
+        setRemarks(prev => prev || 'Admin Manual Entry');
+      }
+    } else {
+      setEmployeeId('');
+      setRemarks('');
     }
-  }, [initialRecord, users]);
+  }, [isOpen, initialRecord]);
 
   if (!isOpen) return null;
 
