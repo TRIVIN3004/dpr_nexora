@@ -110,7 +110,7 @@ export default function CalendarView() {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
       
       {/* Interactive Calendar grid */}
-      <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[560px]">
+      <div className="lg:col-span-2 p-6 rounded-2xl border shadow-sm flex flex-col h-[560px]" style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1' }}>
         {/* Month Toolbar */}
         <div className="flex justify-between items-center mb-5">
           <div className="flex items-center gap-2">
@@ -122,21 +122,23 @@ export default function CalendarView() {
           <div className="flex gap-2">
             <button
               onClick={handlePrevMonth}
-              className="p-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 hover:bg-slate-200 transition-all cursor-pointer"
+              className="p-2 rounded-xl transition-all cursor-pointer shadow-xs"
+              style={{ backgroundColor: '#ffffff', color: '#0f172a', border: '1px solid #cbd5e1' }}
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4" style={{ color: '#0f172a' }} />
             </button>
             <button
               onClick={handleNextMonth}
-              className="p-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 hover:bg-slate-200 transition-all cursor-pointer"
+              className="p-2 rounded-xl transition-all cursor-pointer shadow-xs"
+              style={{ backgroundColor: '#ffffff', color: '#0f172a', border: '1px solid #cbd5e1' }}
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4" style={{ color: '#0f172a' }} />
             </button>
           </div>
         </div>
 
         {/* Days of week */}
-        <div className="grid grid-cols-7 text-center text-xs font-black uppercase tracking-wider pb-3 border-b border-slate-200" style={{ color: '#1e293b' }}>
+        <div className="grid grid-cols-7 text-center text-xs font-black uppercase tracking-wider pb-3 border-b" style={{ color: '#000000', borderColor: '#cbd5e1' }}>
           <span>Sun</span>
           <span>Mon</span>
           <span>Tue</span>
@@ -158,24 +160,38 @@ export default function CalendarView() {
               return r.date === cell.dateStr && isOwner;
             });
 
+            let cellBg = '#ffffff';
+            let cellBorder = '1px solid #e2e8f0';
+            let textColor = '#000000';
+
+            if (!cell.isCurrentMonth) {
+              cellBg = '#f8fafc';
+              cellBorder = '1px solid #f1f5f9';
+              textColor = '#94a3b8';
+            } else if (isSelected) {
+              cellBg = '#eef2ff';
+              cellBorder = '2px solid #4f46e5';
+              textColor = '#312e81';
+            } else if (isToday) {
+              cellBg = '#f0f9ff';
+              cellBorder = '2px solid #0284c7';
+              textColor = '#0369a1';
+            }
+
             return (
               <div
                 key={idx}
                 onClick={() => handleDayClick(cell.dateStr)}
-                className={`p-2 rounded-xl border flex flex-col justify-between cursor-pointer transition-all ${
-                  cell.isCurrentMonth ? 'bg-slate-50 border-slate-200 hover:border-indigo-400' : 'bg-slate-100/50 border-transparent opacity-40 pointer-events-none'
-                } ${
-                  isSelected ? 'border-indigo-600 bg-indigo-50/80 shadow-xs' : ''
-                } ${
-                  isToday ? 'bg-indigo-100/70 border-indigo-400' : ''
-                }`}
+                className="p-2 rounded-xl flex flex-col justify-between cursor-pointer transition-all shadow-xs"
+                style={{ backgroundColor: cellBg, border: cellBorder }}
               >
                 <div className="flex justify-between items-center">
                   <span 
-                    className={`text-xs font-black h-5 w-5 flex items-center justify-center rounded-full ${
-                      isToday ? 'bg-indigo-600 text-white' : ''
-                    }`}
-                    style={{ color: isToday ? '#ffffff' : cell.isCurrentMonth ? '#000000' : '#94a3b8' }}
+                    className="text-xs font-black h-5 w-5 flex items-center justify-center rounded-full"
+                    style={{ 
+                      backgroundColor: isToday ? '#4f46e5' : 'transparent', 
+                      color: isToday ? '#ffffff' : textColor 
+                    }}
                   >
                     {cell.day}
                   </span>
@@ -191,7 +207,7 @@ export default function CalendarView() {
                     />
                   ))}
                   {dayReps.length > 3 && (
-                    <span className="text-[8px] font-black leading-none" style={{ color: '#0f172a' }}>+{dayReps.length - 3}</span>
+                    <span className="text-[8px] font-black leading-none" style={{ color: '#000000' }}>+{dayReps.length - 3}</span>
                   )}
                 </div>
               </div>
@@ -201,26 +217,27 @@ export default function CalendarView() {
       </div>
 
       {/* Day Details Pane */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[560px] text-left">
-        <h3 className="text-sm font-extrabold border-b border-slate-200 pb-3 mb-4" style={{ color: '#000000' }}>
+      <div className="p-6 rounded-2xl border shadow-sm flex flex-col h-[560px] text-left" style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1' }}>
+        <h3 className="text-sm font-extrabold border-b pb-3 mb-4" style={{ color: '#000000', borderColor: '#cbd5e1' }}>
           Reports for {selectedDateStr || 'Select a day'}
         </h3>
 
         <div className="flex-1 overflow-y-auto space-y-3">
           {selectedDateStr === '' ? (
-            <div className="h-full flex flex-col justify-center items-center text-center text-xs font-semibold" style={{ color: '#475569' }}>
+            <div className="h-full flex flex-col justify-center items-center text-center text-xs font-bold" style={{ color: '#475569' }}>
               <CalIcon className="h-8 w-8 text-indigo-600 mb-2.5" />
               Click any highlighted day on the calendar grid to review submitted progress reports.
             </div>
           ) : selectedDayReports.length === 0 ? (
-            <div className="h-full flex flex-col justify-center items-center text-center text-xs font-semibold" style={{ color: '#475569' }}>
+            <div className="h-full flex flex-col justify-center items-center text-center text-xs font-bold" style={{ color: '#475569' }}>
               No reports submitted on this date.
             </div>
           ) : (
             selectedDayReports.map((rep) => (
               <div
                 key={rep.id}
-                className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 transition-all flex flex-col gap-2"
+                className="p-3.5 rounded-xl border flex flex-col gap-2 shadow-xs"
+                style={{ backgroundColor: '#f8fafc', borderColor: '#cbd5e1' }}
               >
                 <div className="flex justify-between items-start">
                   <div className="text-xs">
@@ -229,13 +246,13 @@ export default function CalendarView() {
                   </div>
                   <button
                     onClick={() => setInspectReport(rep)}
-                    className="p-1.5 rounded-lg text-slate-600 hover:text-indigo-600 hover:bg-white cursor-pointer"
+                    className="p-1.5 rounded-lg text-slate-700 hover:text-indigo-600 hover:bg-white cursor-pointer"
                   >
                     <Eye className="h-4 w-4 text-indigo-600" />
                   </button>
                 </div>
                 
-                <div className="flex justify-between text-[11px] font-extrabold border-t border-slate-200 pt-2" style={{ color: '#1e293b' }}>
+                <div className="flex justify-between text-[11px] font-extrabold border-t pt-2" style={{ color: '#1e293b', borderColor: '#e2e8f0' }}>
                   <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5 text-indigo-600" /> {rep.hoursWorked} hrs</span>
                   <span className={`px-2 py-0.5 rounded-md border text-[10px] ${workStatusColors[rep.workStatus]}`}>{rep.workStatus}</span>
                 </div>

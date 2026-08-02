@@ -851,29 +851,31 @@ export default function Attendance() {
       {/* ATTENDANCE CALENDAR TAB */}
       {activeTab === 'calendar' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-            <h3 className="text-sm font-bold" style={{ color: '#0f172a' }}>
+          <div className="flex items-center justify-between p-4 rounded-2xl border shadow-sm" style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1' }}>
+            <h3 className="text-base font-extrabold" style={{ color: '#000000' }}>
               Interactive Attendance Calendar - {calendarDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
             </h3>
             <div className="flex items-center gap-2">
               <button 
                 onClick={() => setCalendarDate(new Date(calendarDate.setMonth(calendarDate.getMonth() - 1)))}
-                className="p-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200"
+                className="p-2 rounded-xl transition-colors cursor-pointer shadow-xs"
+                style={{ backgroundColor: '#ffffff', color: '#0f172a', border: '1px solid #cbd5e1' }}
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4" style={{ color: '#0f172a' }} />
               </button>
               <button 
                 onClick={() => setCalendarDate(new Date(calendarDate.setMonth(calendarDate.getMonth() + 1)))}
-                className="p-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200"
+                className="p-2 rounded-xl transition-colors cursor-pointer shadow-xs"
+                style={{ backgroundColor: '#ffffff', color: '#0f172a', border: '1px solid #cbd5e1' }}
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4" style={{ color: '#0f172a' }} />
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold" style={{ color: '#334155' }}>
+          <div className="grid grid-cols-7 gap-2 text-center text-xs font-black">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-              <div key={day} className="p-2 bg-slate-100 rounded-xl border border-slate-200">{day}</div>
+              <div key={day} className="p-2 rounded-xl border" style={{ backgroundColor: '#ffffff', color: '#000000', borderColor: '#cbd5e1' }}>{day}</div>
             ))}
           </div>
 
@@ -883,27 +885,29 @@ export default function Attendance() {
               const dateKey = `2026-08-${String(dayNum).padStart(2, '0')}`;
               const rec = records.find(r => r.employeeId === currentUser?.id && r.date === dateKey);
 
+              let cellStyle = { backgroundColor: '#ffffff', color: '#000000', borderColor: '#e2e8f0', border: '1px solid #e2e8f0' };
+              if (rec?.status === 'Present') {
+                cellStyle = { backgroundColor: '#ecfdf5', color: '#064e3b', borderColor: '#a7f3d0', border: '1px solid #a7f3d0' };
+              } else if (rec?.status === 'Late') {
+                cellStyle = { backgroundColor: '#fffbeb', color: '#92400e', borderColor: '#fde68a', border: '1px solid #fde68a' };
+              } else if (rec?.status === 'Absent') {
+                cellStyle = { backgroundColor: '#fef2f2', color: '#9f1239', borderColor: '#fecaca', border: '1px solid #fecaca' };
+              }
+
               return (
                 <div 
                   key={dayNum}
-                  className={`h-24 p-2 rounded-2xl border flex flex-col justify-between transition-all ${
-                    rec?.status === 'Present'
-                      ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-                      : rec?.status === 'Late'
-                      ? 'bg-amber-50 border-amber-200 text-amber-900'
-                      : rec?.status === 'Absent'
-                      ? 'bg-rose-50 border-rose-200 text-rose-900'
-                      : 'bg-slate-50 border-slate-200 text-slate-400'
-                  }`}
+                  className="h-24 p-2.5 rounded-2xl flex flex-col justify-between transition-all shadow-xs"
+                  style={cellStyle}
                 >
-                  <span className="text-xs font-extrabold">{dayNum}</span>
+                  <span className="text-xs font-black" style={{ color: cellStyle.color }}>{dayNum}</span>
                   {rec ? (
-                    <div className="text-[10px] font-bold truncate">
-                      <span>{rec.status}</span>
-                      <span className="block font-mono text-[9px]" style={{ color: '#334155' }}>{rec.checkInTime}</span>
+                    <div className="text-[10px] font-extrabold truncate">
+                      <span style={{ color: cellStyle.color }}>{rec.status}</span>
+                      <span className="block font-mono text-[9px]" style={{ color: cellStyle.color }}>{rec.checkInTime}</span>
                     </div>
                   ) : (
-                    <span className="text-[9px] text-slate-400">--</span>
+                    <span className="text-[9px] font-bold" style={{ color: '#94a3b8' }}>--</span>
                   )}
                 </div>
               );
