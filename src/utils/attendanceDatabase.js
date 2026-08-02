@@ -180,11 +180,8 @@ export const markCheckIn = async (user, method = 'Self', remarks = '') => {
     const now = new Date();
     const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-    // Determine status (Late if check-in past lateEntryTime)
+    // Status is Present directly for flexible entry
     let status = 'Present';
-    if (settings.lateEntryTime && currentTimeStr > settings.lateEntryTime) {
-      status = 'Late';
-    }
 
     const recordId = `ATT-${todayStr}-${user.id}`;
     const newRecord = {

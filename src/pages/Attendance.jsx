@@ -958,35 +958,20 @@ export default function Attendance() {
             <p className="text-xs text-slate-500 font-medium">Configure global office timings, late entries, working days, and policy threshold percentages.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Office Start Time</label>
-              <input 
-                type="time" 
-                value={settingsForm.officeStartTime} 
-                onChange={(e) => setSettingsForm({ ...settingsForm, officeStartTime: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-indigo-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Late Entry Threshold</label>
-              <input 
-                type="time" 
-                value={settingsForm.lateEntryTime} 
-                onChange={(e) => setSettingsForm({ ...settingsForm, lateEntryTime: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-indigo-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Office End Time</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Office End Time (Reference)</label>
               <input 
                 type="time" 
                 value={settingsForm.officeEndTime} 
                 onChange={(e) => setSettingsForm({ ...settingsForm, officeEndTime: e.target.value })}
                 className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-indigo-500"
               />
+            </div>
+            <div className="flex items-center pt-5">
+              <span className="text-xs text-emerald-700 font-semibold bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-200">
+                ✓ Flexible Entry Enabled (No Office Start Time Restriction)
+              </span>
             </div>
           </div>
 
