@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { getDatabase } from '../utils/database';
 import { Bar, Line, Doughnut } from 'react-chartjs-2';
 import { BarChart3, TrendingUp, Layers, Award } from 'lucide-react';
@@ -34,7 +34,129 @@ export default function Analytics() {
     return () => window.removeEventListener('database_updated', handleUpdate);
   }, []);
 
-  if (!db) {
+  const analyticsStatsAndCharts = useMemo(() => {
+    if (!db) return null;
+
+    const reportsCount = db.reports.length;
+    const totalHours = db.reports.reduce((acc, c) => acc + c.hoursWorked, 0);
+    
+    // Best performing employee (most hours logged)
+    const employeeHours = {};
+    db.reports.forEach(r => {
+      employeeHours[r.employeeName] = (employeeHours[r.employeeName] || 0) + r.hoursWorked;
+    });
+    
+    let bestEmployee = "None";
+    let maxHours = 0;
+    Object.keys(employeeHours).forEach(name => {
+      if (employeeHours[name] > maxHours) {
+        maxHours = employeeHours[name];
+        bestEmployee = name;
+      }
+    });
+
+    // KPI calculations
+    const avgCompletion = Math.round(
+      db.reports.reduce((acc, c) => acc + c.percentageCompleted, 0) / (reportsCount || 1)
+    );
+
+    // Chart 1: Employee Productivity (Total Hours worked per user)
+    const employeeNames = db.users.filter(u => u.role !== 'admin').map(u => u.name);
+    const employeeHoursData = employeeNames.map(name => employeeHours[name] || 0);
+
+    const barChartData = {
+      labels: employeeNames,
+      datasets: [
+        {
+          label: 'Cumulative Hours Worked',
+          data: employeeHoursData,
+          backgroundColor: [
+            'rgba(99, 102, 241, 0.5)',
+            'rgba(168, 85, 247, 0.5)',
+            'rgba(236, 72, 153, 0.5)'
+          ],
+          borderColor: [
+            '#6366f1',
+            '#a855f7',
+            '#ec4899'
+          ],
+          borderWidth: 1.5,
+          borderRadius: 6
+        }
+      ]
+    };
+
+    // Chart 2: Project completion rates (average % completed per project)
+    const projectNames = db.projects.map(p => p.status === 'Completed' ? `${p.name} (Completed)` : p.name);
+    const avgProgressPerProject = db.projects.map(p => {
+      const projReports = db.reports.filter(r => r.projectName === p.name);
+      return projReports.length 
+        ? Math.round(projReports.reduce((acc, r) => acc + r.percentageCompleted, 0) / projReports.length)
+        : 0;
+    });
+
+    const doughnutChartData = {
+      labels: projectNames,
+      datasets: [
+        {
+          data: avgProgressPerProject,
+          backgroundColor: [
+            'rgba(59, 130, 246, 0.55)',
+            'rgba(168, 85, 247, 0.55)',
+            'rgba(236, 72, 153, 0.55)',
+            'rgba(99, 102, 241, 0.55)',
+          ],
+          borderColor: 'rgba(255, 255, 255, 0.08)',
+          borderWidth: 1
+        }
+      ]
+    };
+
+    // Chart 3: Line trend of hours worked daily over last 7 days
+    const dateLabels = [];
+    const dailyHours = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dStr = d.toISOString().split('T')[0];
+      dateLabels.push(d.toLocaleDateString([], { month: 'short', day: 'numeric' }));
+      
+      const sum = db.reports
+        .filter(r => r.date === dStr)
+        .reduce((acc, r) => acc + r.hoursWorked, 0);
+      dailyHours.push(sum);
+    }
+
+    const lineChartData = {
+      labels: dateLabels,
+      datasets: [
+        {
+          fill: true,
+          label: 'Total Team Hours / Day',
+          data: dailyHours,
+          borderColor: '#a855f7',
+          backgroundColor: 'rgba(168, 85, 247, 0.05)',
+          borderWidth: 2,
+          tension: 0.45,
+          pointBackgroundColor: '#a855f7',
+          pointHoverRadius: 6
+        }
+      ]
+    };
+
+    return {
+      reportsCount,
+      totalHours,
+      bestEmployee,
+      maxHours,
+      avgCompletion,
+      barChartData,
+      doughnutChartData,
+      lineChartData
+    };
+  }, [db]);
+
+  if (!db || !analyticsStatsAndCharts) {
     return (
       <div className="flex h-64 items-center justify-center">
         <div className="h-8 w-8 rounded-full border-4 border-nexora-purple border-t-transparent animate-spin" />
@@ -42,113 +164,16 @@ export default function Analytics() {
     );
   }
 
-  // Pre-calculate aggregates
-  const reportsCount = db.reports.length;
-  const totalHours = db.reports.reduce((acc, c) => acc + c.hoursWorked, 0);
-  
-  // Best performing employee (most hours logged)
-  const employeeHours = {};
-  db.reports.forEach(r => {
-    employeeHours[r.employeeName] = (employeeHours[r.employeeName] || 0) + r.hoursWorked;
-  });
-  
-  let bestEmployee = "None";
-  let maxHours = 0;
-  Object.keys(employeeHours).forEach(name => {
-    if (employeeHours[name] > maxHours) {
-      maxHours = employeeHours[name];
-      bestEmployee = name;
-    }
-  });
-
-  // KPI calculations
-  const avgCompletion = Math.round(
-    db.reports.reduce((acc, c) => acc + c.percentageCompleted, 0) / (reportsCount || 1)
-  );
-
-  // Chart 1: Employee Productivity (Total Hours worked per user)
-  const employeeNames = db.users.filter(u => u.role !== 'admin').map(u => u.name);
-  const employeeHoursData = employeeNames.map(name => employeeHours[name] || 0);
-
-  const barChartData = {
-    labels: employeeNames,
-    datasets: [
-      {
-        label: 'Cumulative Hours Worked',
-        data: employeeHoursData,
-        backgroundColor: [
-          'rgba(99, 102, 241, 0.5)',
-          'rgba(168, 85, 247, 0.5)',
-          'rgba(236, 72, 153, 0.5)'
-        ],
-        borderColor: [
-          '#6366f1',
-          '#a855f7',
-          '#ec4899'
-        ],
-        borderWidth: 1.5,
-        borderRadius: 6
-      }
-    ]
-  };
-
-  // Chart 2: Project completion rates (average % completed per project)
-  const projectNames = db.projects.map(p => p.status === 'Completed' ? `${p.name} (Completed)` : p.name);
-  const avgProgressPerProject = db.projects.map(p => {
-    const projReports = db.reports.filter(r => r.projectName === p.name);
-    return projReports.length 
-      ? Math.round(projReports.reduce((acc, r) => acc + r.percentageCompleted, 0) / projReports.length)
-      : 0;
-  });
-
-  const doughnutChartData = {
-    labels: projectNames,
-    datasets: [
-      {
-        data: avgProgressPerProject,
-        backgroundColor: [
-          'rgba(59, 130, 246, 0.55)',
-          'rgba(168, 85, 247, 0.55)',
-          'rgba(236, 72, 153, 0.55)',
-          'rgba(99, 102, 241, 0.55)',
-        ],
-        borderColor: 'rgba(255, 255, 255, 0.08)',
-        borderWidth: 1
-      }
-    ]
-  };
-
-  // Chart 3: Line trend of hours worked daily over last 7 days
-  const dateLabels = [];
-  const dailyHours = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    const dStr = d.toISOString().split('T')[0];
-    dateLabels.push(d.toLocaleDateString([], { month: 'short', day: 'numeric' }));
-    
-    const sum = db.reports
-      .filter(r => r.date === dStr)
-      .reduce((acc, r) => acc + r.hoursWorked, 0);
-    dailyHours.push(sum);
-  }
-
-  const lineChartData = {
-    labels: dateLabels,
-    datasets: [
-      {
-        fill: true,
-        label: 'Total Team Hours / Day',
-        data: dailyHours,
-        borderColor: '#a855f7',
-        backgroundColor: 'rgba(168, 85, 247, 0.05)',
-        borderWidth: 2,
-        tension: 0.45,
-        pointBackgroundColor: '#a855f7',
-        pointHoverRadius: 6
-      }
-    ]
-  };
+  const {
+    reportsCount,
+    totalHours,
+    bestEmployee,
+    maxHours,
+    avgCompletion,
+    barChartData,
+    doughnutChartData,
+    lineChartData
+  } = analyticsStatsAndCharts;
 
   const chartOptions = {
     responsive: true,
