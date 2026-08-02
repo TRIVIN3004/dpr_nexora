@@ -62,9 +62,7 @@ export default function CalendarView() {
 
   // Current month days
   for (let i = 1; i <= totalDays; i++) {
-    // Correct local time padding
     const dateObj = new Date(year, month, i);
-    // Offset local offset timezone issue
     const offset = dateObj.getTimezoneOffset();
     const localDate = new Date(dateObj.getTime() - (offset*60*1000));
     const dStr = localDate.toISOString().split('T')[0];
@@ -102,35 +100,35 @@ export default function CalendarView() {
   };
 
   const workStatusColors = {
-    'Completed': 'bg-emerald-500/20 text-emerald-300',
-    'In Progress': 'bg-blue-500/20 text-blue-300',
-    'Blocked': 'bg-rose-500/20 text-rose-300',
-    'Not Started': 'bg-slate-500/20 text-slate-300',
+    'Completed': 'bg-emerald-100 text-emerald-800 border-emerald-300',
+    'In Progress': 'bg-indigo-100 text-indigo-800 border-indigo-300',
+    'Blocked': 'bg-rose-100 text-rose-800 border-rose-300',
+    'Not Started': 'bg-slate-100 text-slate-800 border-slate-300',
   };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
       
       {/* Interactive Calendar grid */}
-      <div className="lg:col-span-2 glass-panel p-5 rounded-2xl shadow-glass flex flex-col h-[520px]">
+      <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[560px]">
         {/* Month Toolbar */}
         <div className="flex justify-between items-center mb-5">
           <div className="flex items-center gap-2">
-            <CalIcon className="h-5 w-5 text-nexora-purple" />
-            <h3 className="text-sm font-bold text-slate-200">
+            <CalIcon className="h-5 w-5 text-indigo-600" />
+            <h3 className="text-base font-extrabold" style={{ color: '#000000' }}>
               {monthNames[month]} {year}
             </h3>
           </div>
           <div className="flex gap-2">
             <button
               onClick={handlePrevMonth}
-              className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-all cursor-pointer"
+              className="p-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 hover:bg-slate-200 transition-all cursor-pointer"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
             <button
               onClick={handleNextMonth}
-              className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-all cursor-pointer"
+              className="p-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 hover:bg-slate-200 transition-all cursor-pointer"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -138,7 +136,7 @@ export default function CalendarView() {
         </div>
 
         {/* Days of week */}
-        <div className="grid grid-cols-7 text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest pb-3 border-b border-slate-800/40">
+        <div className="grid grid-cols-7 text-center text-xs font-black uppercase tracking-wider pb-3 border-b border-slate-200" style={{ color: '#1e293b' }}>
           <span>Sun</span>
           <span>Mon</span>
           <span>Tue</span>
@@ -164,18 +162,21 @@ export default function CalendarView() {
               <div
                 key={idx}
                 onClick={() => handleDayClick(cell.dateStr)}
-                className={`p-1.5 rounded-xl border flex flex-col justify-between cursor-pointer transition-all ${
-                  cell.isCurrentMonth ? 'bg-transparent text-slate-200' : 'bg-transparent text-slate-600 border-transparent opacity-30 pointer-events-none'
+                className={`p-2 rounded-xl border flex flex-col justify-between cursor-pointer transition-all ${
+                  cell.isCurrentMonth ? 'bg-slate-50 border-slate-200 hover:border-indigo-400' : 'bg-slate-100/50 border-transparent opacity-40 pointer-events-none'
                 } ${
-                  isSelected ? 'border-nexora-purple bg-nexora-purple/5 shadow-glass' : 'border-slate-800/20 hover:border-slate-700/60'
+                  isSelected ? 'border-indigo-600 bg-indigo-50/80 shadow-xs' : ''
                 } ${
-                  isToday ? 'bg-slate-800/35 border-slate-700' : ''
+                  isToday ? 'bg-indigo-100/70 border-indigo-400' : ''
                 }`}
               >
                 <div className="flex justify-between items-center">
-                  <span className={`text-[10px] font-extrabold font-sans h-5 w-5 flex items-center justify-center rounded-full ${
-                    isToday ? 'bg-nexora-purple text-white shadow-glow-purple font-bold' : ''
-                  }`}>
+                  <span 
+                    className={`text-xs font-black h-5 w-5 flex items-center justify-center rounded-full ${
+                      isToday ? 'bg-indigo-600 text-white' : ''
+                    }`}
+                    style={{ color: isToday ? '#ffffff' : cell.isCurrentMonth ? '#000000' : '#94a3b8' }}
+                  >
                     {cell.day}
                   </span>
                 </div>
@@ -186,11 +187,11 @@ export default function CalendarView() {
                     <span
                       key={rep.id}
                       title={`${rep.employeeName}: ${rep.projectName}`}
-                      className={`h-1.5 w-1.5 rounded-full ${statusColors[rep.status]} shadow-sm`}
+                      className={`h-2 w-2 rounded-full ${statusColors[rep.status]} shadow-xs`}
                     />
                   ))}
                   {dayReps.length > 3 && (
-                    <span className="text-[7px] text-slate-500 font-extrabold leading-none">+{dayReps.length - 3}</span>
+                    <span className="text-[8px] font-black leading-none" style={{ color: '#0f172a' }}>+{dayReps.length - 3}</span>
                   )}
                 </div>
               </div>
@@ -200,43 +201,43 @@ export default function CalendarView() {
       </div>
 
       {/* Day Details Pane */}
-      <div className="glass-panel p-5 rounded-2xl shadow-glass flex flex-col h-[520px] text-left">
-        <h3 className="text-sm font-bold text-slate-300 border-b border-slate-800/40 pb-3 mb-4">
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[560px] text-left">
+        <h3 className="text-sm font-extrabold border-b border-slate-200 pb-3 mb-4" style={{ color: '#000000' }}>
           Reports for {selectedDateStr || 'Select a day'}
         </h3>
 
         <div className="flex-1 overflow-y-auto space-y-3">
           {selectedDateStr === '' ? (
-            <div className="h-full flex flex-col justify-center items-center text-center text-slate-500 text-xs">
-              <CalIcon className="h-8 w-8 text-slate-600 mb-2.5" />
+            <div className="h-full flex flex-col justify-center items-center text-center text-xs font-semibold" style={{ color: '#475569' }}>
+              <CalIcon className="h-8 w-8 text-indigo-600 mb-2.5" />
               Click any highlighted day on the calendar grid to review submitted progress reports.
             </div>
           ) : selectedDayReports.length === 0 ? (
-            <div className="h-full flex flex-col justify-center items-center text-center text-slate-500 text-xs">
+            <div className="h-full flex flex-col justify-center items-center text-center text-xs font-semibold" style={{ color: '#475569' }}>
               No reports submitted on this date.
             </div>
           ) : (
             selectedDayReports.map((rep) => (
               <div
                 key={rep.id}
-                className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/20 hover:bg-slate-800/10 transition-all flex flex-col gap-2"
+                className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 transition-all flex flex-col gap-2"
               >
                 <div className="flex justify-between items-start">
                   <div className="text-xs">
-                    <span className="font-extrabold text-slate-200 block">{rep.employeeName}</span>
-                    <span className="text-[10px] text-slate-500 font-semibold">{rep.projectName}</span>
+                    <span className="font-extrabold block" style={{ color: '#000000' }}>{rep.employeeName}</span>
+                    <span className="text-[11px] font-bold" style={{ color: '#475569' }}>{rep.projectName}</span>
                   </div>
                   <button
                     onClick={() => setInspectReport(rep)}
-                    className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/40"
+                    className="p-1.5 rounded-lg text-slate-600 hover:text-indigo-600 hover:bg-white cursor-pointer"
                   >
-                    <Eye className="h-3.5 w-3.5" />
+                    <Eye className="h-4 w-4 text-indigo-600" />
                   </button>
                 </div>
                 
-                <div className="flex justify-between text-[10px] text-slate-400 mt-1 border-t border-slate-800/50 pt-2 font-medium">
-                  <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {rep.hoursWorked} hrs</span>
-                  <span className={`px-1.5 py-0.5 rounded-md ${workStatusColors[rep.workStatus]}`}>{rep.workStatus}</span>
+                <div className="flex justify-between text-[11px] font-extrabold border-t border-slate-200 pt-2" style={{ color: '#1e293b' }}>
+                  <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5 text-indigo-600" /> {rep.hoursWorked} hrs</span>
+                  <span className={`px-2 py-0.5 rounded-md border text-[10px] ${workStatusColors[rep.workStatus]}`}>{rep.workStatus}</span>
                 </div>
               </div>
             ))
