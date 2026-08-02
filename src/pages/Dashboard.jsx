@@ -225,34 +225,6 @@ export default function Dashboard({ searchFilter, onNavigate }) {
       ]
     };
 
-    return {
-      totalMembers,
-      activeProjects,
-      completedProjectsCount,
-      submittedToday,
-      pendingToday,
-      completedTasksCount,
-      avgProgress,
-      barChartData,
-      doughnutChartData
-    };
-  }, [db]);
-
-  // RENDER ADMIN DASHBOARD WIDGETS
-  const renderAdminDashboard = () => {
-    if (!adminStatsAndCharts) return null;
-
-    const {
-      totalMembers,
-      activeProjects,
-      completedProjectsCount,
-      submittedToday,
-      pendingToday,
-      avgProgress,
-      barChartData,
-      doughnutChartData
-    } = adminStatsAndCharts;
-
     // Chart 3 Data: Team Performance Trend (Average Completion % over the last 6 days)
     const completionTrends = [];
     for (let i = 5; i >= 0; i--) {
@@ -281,6 +253,36 @@ export default function Dashboard({ searchFilter, onNavigate }) {
         }
       ]
     };
+
+    return {
+      totalMembers,
+      activeProjects,
+      completedProjectsCount,
+      submittedToday,
+      pendingToday,
+      completedTasksCount,
+      avgProgress,
+      barChartData,
+      doughnutChartData,
+      lineChartData
+    };
+  }, [db]);
+
+  // RENDER ADMIN DASHBOARD WIDGETS
+  const renderAdminDashboard = () => {
+    if (!adminStatsAndCharts) return null;
+
+    const {
+      totalMembers,
+      activeProjects,
+      completedProjectsCount,
+      submittedToday,
+      pendingToday,
+      avgProgress,
+      barChartData,
+      doughnutChartData,
+      lineChartData
+    } = adminStatsAndCharts;
 
     const chartOptions = {
       responsive: true,
@@ -479,7 +481,8 @@ export default function Dashboard({ searchFilter, onNavigate }) {
 
   // RENDER TEAM MEMBER INDIVIDUAL DASHBOARD
   const renderMemberDashboard = () => {
-    const myReports = db.reports.filter(r => r.employeeEmail === currentUser.email);
+    const myEmail = currentUser?.email || '';
+    const myReports = (db.reports || []).filter(r => r.employeeEmail === myEmail);
     const submittedCount = myReports.length;
     const approvedCount = myReports.filter(r => r.status === 'Approved').length;
     const rate = submittedCount ? Math.round((approvedCount / submittedCount) * 100) : 100;
@@ -487,7 +490,8 @@ export default function Dashboard({ searchFilter, onNavigate }) {
     const recentActivity = myReports.slice(0, 4);
 
     // Calculate active vs completed assigned projects
-    const myProjects = db.projects.filter(p => currentUser.assignedProjects.includes(p.name) || currentUser.assignedProjects.includes('All'));
+    const assigned = Array.isArray(currentUser?.assignedProjects) ? currentUser.assignedProjects : ['All'];
+    const myProjects = (db.projects || []).filter(p => assigned.includes(p.name) || assigned.includes('All'));
     const activeAssignedProjects = myProjects.filter(p => p.status !== 'Completed').length;
     const completedAssignedProjects = myProjects.filter(p => p.status === 'Completed').length;
 
