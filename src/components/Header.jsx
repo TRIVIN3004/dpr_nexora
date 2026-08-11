@@ -2,64 +2,36 @@ import React, { useState, useEffect } from 'react';
 import { Bell, Search, LogOut, ChevronDown, Check, User, Activity } from 'lucide-react';
 import { 
   getCurrentUser, 
-  getDatabase, 
   markNotificationRead, 
-  markAllNotificationsRead,
-  setCurrentUser 
+  markAllNotificationsRead
 } from '../utils/database';
+import { useDatabaseStore } from '../context/DatabaseContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Header({ onSearchChange, searchValue, pageTitle, onLogout, onUserChanged }) {
   const [user, setUser] = useState(null);
-  const [db, setDb] = useState(null);
-  const [notifications, setNotifications] = useState([]);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+
+  const { users: dbUsers, notifications: dbNotifications, invalidateStore } = useDatabaseStore();
 
   useEffect(() => {
     const currUser = getCurrentUser();
     setUser(currUser);
-
-    const loadData = async () => {
-      const database = await getDatabase();
-      setDb(database);
-      if (currUser) {
-        setNotifications(database.notifications.filter(n => n.userId === currUser.id));
-      }
-    };
-
-    loadData();
-
-    // Set up a listener for storage events to update UI state across dashboard updates
-    const handleStorageChange = async () => {
-      const updatedUser = getCurrentUser();
-      const updatedDb = await getDatabase();
-      setUser(updatedUser);
-      setDb(updatedDb);
-      if (updatedUser) {
-        setNotifications(updatedDb.notifications.filter(n => n.userId === updatedUser.id));
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('database_updated', handleStorageChange);
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('database_updated', handleStorageChange);
-    };
   }, []);
 
+  const notifications = user ? dbNotifications.filter(n => n.userId === user.id) : [];
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const handleNotificationClick = async (id) => {
     await markNotificationRead(id);
-    window.dispatchEvent(new Event('database_updated'));
+    invalidateStore('notifications');
   };
 
   const handleMarkAllRead = async () => {
     if (user) {
       await markAllNotificationsRead(user.id);
-      window.dispatchEvent(new Event('database_updated'));
+      invalidateStore('notifications');
     }
   };
 
@@ -107,7 +79,7 @@ export default function Header({ onSearchChange, searchValue, pageTitle, onLogou
             onChange={(e) => handleSwitchRole(e.target.value)}
             className="bg-transparent text-slate-200 border-none font-semibold focus:outline-none cursor-pointer"
           >
-            {db?.users.map(u => (
+            {dbUsers.map(u => (
               <option key={u.id} value={u.email} className="bg-slate-900 text-slate-200">
                 {u.role === 'admin' ? `Admin (${u.name})` : `${u.name} (Member)`}
               </option>
@@ -221,7 +193,7 @@ export default function Header({ onSearchChange, searchValue, pageTitle, onLogou
                   <div className="p-1">
                     <div className="lg:hidden flex flex-col p-2 gap-1 border-b border-slate-800/40">
                       <span className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider">Switch Profile:</span>
-                      {db?.users.slice(0, 6).map(u => (
+                      {dbUsers.slice(0, 6).map(u => (
                         <button 
                           key={u.id}
                           onClick={() => handleSwitchRole(u.email)}

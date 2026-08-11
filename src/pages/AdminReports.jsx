@@ -23,38 +23,15 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
+import { useDatabaseStore } from '../context/DatabaseContext';
+
 export default function AdminReports({ searchFilter }) {
   const [currentUser, setCurrentUser] = useState(() => getCurrentUser());
-  const [reports, setReports] = useState(() => {
-    try {
-      const saved = localStorage.getItem('nexora_dashboard_cache');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && parsed.reports) return parsed.reports;
-      }
-    } catch (e) {}
-    return [];
-  });
-  const [users, setUsers] = useState(() => {
-    try {
-      const saved = localStorage.getItem('nexora_dashboard_cache');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && parsed.users) return parsed.users.filter(u => u.role !== 'admin');
-      }
-    } catch (e) {}
-    return [];
-  });
-  const [projects, setProjects] = useState(() => {
-    try {
-      const saved = localStorage.getItem('nexora_dashboard_cache');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && parsed.projects) return parsed.projects;
-      }
-    } catch (e) {}
-    return [];
-  });
+  const { reports: dbReports, users: dbUsers, projects: dbProjects, invalidateStore } = useDatabaseStore();
+
+  const reports = dbReports || [];
+  const users = useMemo(() => (dbUsers || []).filter(u => u.role !== 'admin'), [dbUsers]);
+  const projects = dbProjects || [];
   
   // Filter states
   const [selectedEmployee, setSelectedEmployee] = useState('');
@@ -66,26 +43,8 @@ export default function AdminReports({ searchFilter }) {
   const [selectedReport, setSelectedReport] = useState(null);
   const [toast, setToast] = useState('');
 
-  const loadData = async () => {
-    setCurrentUser(getCurrentUser());
-    try {
-      const db = await getDatabase();
-      if (db) {
-        setReports(db.reports || []);
-        setUsers((db.users || []).filter(u => u.role !== 'admin'));
-        setProjects(db.projects || []);
-        try { localStorage.setItem('nexora_dashboard_cache', JSON.stringify(db)); } catch(e){}
-      }
-    } catch (err) {
-      console.warn("AdminReports background sync note:", err);
-    }
-  };
-
   useEffect(() => {
-    loadData();
-    const handleUpdate = () => loadData();
-    window.addEventListener('database_updated', handleUpdate);
-    return () => window.removeEventListener('database_updated', handleUpdate);
+    setCurrentUser(getCurrentUser());
   }, []);
 
   const triggerToast = (msg) => {
@@ -98,7 +57,7 @@ export default function AdminReports({ searchFilter }) {
     const res = await reviewReportStatus(id, status, defaultFeedback, currentUser?.name || 'Admin');
     if (res.success) {
       triggerToast(`Report ${status} successfully!`);
-      window.dispatchEvent(new Event('database_updated'));
+      invalidateStore('reports');
     }
   };
 
@@ -107,7 +66,7 @@ export default function AdminReports({ searchFilter }) {
       const res = await deleteReport(reportId);
       if (res.success) {
         triggerToast("Report successfully deleted.");
-        window.dispatchEvent(new Event('database_updated'));
+        invalidateStore('reports');
       } else {
         alert(res.error || "Failed to delete report.");
       }

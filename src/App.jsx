@@ -13,6 +13,7 @@ import Attendance from './pages/Attendance';
 import ForcePasswordChange from './pages/ForcePasswordChange';
 import WelcomeLoader from './components/WelcomeLoader';
 import { getCurrentUser, setCurrentUser } from './utils/database';
+import { DatabaseProvider } from './context/DatabaseContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function App() {
@@ -153,7 +154,7 @@ export default function App() {
 
   // If welcome loader is active, render it
   return (
-    <>
+    <DatabaseProvider>
       <AnimatePresence mode="wait">
         {isWelcomeLoading && (
           <motion.div
@@ -256,6 +257,6 @@ export default function App() {
 
         </div>
       )}
-    </>
+    </DatabaseProvider>
   );
 }

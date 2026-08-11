@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase, getDatabase } from '../utils/database';
 import { 
   addTeamMember, 
@@ -22,18 +22,13 @@ import {
   Plus
 } from 'lucide-react';
 
+import { useDatabaseStore } from '../context/DatabaseContext';
+
 export default function TeamManagement() {
-  const [members, setMembers] = useState(() => {
-    try {
-      const saved = localStorage.getItem('nexora_users_cache');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed.filter(u => u.role !== 'admin');
-      }
-    } catch (e) {}
-    return [];
-  });
-  const [projects, setProjects] = useState([]);
+  const { users: dbUsers, projects: dbProjects, invalidateStore } = useDatabaseStore();
+
+  const members = useMemo(() => (dbUsers || []).filter(u => u.role !== 'admin'), [dbUsers]);
+  const projects = dbProjects || [];
   const [toast, setToast] = useState('');
 
   // Form modals state
@@ -53,54 +48,6 @@ export default function TeamManagement() {
   const [department, setDepartment] = useState('Engineering');
   const [phone, setPhone] = useState('');
   const [assignedProjects, setAssignedProjects] = useState([]);
-
-  const loadData = async () => {
-    // 1. Instant Cache Hydration
-    try {
-      const saved = localStorage.getItem('nexora_users_cache');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setMembers(parsed.filter(u => u.role !== 'admin'));
-        }
-      }
-    } catch (e) {}
-
-    // 2. Parallel background fetch for sub-second loading
-    try {
-      const [usersRes, projectsRes] = await Promise.all([
-        supabase.from('users').select('*').order('id', { ascending: true }),
-        supabase.from('projects').select('*').order('id', { ascending: true })
-      ]);
-
-      if (usersRes.data && usersRes.data.length > 0) {
-        setMembers(usersRes.data.filter(u => u.role !== 'admin'));
-        try { localStorage.setItem('nexora_users_cache', JSON.stringify(usersRes.data)); } catch(e){}
-      } else {
-        // Fallback to getDatabase if table empty
-        const db = await getDatabase();
-        if (db && db.users && db.users.length > 0) {
-          setMembers(db.users.filter(u => u.role !== 'admin'));
-          setProjects(db.projects || []);
-        }
-      }
-
-      if (projectsRes.data && projectsRes.data.length > 0) {
-        setProjects(projectsRes.data);
-      }
-    } catch (err) {
-      console.warn("Background fetch note:", err);
-      const db = await getDatabase();
-      if (db && db.users) setMembers(db.users.filter(u => u.role !== 'admin'));
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-    const handleUpdate = () => loadData();
-    window.addEventListener('database_updated', handleUpdate);
-    return () => window.removeEventListener('database_updated', handleUpdate);
-  }, []);
 
   const triggerToast = (msg) => {
     setToast(msg);
@@ -125,7 +72,7 @@ export default function TeamManagement() {
       triggerToast(`Account created for ${name}!`);
       setShowAddModal(false);
       resetForm();
-      window.dispatchEvent(new Event('database_updated'));
+      invalidateStore('users');
     } else {
       alert(res.error);
     }
@@ -148,7 +95,7 @@ export default function TeamManagement() {
       triggerToast(`Account details updated!`);
       setShowEditModal(false);
       resetForm();
-      window.dispatchEvent(new Event('database_updated'));
+      invalidateStore('users');
     } else {
       alert(res.error);
     }
@@ -159,7 +106,7 @@ export default function TeamManagement() {
       const res = await deleteTeamMember(id);
       if (res.success) {
         triggerToast(`Removed ${name} from registry.`);
-        window.dispatchEvent(new Event('database_updated'));
+        invalidateStore('users');
       } else {
         alert(res.error);
       }
@@ -198,7 +145,7 @@ export default function TeamManagement() {
       setNewProjectName('');
       setNewProjectDescription('');
       setShowAddProjectModal(false);
-      window.dispatchEvent(new Event('database_updated'));
+      invalidateStore('projects');
     } else {
       alert(res.error || 'Failed to add project.');
     }
@@ -209,7 +156,7 @@ export default function TeamManagement() {
       const res = await deleteProject(projectId);
       if (res.success) {
         triggerToast(`Project "${projectName}" deleted!`);
-        window.dispatchEvent(new Event('database_updated'));
+        invalidateStore('projects');
       } else {
         alert(res.error || 'Failed to delete project.');
       }
@@ -221,7 +168,7 @@ export default function TeamManagement() {
     const res = await editProject(projectId, { status: nextStatus });
     if (res.success) {
       triggerToast(`Project "${projectName}" marked as ${nextStatus}!`);
-      window.dispatchEvent(new Event('database_updated'));
+      invalidateStore('projects');
     } else {
       alert(res.error || 'Failed to update project status.');
     }

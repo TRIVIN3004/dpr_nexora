@@ -20,6 +20,8 @@ import {
   updateDailyReport 
 } from '../utils/database';
 import confetti from 'canvas-confetti';
+import { compressImage, uploadFileToStorage } from '../utils/storageService';
+import { useDatabaseStore } from '../context/DatabaseContext';
 
 export default function DprForm({ onActionSuccess }) {
   const [currentUser, setCurrentUser] = useState(null);
@@ -113,16 +115,20 @@ export default function DprForm({ onActionSuccess }) {
 
   if (!currentUser) return null;
 
-  // Handle image loading (base64 simulation)
-  const handleImageUpload = (e) => {
+  const { invalidateStore } = useDatabaseStore();
+
+  // Handle image compression & object storage upload
+  const handleImageUpload = async (e) => {
     const selected = Array.from(e.target.files);
-    selected.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setImages(prev => [...prev, event.target.result]);
-      };
-      reader.readAsDataURL(file);
-    });
+    for (const file of selected) {
+      try {
+        const compressed = await compressImage(file, 1200, 0.8);
+        const storageUrl = await uploadFileToStorage(compressed, 'reports');
+        setImages(prev => [...prev, storageUrl]);
+      } catch (err) {
+        console.warn("Image upload error:", err);
+      }
+    }
   };
 
   const removeImage = (index) => {
@@ -177,7 +183,7 @@ export default function DprForm({ onActionSuccess }) {
       if (res.success) {
         confetti({ particleCount: 80, spread: 60, origin: { y: 0.8 } });
         if (onActionSuccess) onActionSuccess("Daily Progress Report updated successfully!");
-        window.dispatchEvent(new Event('database_updated'));
+        invalidateStore('reports');
       } else {
         alert(res.error);
       }
@@ -186,7 +192,7 @@ export default function DprForm({ onActionSuccess }) {
       if (res.success) {
         confetti({ particleCount: 120, spread: 80, origin: { y: 0.8 } });
         if (onActionSuccess) onActionSuccess("Daily Progress Report submitted successfully!");
-        window.dispatchEvent(new Event('database_updated'));
+        invalidateStore('reports');
       }
     }
   };

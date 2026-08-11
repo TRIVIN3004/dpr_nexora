@@ -1,16 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Calendar, User, Briefcase, Clock, Percent, AlertCircle, FileText, CheckCircle2, XCircle, Edit, Download } from 'lucide-react';
-import { reviewReportStatus } from '../utils/database';
+import { reviewReportStatus, getReportDetails } from '../utils/database';
 import { motion, AnimatePresence } from 'framer-motion';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
-export default function ReportModal({ report, isOpen, onClose, currentUser, onActionSuccess }) {
-  const [feedback, setFeedback] = useState(report?.feedback || '');
+export default function ReportModal({ report: initialReport, isOpen, onClose, currentUser, onActionSuccess }) {
+  const [fullReport, setFullReport] = useState(initialReport);
+  const [feedback, setFeedback] = useState(initialReport?.feedback || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
 
-  if (!isOpen || !report) return null;
+  useEffect(() => {
+    setFullReport(initialReport);
+    setFeedback(initialReport?.feedback || '');
 
+    if (isOpen && initialReport?.id) {
+      // Lazy load full details if images or challenges are missing from list query
+      const loadDetails = async () => {
+        setIsLoadingDetails(true);
+        const details = await getReportDetails(initialReport.id);
+        if (details) {
+          setFullReport(details);
+        }
+        setIsLoadingDetails(false);
+      };
+      loadDetails();
+    }
+  }, [isOpen, initialReport]);
+
+  if (!isOpen || !fullReport) return null;
+
+  const report = fullReport;
   const isAdmin = currentUser?.role === 'admin';
   const canEdit = currentUser?.role === 'member' && report.status === 'Pending' && report.date === new Date().toISOString().split('T')[0];
 

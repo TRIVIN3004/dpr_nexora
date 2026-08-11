@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getCurrentUser, editTeamMember, getDatabase } from '../utils/database';
+import { compressImage, uploadFileToStorage } from '../utils/storageService';
+import { useDatabaseStore } from '../context/DatabaseContext';
 import { User, Shield, Bell, Key, Sparkles, Building2, CheckCircle2, Camera } from 'lucide-react';
 
 const PRESET_AVATARS = [
@@ -18,6 +20,7 @@ const PRESET_AVATARS = [
 export default function Settings() {
   const [currentUser, setCurrentUser] = useState(null);
   const [toast, setToast] = useState('');
+  const { invalidateStore } = useDatabaseStore();
 
   // Profile Form States
   const [name, setName] = useState('');
@@ -62,47 +65,25 @@ export default function Settings() {
     e.preventDefault();
     const res = await editTeamMember(currentUser.id, { name, email, phone, avatar: avatarUrl });
     if (res.success) {
-      // Sync sessions user object
-      const db = await getDatabase();
-      const updatedUser = db.users.find(u => u.id === currentUser.id);
-      sessionStorage.setItem("nexora_current_user", JSON.stringify(updatedUser));
-      
+      sessionStorage.setItem("nexora_current_user", JSON.stringify({ ...currentUser, name, email, phone, avatar: avatarUrl }));
       triggerToast("Profile details updated successfully!");
-      window.dispatchEvent(new Event('database_updated'));
+      invalidateStore('users');
     } else {
       alert(res.error);
     }
   };
 
-  const handleAvatarFileChange = (e) => {
+  const handleAvatarFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const maxDim = 200; // 200x200 pixels is perfect for a compact profile picture
-        
-        canvas.width = maxDim;
-        canvas.height = maxDim;
-        
-        const ctx = canvas.getContext('2d');
-        const minDim = Math.min(img.width, img.height);
-        
-        // Crop the image into a perfect square from the center
-        const startX = (img.width - minDim) / 2;
-        const startY = (img.height - minDim) / 2;
-        
-        ctx.drawImage(img, startX, startY, minDim, minDim, 0, 0, maxDim, maxDim);
-        
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85); // Compress to 85% JPEG quality
-        setAvatarUrl(dataUrl);
-      };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
+    try {
+      const compressed = await compressImage(file, 300, 0.85);
+      const publicUrl = await uploadFileToStorage(compressed, 'avatars');
+      setAvatarUrl(publicUrl);
+    } catch (err) {
+      console.warn("Avatar upload error:", err);
+    }
   };
 
   const handlePasswordSave = async (e) => {

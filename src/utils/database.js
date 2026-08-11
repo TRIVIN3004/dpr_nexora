@@ -164,11 +164,11 @@ const DEFAULT_FALLBACK_DATABASE = {
 export const getDatabase = async () => {
   try {
     const [usersRes, projectsRes, reportsRes, announcementsRes, notificationsRes] = await Promise.all([
-      supabase.from('users').select('*').order('id', { ascending: true }),
-      supabase.from('projects').select('*').order('id', { ascending: true }),
-      supabase.from('reports').select('*').order('date', { ascending: false }).order('id', { ascending: false }).limit(300),
-      supabase.from('announcements').select('*').order('date', { ascending: false }).order('id', { ascending: false }).limit(30),
-      supabase.from('notifications').select('*').order('date', { ascending: false }).limit(50)
+      supabase.from('users').select('id, name, email, role, department, assignedProjects, phone, mustChangePassword, avatar').order('id', { ascending: true }).limit(100),
+      supabase.from('projects').select('id, name, status, lead, description').order('id', { ascending: true }).limit(50),
+      supabase.from('reports').select('id, date, employeeName, employeeId, employeeEmail, projectName, moduleName, workStatus, hoursWorked, percentageCompleted, status, feedback, approvedBy, approvedAt, taskCompletedToday').order('date', { ascending: false }).order('id', { ascending: false }).limit(100),
+      supabase.from('announcements').select('id, title, content, date, sender').order('date', { ascending: false }).order('id', { ascending: false }).limit(30),
+      supabase.from('notifications').select('id, userId, type, title, message, date, read').order('date', { ascending: false }).limit(50)
     ]);
 
     if (usersRes.error || projectsRes.error || reportsRes.error || announcementsRes.error || notificationsRes.error) {
@@ -205,6 +205,21 @@ export const getDatabase = async () => {
       } catch(e){}
     }
     return DEFAULT_FALLBACK_DATABASE;
+  }
+};
+
+export const getReportDetails = async (reportId) => {
+  try {
+    const { data, error } = await supabase
+      .from('reports')
+      .select('*')
+      .eq('id', reportId)
+      .single();
+
+    if (error || !data) return null;
+    return data;
+  } catch (e) {
+    return null;
   }
 };
 
@@ -468,7 +483,7 @@ export const deleteProject = async (projectId) => {
 
     if (deleteErr) throw deleteErr;
 
-    const { data: allUsers } = await supabase.from('users').select('*');
+    const { data: allUsers } = await supabase.from('users').select('id, assignedProjects');
     if (allUsers) {
       const updates = allUsers.map(async (u) => {
         if (u.assignedProjects && u.assignedProjects.includes(project.name)) {

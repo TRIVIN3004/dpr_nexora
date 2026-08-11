@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { getDatabase, getCurrentUser } from '../utils/database';
+import { getCurrentUser } from '../utils/database';
+import { useDatabaseStore } from '../context/DatabaseContext';
 import { ChevronLeft, ChevronRight, Eye, Calendar as CalIcon, Clock, Layers } from 'lucide-react';
 import ReportModal from '../components/ReportModal';
 
 export default function CalendarView() {
   const [currentUser, setCurrentUser] = useState(null);
-  const [reports, setReports] = useState([]);
+  const { reports: dbReports } = useDatabaseStore();
+  const reports = dbReports || [];
   const [currentDate, setCurrentDate] = useState(new Date());
   
   // Selection detail state
@@ -13,17 +15,8 @@ export default function CalendarView() {
   const [selectedDateStr, setSelectedDateStr] = useState('');
   const [inspectReport, setInspectReport] = useState(null);
 
-  const loadData = async () => {
-    setCurrentUser(getCurrentUser());
-    const db = await getDatabase();
-    if (db) setReports(db.reports);
-  };
-
   useEffect(() => {
-    loadData();
-    const handleUpdate = () => loadData();
-    window.addEventListener('database_updated', handleUpdate);
-    return () => window.removeEventListener('database_updated', handleUpdate);
+    setCurrentUser(getCurrentUser());
   }, []);
 
   const year = currentDate.getFullYear();

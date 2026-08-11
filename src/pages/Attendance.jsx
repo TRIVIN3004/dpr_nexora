@@ -39,6 +39,7 @@ import AdminAttendanceModal from '../components/Attendance/AdminAttendanceModal'
 import ReactivateUserModal from '../components/Attendance/ReactivateUserModal';
 
 import { getDatabase, getCurrentUser } from '../utils/database';
+import { useDatabaseStore } from '../context/DatabaseContext';
 import { 
   getAttendanceRecords, 
   getAttendanceSettings, 
@@ -126,61 +127,41 @@ export default function Attendance() {
     setTimeout(() => setToast(''), 3500);
   };
 
+  const { users: dbUsers, projects: dbProjects, attendance: dbAttendance, invalidateStore } = useDatabaseStore();
+
   const loadData = async () => {
     const currUser = getCurrentUser();
     setCurrentUser(currUser);
 
-    // 1. Instant Cache Hydration (0ms load - Protect against empty arrays)
-    try {
-      const savedUsers = localStorage.getItem('nexora_users_cache');
-      const savedRecords = localStorage.getItem('nexora_attendance_cache');
-      if (savedUsers) {
-        const parsed = JSON.parse(savedUsers);
-        if (Array.isArray(parsed) && parsed.length > 0) setUsers(parsed);
-      }
-      if (savedRecords) {
-        const parsedR = JSON.parse(savedRecords);
-        if (Array.isArray(parsedR) && parsedR.length > 0) setRecords(parsedR);
-      }
-    } catch (e) {}
-
-    // Open page view instantly
+    if (dbUsers && dbUsers.length > 0) setUsers(dbUsers);
+    if (dbProjects && dbProjects.length > 0) setProjects(dbProjects);
+    
     setLoading(false);
 
-    // 2. Fast Parallel Background Fetch
     try {
-      const [dbData, attRecords, attSettings] = await Promise.all([
-        getDatabase(),
-        getAttendanceRecords(),
+      const [attRecords, attSettings] = await Promise.all([
+        getAttendanceRecords(50),
         getAttendanceSettings()
       ]);
 
-      if (dbData && dbData.users && dbData.users.length > 0) {
-        setUsers(dbData.users);
-        try { localStorage.setItem('nexora_users_cache', JSON.stringify(dbData.users)); } catch(e){}
-      }
-      if (dbData && dbData.projects && dbData.projects.length > 0) {
-        setProjects(dbData.projects);
-      }
       if (attRecords && attRecords.length > 0) {
         setRecords(attRecords);
-        try { localStorage.setItem('nexora_attendance_cache', JSON.stringify(attRecords)); } catch(e){}
+      } else if (dbAttendance && dbAttendance.length > 0) {
+        setRecords(dbAttendance);
       }
+
       if (attSettings) {
         setSettings(attSettings);
         setSettingsForm(attSettings);
       }
     } catch (err) {
-      console.warn("Background sync note:", err);
+      console.warn("Attendance load note:", err);
     }
   };
 
   useEffect(() => {
     loadData();
-    const handleUpdate = () => loadData();
-    window.addEventListener('database_updated', handleUpdate);
-    return () => window.removeEventListener('database_updated', handleUpdate);
-  }, []);
+  }, [dbUsers, dbProjects, dbAttendance]);
 
   const isAdmin = currentUser?.role === 'admin';
   const todayStr = getTodayString();

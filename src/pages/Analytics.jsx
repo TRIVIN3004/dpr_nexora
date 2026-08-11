@@ -1,38 +1,17 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { getDatabase } from '../utils/database';
+import React, { useState, useMemo } from 'react';
 import { Bar, Line, Doughnut } from 'react-chartjs-2';
 import { BarChart3, TrendingUp, Layers, Award } from 'lucide-react';
 import StatCard from '../components/StatCard';
+import { useDatabaseStore } from '../context/DatabaseContext';
 
 export default function Analytics() {
-  const [db, setDb] = useState(() => {
-    try {
-      const saved = localStorage.getItem('nexora_dashboard_cache');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && parsed.users) return parsed;
-      }
-    } catch (e) {}
-    return null;
-  });
+  const { users, projects, reports } = useDatabaseStore();
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const data = await getDatabase();
-        if (data) {
-          setDb(data);
-          try { localStorage.setItem('nexora_dashboard_cache', JSON.stringify(data)); } catch(e){}
-        }
-      } catch (err) {
-        console.warn("Analytics background sync note:", err);
-      }
-    };
-    loadData();
-    const handleUpdate = () => loadData();
-    window.addEventListener('database_updated', handleUpdate);
-    return () => window.removeEventListener('database_updated', handleUpdate);
-  }, []);
+  const db = useMemo(() => ({
+    users: users || [],
+    projects: projects || [],
+    reports: reports || []
+  }), [users, projects, reports]);
 
   const analyticsStatsAndCharts = useMemo(() => {
     if (!db) return null;

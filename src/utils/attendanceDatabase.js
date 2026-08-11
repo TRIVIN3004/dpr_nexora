@@ -138,7 +138,7 @@ export const updateAttendanceSettings = async (newSettings) => {
 };
 
 // 3. Get Attendance Records (Instant Cache-First Pattern)
-export const getAttendanceRecords = async () => {
+export const getAttendanceRecords = async (limit = 50) => {
   // Read from localStorage cache instantly
   if (!localAttendanceCache) {
     try {
@@ -152,15 +152,15 @@ export const getAttendanceRecords = async () => {
     try {
       const { data, error } = await supabase
         .from('attendance')
-        .select('*')
-        .order('date', { ascending: false });
+        .select('id, employeeId, employeeName, department, project, role, date, checkInTime, checkOutTime, status, remarks, markedBy')
+        .order('date', { ascending: false })
+        .limit(limit);
 
       if (!error && data && data.length > 0) {
         localAttendanceCache = data;
         try {
           localStorage.setItem('nexora_attendance_cache', JSON.stringify(data));
         } catch (e) {}
-        window.dispatchEvent(new Event('database_updated'));
       }
     } catch (err) {}
   };
@@ -175,7 +175,7 @@ export const getAttendanceRecords = async () => {
   // Fallback to seed cache if empty
   if (!localAttendanceCache) {
     try {
-      const { data: users } = await supabase.from('users').select('*');
+      const { data: users } = await supabase.from('users').select('id, name, department, role, assignedProjects');
       localAttendanceCache = seedSampleAttendanceData(users || []);
     } catch (e) {
       localAttendanceCache = seedSampleAttendanceData([]);

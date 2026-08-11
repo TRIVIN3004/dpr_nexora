@@ -53,18 +53,12 @@ ChartJS.register(
   Filler
 );
 
+import { useDatabaseStore } from '../context/DatabaseContext';
+
 export default function Dashboard({ searchFilter, onNavigate }) {
   const [currentUser, setCurrentUser] = useState(() => getCurrentUser());
-  const [db, setDb] = useState(() => {
-    try {
-      const saved = localStorage.getItem('nexora_dashboard_cache');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && parsed.users) return parsed;
-      }
-    } catch (e) {}
-    return null;
-  });
+  const { users, projects, reports, announcements, invalidateStore } = useDatabaseStore();
+
   const [selectedReport, setSelectedReport] = useState(null);
   const [showProjectsModal, setShowProjectsModal] = useState(false);
   
@@ -73,39 +67,18 @@ export default function Dashboard({ searchFilter, onNavigate }) {
   const [annContent, setAnnContent] = useState('');
   const [toast, setToast] = useState('');
 
-  const loadData = async () => {
-    const user = getCurrentUser();
-    setCurrentUser(user);
-
-    // 1. Instant Cache Hydration
-    try {
-      const saved = localStorage.getItem('nexora_dashboard_cache');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && parsed.users) setDb(parsed);
-      }
-    } catch (e) {}
-
-    // 2. Non-blocking background sync
-    try {
-      const data = await getDatabase();
-      if (data && data.users) {
-        setDb(data);
-        try { localStorage.setItem('nexora_dashboard_cache', JSON.stringify(data)); } catch(e){}
-      }
-    } catch (err) {
-      console.warn("Dashboard background sync note:", err);
-    }
-  };
+  const db = useMemo(() => ({
+    users: users || [],
+    projects: projects || [],
+    reports: reports || [],
+    announcements: announcements || []
+  }), [users, projects, reports, announcements]);
 
   useEffect(() => {
-    loadData();
-    const handleUpdate = () => loadData();
-    window.addEventListener('database_updated', handleUpdate);
-    return () => window.removeEventListener('database_updated', handleUpdate);
+    setCurrentUser(getCurrentUser());
   }, []);
 
-  if (!db || !currentUser) {
+  if (!currentUser) {
     return (
       <div className="flex h-64 items-center justify-center">
         <div className="h-8 w-8 rounded-full border-4 border-nexora-purple border-t-transparent animate-spin" />
@@ -126,7 +99,7 @@ export default function Dashboard({ searchFilter, onNavigate }) {
     const res = await reviewReportStatus(reportId, status, feedbackMsg, currentUser.name);
     if (res.success) {
       triggerToast(`Report ${status} successfully!`);
-      window.dispatchEvent(new Event('database_updated'));
+      invalidateStore('reports');
     }
   };
 
@@ -138,7 +111,7 @@ export default function Dashboard({ searchFilter, onNavigate }) {
       triggerToast('Announcement published successfully!');
       setAnnTitle('');
       setAnnContent('');
-      window.dispatchEvent(new Event('database_updated'));
+      invalidateStore('announcements');
     }
   };
 
