@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Search, LogOut, ChevronDown, Check, User, Activity } from 'lucide-react';
+import { Bell, Search, LogOut, ChevronDown, Check, User, Activity, Sun, Moon } from 'lucide-react';
 import { 
   getCurrentUser, 
   markNotificationRead, 
   markAllNotificationsRead
 } from '../utils/database';
 import { useDatabaseStore } from '../context/DatabaseContext';
+import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Header({ onSearchChange, searchValue, pageTitle, onLogout, onUserChanged }) {
@@ -13,6 +14,7 @@ export default function Header({ onSearchChange, searchValue, pageTitle, onLogou
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
+  const { theme, toggleTheme, isLight } = useTheme();
   const { users: dbUsers, notifications: dbNotifications, invalidateStore } = useDatabaseStore();
 
   useEffect(() => {
@@ -68,12 +70,12 @@ export default function Header({ onSearchChange, searchValue, pageTitle, onLogou
       </div>
 
       {/* Action Badges & Profile */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         
         {/* Quick Testing Role Switcher in Header */}
         <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-white">
           <Activity className="h-3 w-3 text-cyan-400 animate-pulse" />
-          <span className="text-slate-300">Testing Mode:</span>
+          <span className="text-slate-300">Testing:</span>
           <select 
             value={user?.email || ''} 
             onChange={(e) => handleSwitchRole(e.target.value)}
@@ -86,6 +88,41 @@ export default function Header({ onSearchChange, searchValue, pageTitle, onLogou
             ))}
           </select>
         </div>
+
+        {/* Light / Dark Mode Toggle Button */}
+        <button 
+          onClick={toggleTheme}
+          title={isLight ? "Switch to Dark Mode" : "Switch to Light Mode"}
+          className="relative px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white focus:outline-none transition-all duration-200 cursor-pointer shadow-sm flex items-center gap-1.5 group active:scale-[0.96]"
+        >
+          <AnimatePresence mode="wait" initial={false}>
+            {isLight ? (
+              <motion.div
+                key="sun"
+                initial={{ rotate: -90, scale: 0, opacity: 0 }}
+                animate={{ rotate: 0, scale: 1, opacity: 1 }}
+                exit={{ rotate: 90, scale: 0, opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="flex items-center gap-1.5"
+              >
+                <Sun className="h-4 w-4 text-amber-400" />
+                <span className="text-xs font-black text-amber-300">Light</span>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="moon"
+                initial={{ rotate: 90, scale: 0, opacity: 0 }}
+                animate={{ rotate: 0, scale: 1, opacity: 1 }}
+                exit={{ rotate: -90, scale: 0, opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="flex items-center gap-1.5"
+              >
+                <Moon className="h-4 w-4 text-cyan-300" />
+                <span className="text-xs font-black text-slate-200">Dark</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </button>
 
         {/* Notifications Dropdown */}
         <div className="relative">

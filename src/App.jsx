@@ -14,6 +14,7 @@ import ForcePasswordChange from './pages/ForcePasswordChange';
 import WelcomeLoader from './components/WelcomeLoader';
 import { getCurrentUser, setCurrentUser } from './utils/database';
 import { DatabaseProvider } from './context/DatabaseContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function App() {
@@ -154,122 +155,124 @@ export default function App() {
 
   // If welcome loader is active, render it
   return (
-    <DatabaseProvider>
-      <AnimatePresence mode="wait">
-        {isWelcomeLoading && (
-          <motion.div
-            key="welcome-loader"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="fixed inset-0 z-[9999]"
-          >
-            <WelcomeLoader />
-          </motion.div>
+    <ThemeProvider>
+      <DatabaseProvider>
+        <AnimatePresence mode="wait">
+          {isWelcomeLoading && (
+            <motion.div
+              key="welcome-loader"
+              initial={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
+              className="fixed inset-0 z-[9999]"
+            >
+              <WelcomeLoader />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {!isWelcomeLoading && !user && (
+          <div className="min-h-screen w-full bg-slate-950">
+            <Login onLoginSuccess={handleLoginSuccess} />
+          </div>
         )}
-      </AnimatePresence>
 
-      {!isWelcomeLoading && !user && (
-        <div className="min-h-screen w-full bg-slate-950">
-          <Login onLoginSuccess={handleLoginSuccess} />
-        </div>
-      )}
-
-      {!isWelcomeLoading && user && user.mustChangePassword && (
-        <ForcePasswordChange 
-          currentUser={user} 
-          onPasswordChanged={(updatedUser) => {
-            setUser(updatedUser);
-            showToast("Password updated. Welcome to Nexora DPR Portal!");
-          }} 
-        />
-      )}
-
-      {!isWelcomeLoading && user && !user.mustChangePassword && (
-        <div className="flex h-screen w-full bg-slate-950 overflow-hidden text-slate-100">
-          
-          {/* Toast Alert popup */}
-          <AnimatePresence>
-            {globalToast && (
-              <motion.div 
-                initial={{ opacity: 0, y: -20, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -20, scale: 0.9 }}
-                className="fixed top-5 right-5 z-50 px-4 py-2.5 rounded-xl bg-slate-900 border border-indigo-500 shadow-xl text-xs text-slate-100 font-semibold flex items-center gap-2"
-              >
-                <span className="h-2 w-2 rounded-full bg-indigo-400 animate-ping" />
-                {globalToast}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Responsive Sidebar component */}
-          <Sidebar 
-            currentTab={currentTab} 
-            onTabChange={onTabSelect}
-            isCollapsed={isSidebarCollapsed}
-            setIsCollapsed={setIsSidebarCollapsed}
-            mobileOpen={mobileSidebarOpen}
-            setMobileOpen={setMobileSidebarOpen}
+        {!isWelcomeLoading && user && user.mustChangePassword && (
+          <ForcePasswordChange 
+            currentUser={user} 
+            onPasswordChanged={(updatedUser) => {
+              setUser(updatedUser);
+              showToast("Password updated. Welcome to Nexora DPR Portal!");
+            }} 
           />
+        )}
 
-          {/* Main viewport workspace wrapper */}
-          <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+        {!isWelcomeLoading && user && !user.mustChangePassword && (
+          <div className="flex h-screen w-full bg-slate-950 overflow-hidden text-slate-100">
             
-            {/* Header navigation bar */}
-            <Header 
-              pageTitle={getPageTitle()} 
-              onSearchChange={setSearchValue}
-              searchValue={searchValue}
-              onLogout={handleLogout}
-              onUserChanged={handleUserSessionSwapped}
+            {/* Toast Alert popup */}
+            <AnimatePresence>
+              {globalToast && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -20, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                  className="fixed top-5 right-5 z-50 px-4 py-2.5 rounded-xl bg-slate-900 border border-indigo-500 shadow-xl text-xs text-slate-100 font-semibold flex items-center gap-2"
+                >
+                  <span className="h-2 w-2 rounded-full bg-indigo-400 animate-ping" />
+                  {globalToast}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Responsive Sidebar component */}
+            <Sidebar 
+              currentTab={currentTab} 
+              onTabChange={onTabSelect}
+              isCollapsed={isSidebarCollapsed}
+              setIsCollapsed={setIsSidebarCollapsed}
+              mobileOpen={mobileSidebarOpen}
+              setMobileOpen={setMobileSidebarOpen}
             />
 
-            {/* Content viewport area with rich grey mesh background and animated ambient effects */}
-            <main className="flex-1 overflow-y-auto p-4 md:p-6 portal-grey-mesh relative flex flex-col justify-between">
+            {/* Main viewport workspace wrapper */}
+            <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
               
-              {/* Zero-Egress GPU Animated Grey Ambient Layer */}
-              <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-                {/* Floating ambient glowing grey gradient orbs */}
-                <div className="absolute -top-20 -left-20 w-[500px] h-[500px] rounded-full bg-slate-600/15 blur-[140px] animate-float-1" />
-                <div className="absolute top-1/3 -right-20 w-[480px] h-[480px] rounded-full bg-zinc-600/12 blur-[140px] animate-float-2" />
-                <div className="absolute -bottom-20 left-1/4 w-[520px] h-[520px] rounded-full bg-slate-700/20 blur-[130px] animate-float-3" />
-                <div className="absolute top-2/3 right-1/4 w-[350px] h-[350px] rounded-full bg-indigo-950/25 blur-[120px] animate-float-1" />
+              {/* Header navigation bar */}
+              <Header 
+                pageTitle={getPageTitle()} 
+                onSearchChange={setSearchValue}
+                searchValue={searchValue}
+                onLogout={handleLogout}
+                onUserChanged={handleUserSessionSwapped}
+              />
+
+              {/* Content viewport area with rich grey mesh background and animated ambient effects */}
+              <main className="flex-1 overflow-y-auto p-4 md:p-6 portal-grey-mesh relative flex flex-col justify-between">
                 
-                {/* Subtle Modern Grey Matrix Grid & Dot Layer */}
-                <div className="absolute inset-0 bg-grid-slate-pattern opacity-35" />
-                <div className="absolute inset-0 bg-dots-grey opacity-20" />
-              </div>
+                {/* Zero-Egress GPU Animated Grey Ambient Layer */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+                  {/* Floating ambient glowing grey gradient orbs */}
+                  <div className="absolute -top-20 -left-20 w-[500px] h-[500px] rounded-full bg-slate-600/15 blur-[140px] animate-float-1" />
+                  <div className="absolute top-1/3 -right-20 w-[480px] h-[480px] rounded-full bg-zinc-600/12 blur-[140px] animate-float-2" />
+                  <div className="absolute -bottom-20 left-1/4 w-[520px] h-[520px] rounded-full bg-slate-700/20 blur-[130px] animate-float-3" />
+                  <div className="absolute top-2/3 right-1/4 w-[350px] h-[350px] rounded-full bg-indigo-950/25 blur-[120px] animate-float-1" />
+                  
+                  {/* Subtle Modern Grey Matrix Grid & Dot Layer */}
+                  <div className="absolute inset-0 bg-grid-slate-pattern opacity-35" />
+                  <div className="absolute inset-0 bg-dots-grey opacity-20" />
+                </div>
 
-              {/* Animated Page Transitions Content */}
-              <div className="flex-1 relative z-10">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={currentTab}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.2 }}
-                    className="h-full"
-                  >
-                    {renderTabContent()}
-                  </motion.div>
-                </AnimatePresence>
-              </div>
+                {/* Animated Page Transitions Content */}
+                <div className="flex-1 relative z-10">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={currentTab}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.2 }}
+                      className="h-full"
+                    >
+                      {renderTabContent()}
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
 
-              {/* Premium layout footer */}
-              <footer className="mt-8 pt-6 border-t border-slate-800/60 text-center select-none text-[10px] tracking-widest font-bold text-slate-500 uppercase flex flex-col sm:flex-row justify-between items-center gap-2 relative z-10">
-                <span>© {new Date().getFullYear()} GoNexora Technologies</span>
-                <span className="bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent font-extrabold">
-                  Building Tomorrow, Today.
-                </span>
-              </footer>
+                {/* Premium layout footer */}
+                <footer className="mt-8 pt-6 border-t border-slate-800/60 text-center select-none text-[10px] tracking-widest font-bold text-slate-500 uppercase flex flex-col sm:flex-row justify-between items-center gap-2 relative z-10">
+                  <span>© {new Date().getFullYear()} GoNexora Technologies</span>
+                  <span className="bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent font-extrabold">
+                    Building Tomorrow, Today.
+                  </span>
+                </footer>
 
-            </main>
+              </main>
+            </div>
+
           </div>
-
-        </div>
-      )}
-    </DatabaseProvider>
+        )}
+      </DatabaseProvider>
+    </ThemeProvider>
   );
 }
