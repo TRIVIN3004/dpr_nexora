@@ -170,7 +170,7 @@ export default function App() {
       </AnimatePresence>
 
       {!isWelcomeLoading && !user && (
-        <div className="min-h-screen w-full bg-slate-900">
+        <div className="min-h-screen w-full bg-slate-950">
           <Login onLoginSuccess={handleLoginSuccess} />
         </div>
       )}
@@ -186,7 +186,7 @@ export default function App() {
       )}
 
       {!isWelcomeLoading && user && !user.mustChangePassword && (
-        <div className="flex h-screen w-full bg-slate-900 overflow-hidden text-slate-900">
+        <div className="flex h-screen w-full bg-slate-950 overflow-hidden text-slate-100">
           
           {/* Toast Alert popup */}
           <AnimatePresence>
@@ -225,18 +225,18 @@ export default function App() {
               onUserChanged={handleUserSessionSwapped}
             />
 
-            {/* Content viewport area with Animated Grey Background (0 Egress) */}
-            <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-100/90 relative flex flex-col justify-between">
+            {/* Content viewport area matching sidebar background with animated ambient glows */}
+            <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-950/90 backdrop-blur-xl relative flex flex-col justify-between">
               
-              {/* Zero-Egress GPU Animated Grey Ambient Layer */}
+              {/* Zero-Egress GPU Animated Ambient Layer */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-                {/* Floating ambient grey-indigo gradient orbs */}
-                <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-slate-300/40 blur-[80px] animate-float-1" />
-                <div className="absolute top-1/2 -right-20 w-[420px] h-[420px] rounded-full bg-indigo-200/35 blur-[90px] animate-float-2" />
-                <div className="absolute -bottom-20 left-1/3 w-96 h-96 rounded-full bg-cyan-100/40 blur-[80px] animate-float-3" />
+                {/* Floating ambient glowing gradient orbs */}
+                <div className="absolute -top-24 -left-24 w-[450px] h-[450px] rounded-full bg-indigo-600/10 blur-[120px] animate-float-1" />
+                <div className="absolute top-1/2 -right-20 w-[450px] h-[450px] rounded-full bg-cyan-600/10 blur-[130px] animate-float-2" />
+                <div className="absolute -bottom-20 left-1/3 w-[450px] h-[450px] rounded-full bg-purple-600/10 blur-[120px] animate-float-3" />
                 
                 {/* Subtle Modern Matrix Grid */}
-                <div className="absolute inset-0 bg-grid-slate-pattern opacity-50" />
+                <div className="absolute inset-0 bg-grid-slate-pattern opacity-30" />
               </div>
 
               {/* Animated Page Transitions Content */}
@@ -256,9 +256,9 @@ export default function App() {
               </div>
 
               {/* Premium layout footer */}
-              <footer className="mt-8 pt-6 border-t border-slate-300/60 text-center select-none text-[10px] tracking-widest font-bold text-slate-500 uppercase flex flex-col sm:flex-row justify-between items-center gap-2 relative z-10">
+              <footer className="mt-8 pt-6 border-t border-slate-800/60 text-center select-none text-[10px] tracking-widest font-bold text-slate-500 uppercase flex flex-col sm:flex-row justify-between items-center gap-2 relative z-10">
                 <span>© {new Date().getFullYear()} GoNexora Technologies</span>
-                <span className="bg-gradient-to-r from-indigo-600 to-cyan-600 bg-clip-text text-transparent font-extrabold">
+                <span className="bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent font-extrabold">
                   Building Tomorrow, Today.
                 </span>
               </footer>

@@ -73,17 +73,17 @@ export default function WelcomeLoader() {
             className="absolute inset-2 rounded-full border border-dashed border-cyan-400/50 border-r-indigo-400 opacity-80"
           />
           
-          {/* Large Logo Card */}
+          {/* Large Circle Logo */}
           <motion.div 
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.6 }}
-            className="p-3.5 rounded-3xl bg-black border-2 border-slate-800 shadow-2xl relative z-10 h-28 w-28 flex items-center justify-center shadow-indigo-950/50"
+            className="p-1 rounded-full bg-black border-2 border-indigo-500/60 shadow-2xl relative z-10 h-28 w-28 flex items-center justify-center overflow-hidden shadow-indigo-950/80"
           >
             <img 
               src="/logo.png" 
               alt="GoNexora Techs Logo" 
-              className="h-22 w-22 object-contain drop-shadow-md" 
+              className="h-full w-full object-cover rounded-full drop-shadow-md scale-105" 
             />
           </motion.div>
         </div>
