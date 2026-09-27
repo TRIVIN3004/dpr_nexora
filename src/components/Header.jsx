@@ -46,7 +46,7 @@ export default function Header({ onSearchChange, searchValue, pageTitle, onLogou
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between px-6 bg-slate-950/70 backdrop-blur-xl border-b border-white/10 shadow-sm">
+    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between px-6 bg-[#0b0f19] border-b border-slate-800 shadow-lg text-white">
       
       {/* Search Bar / Title */}
       <div className="flex items-center gap-4 flex-1">
@@ -56,7 +56,7 @@ export default function Header({ onSearchChange, searchValue, pageTitle, onLogou
         
         {/* Global Search with Frosted Glass */}
         <div className="relative w-full max-w-xs md:max-w-md ml-0 md:ml-4">
-          <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-300">
+          <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
             <Search className="h-4.5 w-4.5" />
           </span>
           <input
@@ -64,7 +64,7 @@ export default function Header({ onSearchChange, searchValue, pageTitle, onLogou
             placeholder="Search employees, projects, or reports..."
             value={searchValue || ''}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 text-sm rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-400 focus:outline-none focus:bg-white/10 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 transition-all duration-200"
+            className="w-full pl-10 pr-4 py-2 text-sm rounded-xl bg-slate-900/90 border border-slate-700 text-white placeholder-slate-400 focus:outline-none focus:bg-slate-900 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 transition-all duration-200"
           />
         </div>
       </div>
@@ -73,9 +73,9 @@ export default function Header({ onSearchChange, searchValue, pageTitle, onLogou
       <div className="flex items-center gap-3">
         
         {/* Quick Testing Role Switcher in Header */}
-        <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-white">
+        <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-xs text-white">
           <Activity className="h-3 w-3 text-cyan-400 animate-pulse" />
-          <span className="text-slate-300">Testing:</span>
+          <span className="text-slate-300 font-semibold">Testing:</span>
           <select 
             value={user?.email || ''} 
             onChange={(e) => handleSwitchRole(e.target.value)}

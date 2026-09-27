@@ -21,7 +21,7 @@ export default function StatCard({ title, value, change, changeType, icon: Icon,
       <div className="absolute top-0 right-0 -mr-6 -mt-6 h-24 w-24 rounded-full bg-white/10 blur-xl group-hover:bg-white/20 transition-colors duration-300" />
       
       <div className="flex items-center justify-between">
-        <span className="text-xs font-black text-slate-200 uppercase tracking-wider">{title}</span>
+        <span className="text-xs font-black text-white uppercase tracking-wider drop-shadow-sm">{title}</span>
         {Icon && (
           <div className="p-2.5 rounded-xl bg-white/10 border border-white/20 text-white group-hover:text-cyan-300 group-hover:bg-white/15 transition-colors duration-300 shadow-sm">
             <Icon className="h-4.5 w-4.5" />
@@ -50,11 +50,11 @@ export default function StatCard({ title, value, change, changeType, icon: Icon,
             </span>
           )}
           {!isPositive && !isNegative && (
-            <span className="text-xs font-semibold text-slate-300">
+            <span className="text-xs font-bold text-white bg-white/10 px-2 py-0.5 rounded-md border border-white/20">
               {change}
             </span>
           )}
-          <span className="text-[10px] text-slate-300 font-medium ml-0.5">vs last week</span>
+          <span className="text-[10px] text-white/90 font-bold ml-0.5">vs last week</span>
         </div>
       )}
     </motion.div>

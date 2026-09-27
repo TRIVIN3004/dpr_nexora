@@ -86,9 +86,9 @@ export default function Sidebar({ currentTab, onTabChange, isCollapsed, setIsCol
         {/* Desktop Collapse Trigger */}
         <button 
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="hidden md:flex h-7 w-7 items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 border border-white/15 text-white cursor-pointer transition-colors backdrop-blur-md shadow-sm"
+          className="hidden md:flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-950/70 hover:bg-indigo-900/80 border border-indigo-800/60 text-[#818cf8] cursor-pointer transition-colors backdrop-blur-md shadow-sm"
         >
-          {isCollapsed ? <ChevronRight className="h-3.5 w-3.5 text-white" /> : <ChevronLeft className="h-3.5 w-3.5 text-white" />}
+          {isCollapsed ? <ChevronRight className="h-3.5 w-3.5 text-[#818cf8]" /> : <ChevronLeft className="h-3.5 w-3.5 text-[#818cf8]" />}
         </button>
 
         {/* Mobile Close Trigger */}
@@ -100,8 +100,8 @@ export default function Sidebar({ currentTab, onTabChange, isCollapsed, setIsCol
         </button>
       </div>
 
-      {/* Nav List with Glassy Effects and Pure White Fonts */}
-      <nav className="flex-1 space-y-2 px-3.5 py-6 overflow-y-auto">
+      {/* Nav List with Glassy Effects, Consistent Dark Blue Icons, and Pure White Fonts */}
+      <nav className="flex-1 space-y-2.5 px-3.5 py-6 overflow-y-auto">
         {filteredItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentTab === item.id;
@@ -112,27 +112,40 @@ export default function Sidebar({ currentTab, onTabChange, isCollapsed, setIsCol
                 onTabChange(item.id);
                 setMobileOpen(false);
               }}
-              className={`w-full group relative flex items-center gap-3.5 py-3 px-4 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 cursor-pointer ${
+              className={`w-full group relative flex items-center gap-3.5 py-3 px-3.5 rounded-xl text-sm font-bold tracking-wide transition-all duration-200 cursor-pointer ${
                 isActive 
-                  ? 'text-white bg-gradient-to-r from-indigo-600/35 via-purple-600/25 to-cyan-500/15 backdrop-blur-xl border border-indigo-400/50 shadow-lg shadow-indigo-500/20' 
-                  : 'text-white hover:text-white hover:bg-white/10 hover:backdrop-blur-md hover:border hover:border-white/10'
+                  ? 'text-white bg-gradient-to-r from-indigo-900/60 via-indigo-950/40 to-blue-950/30 backdrop-blur-xl border border-indigo-500/60 shadow-lg shadow-indigo-950/50' 
+                  : 'text-white hover:text-white hover:bg-white/10 hover:backdrop-blur-md hover:border hover:border-white/15'
               }`}
             >
-              <Icon className={`h-4.5 w-4.5 transition-all duration-200 ${isActive ? 'text-cyan-300 scale-110 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]' : 'text-slate-200 group-hover:text-white group-hover:scale-105'}`} />
+              {/* Constant Perfect Dark Blue Icon Container for all icons */}
+              <div className={`p-2 rounded-xl flex items-center justify-center transition-all duration-200 bg-indigo-950/80 text-[#818cf8] border border-indigo-800/70 shadow-[0_0_10px_rgba(99,102,241,0.35)] ${
+                isActive 
+                  ? 'bg-indigo-950 text-[#818cf8] border-indigo-500/80 shadow-[0_0_14px_rgba(129,140,248,0.7)] ring-1 ring-indigo-400/50' 
+                  : 'group-hover:bg-indigo-900/90 group-hover:text-[#a5b4fc] group-hover:border-indigo-600/70 group-hover:shadow-[0_0_12px_rgba(129,140,248,0.5)]'
+              }`}>
+                <Icon className={`h-4.5 w-4.5 transition-transform duration-200 drop-shadow-[0_0_8px_rgba(129,140,248,0.8)] ${
+                  isActive 
+                    ? 'scale-110 drop-shadow-[0_0_12px_rgba(129,140,248,1)]' 
+                    : 'group-hover:scale-110'
+                }`} />
+              </div>
+
               {!isCollapsed && (
                 <motion.span
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.05 }}
-                  className="truncate text-white font-semibold"
+                  className="truncate text-white font-black text-sm tracking-wide drop-shadow-sm"
                 >
                   {item.label}
                 </motion.span>
               )}
+
               {isActive && !isCollapsed && (
                 <motion.div 
                   layoutId="activeGlow"
-                  className="absolute right-2.5 h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,1)]"
+                  className="absolute right-2.5 h-2 w-2 rounded-full bg-[#818cf8] shadow-[0_0_10px_rgba(129,140,248,1)]"
                 />
               )}
             </button>
