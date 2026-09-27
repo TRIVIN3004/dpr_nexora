@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { getCurrentUser, editTeamMember, getDatabase } from '../utils/database';
 import { compressImage, uploadFileToStorage } from '../utils/storageService';
 import { useDatabaseStore } from '../context/DatabaseContext';
-import { User, Shield, Bell, Key, Sparkles, Building2, CheckCircle2, Camera } from 'lucide-react';
+import { User, Shield, Bell, Key, Sparkles, Building2, CheckCircle2, Camera, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const PRESET_AVATARS = [
   { id: '1', name: 'Man 1', url: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150' },
@@ -20,6 +21,7 @@ const PRESET_AVATARS = [
 export default function Settings() {
   const [currentUser, setCurrentUser] = useState(null);
   const [toast, setToast] = useState('');
+  const [activeSection, setActiveSection] = useState('account'); // 'account' | 'notifications' | 'company'
   const { invalidateStore } = useDatabaseStore();
 
   // Profile Form States
@@ -111,6 +113,11 @@ export default function Settings() {
     }
   };
 
+  const handleNotificationSave = (e) => {
+    e.preventDefault();
+    triggerToast("Notification preferences updated successfully!");
+  };
+
   const handleCompanySave = (e) => {
     e.preventDefault();
     triggerToast("Company profile parameters locked successfully!");
@@ -132,244 +139,302 @@ export default function Settings() {
       {/* Title block */}
       <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl">
         <h3 className="text-base font-black text-slate-900 dark:text-white">System Preferences & Settings</h3>
-        <p className="text-xs text-slate-500 dark:text-slate-300 mt-1 font-semibold">Modify account info, company rules, and client triggers</p>
+        <p className="text-xs font-semibold text-slate-500 dark:text-slate-300 mt-1">Modify account info, notification preferences, and company compliance rules</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Navigation sidebar */}
         <div className="lg:col-span-1 p-4 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl space-y-2 h-fit">
-          <div className="flex items-center gap-2 px-3.5 py-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-[#818cf8] border border-indigo-200 dark:border-indigo-800/60 text-xs font-bold font-sans">
-            <User className="h-4 w-4" /> Personal Account
-          </div>
-          <div className="flex items-center gap-2 px-3.5 py-3 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-xl text-xs font-semibold transition-colors">
-            <Bell className="h-4 w-4" /> Notifications Config
-          </div>
+          <button
+            type="button"
+            onClick={() => setActiveSection('account')}
+            className={`w-full flex items-center gap-2.5 px-3.5 py-3 rounded-xl text-xs font-bold font-sans transition-all cursor-pointer text-left ${
+              activeSection === 'account'
+                ? 'bg-indigo-600 dark:bg-gradient-to-r dark:from-indigo-600 dark:to-cyan-600 text-white shadow-md border border-indigo-500'
+                : 'text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10'
+            }`}
+          >
+            <User className="h-4 w-4 shrink-0" />
+            <span>Personal Account</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveSection('notifications')}
+            className={`w-full flex items-center gap-2.5 px-3.5 py-3 rounded-xl text-xs font-bold font-sans transition-all cursor-pointer text-left ${
+              activeSection === 'notifications'
+                ? 'bg-indigo-600 dark:bg-gradient-to-r dark:from-indigo-600 dark:to-cyan-600 text-white shadow-md border border-indigo-500'
+                : 'text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10'
+            }`}
+          >
+            <Bell className="h-4 w-4 shrink-0" />
+            <span>Notifications Config</span>
+          </button>
+
           {isAdmin && (
-            <div className="flex items-center gap-2 px-3.5 py-3 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-xl text-xs font-semibold transition-colors">
-              <Building2 className="h-4 w-4" /> Company Rules
-            </div>
+            <button
+              type="button"
+              onClick={() => setActiveSection('company')}
+              className={`w-full flex items-center gap-2.5 px-3.5 py-3 rounded-xl text-xs font-bold font-sans transition-all cursor-pointer text-left ${
+                activeSection === 'company'
+                  ? 'bg-indigo-600 dark:bg-gradient-to-r dark:from-indigo-600 dark:to-cyan-600 text-white shadow-md border border-indigo-500'
+                  : 'text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10'
+              }`}
+            >
+              <Building2 className="h-4 w-4 shrink-0" />
+              <span>Company Rules</span>
+            </button>
           )}
         </div>
 
         {/* Configurations main blocks */}
         <div className="lg:col-span-2 space-y-6">
           
-          {/* Section 1: User Profile Settings */}
-          <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl space-y-4">
-            <h4 className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-widest border-b border-slate-100 dark:border-white/10 pb-2 flex items-center gap-2">
-              <Shield className="h-4.5 w-4.5 text-indigo-600 dark:text-[#818cf8]" />
-              General Profile Settings
-            </h4>
+          {/* SECTION: PERSONAL ACCOUNT & PASSWORD */}
+          {activeSection === 'account' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6"
+            >
+              {/* Profile Details Form */}
+              <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl space-y-4">
+                <h4 className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-widest border-b border-slate-100 dark:border-white/10 pb-2 flex items-center gap-2">
+                  <Shield className="h-4.5 w-4.5 text-indigo-600 dark:text-[#818cf8]" />
+                  General Profile Settings
+                </h4>
 
-            <form onSubmit={handleProfileSave} className="space-y-4 text-xs">
-              
-              {/* Profile Picture Section */}
-              <div className="flex flex-col md:flex-row items-start gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/40">
-                <div className="relative group mx-auto md:mx-0 flex-shrink-0 cursor-pointer">
-                  <img
-                    src={avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'}
-                    alt="Profile Avatar"
-                    className="h-16 w-16 rounded-full object-cover border-2 border-indigo-400 shadow-md group-hover:opacity-75 transition-opacity"
-                  />
-                  <label className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white text-[9px] font-bold">
-                    <Camera className="h-4 w-4 mb-0.5" />
-                    Change
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarFileChange}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-                <div className="space-y-2.5 flex-grow w-full">
-                  <div>
-                    <h5 className="text-[11px] font-bold text-slate-900 dark:text-slate-200">Profile Picture</h5>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Click the avatar to upload a local picture, or select a preset below.</p>
-                  </div>
+                <form onSubmit={handleProfileSave} className="space-y-4 text-xs">
                   
-                  {/* Preset Avatars */}
-                  <div className="flex flex-wrap gap-1.5">
-                    {PRESET_AVATARS.map((preset) => (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        onClick={() => setAvatarUrl(preset.url)}
-                        title={preset.name}
-                        className={`h-7 w-7 rounded-full overflow-hidden border cursor-pointer transition-all ${
-                          avatarUrl === preset.url 
-                            ? 'border-indigo-600 scale-110 ring-2 ring-indigo-500/50' 
-                            : 'border-slate-300 dark:border-slate-700 hover:border-slate-500'
-                        }`}
-                      >
-                        <img src={preset.url} alt={preset.name} className="h-full w-full object-cover" />
-                      </button>
-                    ))}
+                  {/* Profile Picture Section */}
+                  <div className="flex flex-col md:flex-row items-start gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/40">
+                    <div className="relative group mx-auto md:mx-0 flex-shrink-0 cursor-pointer">
+                      <img
+                        src={avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'}
+                        alt="Profile Avatar"
+                        className="h-16 w-16 rounded-full object-cover border-2 border-indigo-400 shadow-md group-hover:opacity-75 transition-opacity"
+                      />
+                      <label className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white text-[9px] font-bold">
+                        <Camera className="h-4 w-4 mb-0.5" />
+                        Change
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleAvatarFileChange}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                    <div className="space-y-2.5 flex-grow w-full">
+                      <div>
+                        <h5 className="text-[11px] font-bold text-slate-900 dark:text-slate-200">Profile Picture</h5>
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Click the avatar to upload a local picture, or select a preset below.</p>
+                      </div>
+                      
+                      {/* Preset Avatars */}
+                      <div className="flex flex-wrap gap-1.5">
+                        {PRESET_AVATARS.map((preset) => (
+                          <button
+                            key={preset.id}
+                            type="button"
+                            onClick={() => setAvatarUrl(preset.url)}
+                            title={preset.name}
+                            className={`h-7 w-7 rounded-full overflow-hidden border cursor-pointer transition-all ${
+                              avatarUrl === preset.url 
+                                ? 'border-indigo-600 scale-110 ring-2 ring-indigo-500/50' 
+                                : 'border-slate-300 dark:border-slate-700 hover:border-slate-500'
+                            }`}
+                          >
+                            <img src={preset.url} alt={preset.name} className="h-full w-full object-cover" />
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Remote URL input option */}
+                      <div className="space-y-0.5">
+                        <label className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Or enter external image URL</label>
+                        <input
+                          type="text"
+                          placeholder="https://example.com/avatar.png"
+                          value={avatarUrl}
+                          onChange={(e) => setAvatarUrl(e.target.value)}
+                          className="w-full px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white text-[11px] focus:outline-none focus:border-indigo-500"
+                        />
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Remote URL input option */}
-                  <div className="space-y-0.5">
-                    <label className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Or enter external image URL</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-slate-700 dark:text-slate-300 font-semibold">Display Name</label>
+                      <input
+                        type="text"
+                        required
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-slate-700 dark:text-slate-300 font-semibold">Contact Phone</label>
+                      <input
+                        type="text"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-slate-700 dark:text-slate-300 font-semibold">Work Email Address</label>
                     <input
-                      type="text"
-                      placeholder="https://example.com/avatar.png"
-                      value={avatarUrl}
-                      onChange={(e) => setAvatarUrl(e.target.value)}
-                      className="w-full px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white text-[11px] focus:outline-none focus:border-indigo-500"
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500"
                     />
                   </div>
-                </div>
+
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black transition-all cursor-pointer shadow-md"
+                  >
+                    Update Account Information
+                  </button>
+                </form>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-slate-700 dark:text-slate-300 font-semibold">Display Name</label>
+              {/* Password modifier */}
+              <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl space-y-4">
+                <h4 className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-widest border-b border-slate-100 dark:border-white/10 pb-2 flex items-center gap-2">
+                  <Key className="h-4.5 w-4.5 text-indigo-600 dark:text-[#818cf8]" />
+                  Change System Password
+                </h4>
+
+                <form onSubmit={handlePasswordSave} className="space-y-4 text-xs">
+                  <div className="space-y-1">
+                    <label className="text-slate-700 dark:text-slate-300 font-semibold">Current Password</label>
+                    <input
+                      type="password"
+                      required
+                      value={currPassword}
+                      onChange={(e) => setCurrPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-slate-700 dark:text-slate-300 font-semibold">New Password</label>
+                      <input
+                        type="password"
+                        required
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-slate-700 dark:text-slate-300 font-semibold">Confirm New Password</label>
+                      <input
+                        type="password"
+                        required
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white transition-all cursor-pointer font-black"
+                  >
+                    Change Security Token
+                  </button>
+                </form>
+              </div>
+            </motion.div>
+          )}
+
+          {/* SECTION: NOTIFICATIONS */}
+          {activeSection === 'notifications' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+              className="p-5 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl space-y-5"
+            >
+              <h4 className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-widest border-b border-slate-100 dark:border-white/10 pb-2 flex items-center gap-2">
+                <Bell className="h-4.5 w-4.5 text-indigo-600 dark:text-[#818cf8]" />
+                Notifications Configuration
+              </h4>
+
+              <form onSubmit={handleNotificationSave} className="space-y-4 text-xs text-slate-700 dark:text-slate-300">
+                <label className="flex items-center gap-3.5 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 cursor-pointer">
                   <input
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500"
+                    type="checkbox"
+                    checked={emailDprSubmission}
+                    onChange={(e) => setEmailDprSubmission(e.target.checked)}
+                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4"
                   />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-slate-700 dark:text-slate-300 font-semibold">Contact Phone</label>
+                  <div>
+                    <span className="font-bold text-slate-900 dark:text-slate-200 block">Email Alerts for DPR Submissions</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">Sends alerts when team member submits daily progress reports</span>
+                  </div>
+                </label>
+
+                <label className="flex items-center gap-3.5 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 cursor-pointer">
                   <input
-                    type="text"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500"
+                    type="checkbox"
+                    checked={emailWeeklyDigest}
+                    onChange={(e) => setEmailWeeklyDigest(e.target.checked)}
+                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4"
                   />
-                </div>
-              </div>
+                  <div>
+                    <span className="font-bold text-slate-900 dark:text-slate-200 block">Weekly Digest Summaries</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">Recaps sprint tasks progress every Friday</span>
+                  </div>
+                </label>
 
-              <div className="space-y-1">
-                <label className="text-slate-700 dark:text-slate-300 font-semibold">Work Email Address</label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black transition-all cursor-pointer shadow-md"
-              >
-                Update Account Information
-              </button>
-            </form>
-          </div>
-
-          {/* Section 2: Password modifier */}
-          <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl space-y-4">
-            <h4 className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-widest border-b border-slate-100 dark:border-white/10 pb-2 flex items-center gap-2">
-              <Key className="h-4.5 w-4.5 text-indigo-600 dark:text-[#818cf8]" />
-              Change System Password
-            </h4>
-
-            <form onSubmit={handlePasswordSave} className="space-y-4 text-xs">
-              <div className="space-y-1">
-                <label className="text-slate-700 dark:text-slate-300 font-semibold">Current Password</label>
-                <input
-                  type="password"
-                  required
-                  value={currPassword}
-                  onChange={(e) => setCurrPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-slate-700 dark:text-slate-300 font-semibold">New Password</label>
+                <label className="flex items-center gap-3.5 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 cursor-pointer">
                   <input
-                    type="password"
-                    required
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500"
+                    type="checkbox"
+                    checked={pushStatusUpdate}
+                    onChange={(e) => setPushStatusUpdate(e.target.checked)}
+                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4"
                   />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-slate-700 dark:text-slate-300 font-semibold">Confirm New Password</label>
-                  <input
-                    type="password"
-                    required
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-              </div>
+                  <div>
+                    <span className="font-bold text-slate-900 dark:text-slate-200 block">In-App Live Stream Alerts</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">Recaps status notifications directly on header bell</span>
+                  </div>
+                </label>
 
-              <button
-                type="submit"
-                className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white transition-all cursor-pointer font-black"
-              >
-                Change Security Token
-              </button>
-            </form>
-          </div>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-md cursor-pointer transition-colors"
+                >
+                  Save Notification Preferences
+                </button>
+              </form>
+            </motion.div>
+          )}
 
-          {/* Section 3: Notification Toggles */}
-          <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl space-y-4">
-            <h4 className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-widest border-b border-slate-100 dark:border-white/10 pb-2 flex items-center gap-2">
-              <Bell className="h-4.5 w-4.5 text-indigo-600 dark:text-[#818cf8]" />
-              Notifications Configuration
-            </h4>
-
-            <div className="space-y-3.5 text-xs text-slate-700 dark:text-slate-300">
-              <label className="flex items-center gap-3.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={emailDprSubmission}
-                  onChange={(e) => setEmailDprSubmission(e.target.checked)}
-                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4"
-                />
-                <div>
-                  <span className="font-bold text-slate-900 dark:text-slate-200 block">Email Alerts for submissions</span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400">Sends alerts when team member submits reports</span>
-                </div>
-              </label>
-
-              <label className="flex items-center gap-3.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={emailWeeklyDigest}
-                  onChange={(e) => setEmailWeeklyDigest(e.target.checked)}
-                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4"
-                />
-                <div>
-                  <span className="font-bold text-slate-900 dark:text-slate-200 block">Weekly Digest Summaries</span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400">Recaps sprint tasks progress every Friday</span>
-                </div>
-              </label>
-
-              <label className="flex items-center gap-3.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={pushStatusUpdate}
-                  onChange={(e) => setPushStatusUpdate(e.target.checked)}
-                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4"
-                />
-                <div>
-                  <span className="font-bold text-slate-900 dark:text-slate-200 block">In-App Live Stream Alerts</span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400">Recaps status notifications directly on header bell</span>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          {/* Section 4: Company Profile Configuration (Only for Admins) */}
-          {isAdmin && (
-            <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl space-y-4">
+          {/* SECTION: COMPANY RULES (Admin Only) */}
+          {activeSection === 'company' && isAdmin && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+              className="p-5 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl space-y-4"
+            >
               <h4 className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-widest border-b border-slate-100 dark:border-white/10 pb-2 flex items-center gap-2">
                 <Building2 className="h-4.5 w-4.5 text-indigo-600 dark:text-[#818cf8]" />
                 Nexora Tech Rules & Compliance
@@ -414,7 +479,7 @@ export default function Settings() {
                   Save Compliance Directives
                 </button>
               </form>
-            </div>
+            </motion.div>
           )}
 
         </div>
