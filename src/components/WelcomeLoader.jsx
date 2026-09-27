@@ -58,13 +58,13 @@ export default function WelcomeLoader() {
       {/* Main Container */}
       <div className="relative flex flex-col items-center justify-center max-w-md w-full px-6 text-center space-y-6 z-10">
         
-        {/* Epic Large Brand Logo with Multi-Layered Neon Glow Rings */}
-        <div className="relative flex items-center justify-center h-48 w-48 md:h-56 md:w-56 my-2">
+        {/* Sleek Brand Logo with Multi-Layered Neon Glow Rings */}
+        <div className="relative flex items-center justify-center h-36 w-36 md:h-40 md:w-40 my-1">
           {/* Outer glowing pulsing neon aura */}
           <motion.div
             animate={{ 
-              scale: [1, 1.12, 1],
-              opacity: [0.6, 0.9, 0.6]
+              scale: [1, 1.1, 1],
+              opacity: [0.5, 0.8, 0.5]
             }}
             transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }}
             className="absolute inset-0 rounded-full bg-indigo-500/20 blur-xl pointer-events-none"
@@ -72,36 +72,36 @@ export default function WelcomeLoader() {
 
           {/* Outer high-voltage neon spinning ring */}
           <motion.div
-            animate={{ rotate: 360, scale: [1, 1.04, 1] }}
+            animate={{ rotate: 360, scale: [1, 1.03, 1] }}
             transition={{ rotate: { repeat: Infinity, duration: 4.5, ease: 'linear' }, scale: { repeat: Infinity, duration: 2.2, ease: 'easeInOut' } }}
-            className="absolute inset-0 rounded-full border-2 border-indigo-400 border-t-cyan-300 border-b-fuchsia-400 shadow-[0_0_50px_rgba(99,102,241,0.7),0_0_90px_rgba(56,189,248,0.4)]"
+            className="absolute inset-0 rounded-full border-2 border-indigo-400 border-t-cyan-300 border-b-fuchsia-400 shadow-[0_0_35px_rgba(99,102,241,0.6),0_0_60px_rgba(56,189,248,0.35)]"
           />
 
           {/* Middle counter-rotating neon dashed ring */}
           <motion.div
             animate={{ rotate: -360 }}
             transition={{ repeat: Infinity, duration: 6, ease: 'linear' }}
-            className="absolute inset-2 md:inset-3 rounded-full border-2 border-dashed border-cyan-400/80 border-r-indigo-400 shadow-[0_0_25px_rgba(34,211,238,0.7)] opacity-90"
+            className="absolute inset-2 rounded-full border-2 border-dashed border-cyan-400/80 border-r-indigo-400 shadow-[0_0_20px_rgba(34,211,238,0.6)] opacity-90"
           />
 
           {/* Inner tertiary neon glow orbital */}
           <motion.div
             animate={{ rotate: 180 }}
             transition={{ repeat: Infinity, duration: 8, ease: 'linear' }}
-            className="absolute inset-4 md:inset-5 rounded-full border border-indigo-300/50 shadow-[0_0_15px_rgba(129,140,248,0.6)]"
+            className="absolute inset-3.5 rounded-full border border-indigo-300/50 shadow-[0_0_12px_rgba(129,140,248,0.5)]"
           />
           
-          {/* Large Circle Logo Badge */}
+          {/* Circle Logo Badge */}
           <motion.div 
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.6 }}
-            className="p-1.5 rounded-full bg-black border-2 border-indigo-400/90 shadow-[0_0_40px_rgba(99,102,241,0.8),0_0_70px_rgba(56,189,248,0.5)] relative z-10 h-36 w-36 md:h-44 md:w-44 flex items-center justify-center overflow-hidden"
+            className="p-1 rounded-full bg-black border-2 border-indigo-400/90 shadow-[0_0_30px_rgba(99,102,241,0.7),0_0_50px_rgba(56,189,248,0.4)] relative z-10 h-26 w-26 md:h-28 md:w-28 flex items-center justify-center overflow-hidden"
           >
             <img 
               src="/logo.png" 
               alt="GoNexora Techs Logo" 
-              className="h-full w-full object-cover rounded-full drop-shadow-2xl scale-105" 
+              className="h-full w-full object-cover rounded-full drop-shadow-xl scale-105" 
             />
           </motion.div>
         </div>
