@@ -223,18 +223,7 @@ export default function Attendance() {
   const handleUserCheckIn = async (remarks = '', method = 'Self') => {
     const res = await markCheckIn(currentUser, method, remarks);
     if (res.success) {
-      showToast({
-        type: 'success',
-        title: 'Attendance Marked Successfully!',
-        message: `Daily Check-In recorded for ${currentUser?.name} (${method})`
-      });
       loadData();
-    } else {
-      showToast({
-        type: 'error',
-        title: 'Check-In Error',
-        message: res.error || 'Failed to check in.'
-      });
     }
     return res;
   };
@@ -242,18 +231,7 @@ export default function Attendance() {
   const handleUserCheckOut = async () => {
     const res = await markCheckOut(currentUser);
     if (res.success) {
-      showToast({
-        type: 'success',
-        title: 'Check-Out Logged Successfully!',
-        message: `Daily Check-Out session logged for ${currentUser?.name}`
-      });
       loadData();
-    } else {
-      showToast({
-        type: 'error',
-        title: 'Check-Out Error',
-        message: res.error || 'Failed to check out.'
-      });
     }
     return res;
   };
@@ -469,21 +447,6 @@ export default function Attendance() {
 
   return (
     <div className="space-y-6">
-      
-      {/* Toast popup */}
-      <AnimatePresence>
-        {toast && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed top-5 right-5 z-50 px-4 py-2.5 rounded-xl bg-slate-900 text-white shadow-lg text-xs font-semibold flex items-center gap-2"
-          >
-            <span className="h-2 w-2 rounded-full bg-indigo-400 animate-ping" />
-            {toast}
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Staff Low Attendance Warning Banner */}
       {!isAdmin && myStats.attendancePct < 75 && myStats.attendancePct >= 50 && (
