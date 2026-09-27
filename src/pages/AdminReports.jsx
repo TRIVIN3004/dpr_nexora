@@ -228,12 +228,12 @@ export default function AdminReports({ searchFilter }) {
       )}
 
       {/* Control panel filter card */}
-      <div className="glass-panel p-5 rounded-2xl shadow-glass text-left space-y-4">
+      <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/20 bg-white dark:bg-white/[0.08] backdrop-blur-2xl shadow-sm dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] text-left space-y-4">
         
         {/* Header toolbar */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h3 className="text-sm font-bold text-slate-300 flex items-center gap-2">
-            <Filter className="h-4.5 w-4.5 text-nexora-purple" />
+          <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+            <Filter className="h-4.5 w-4.5 text-indigo-600 dark:text-[#818cf8]" />
             Report Filter Registry
           </h3>
           
@@ -241,7 +241,7 @@ export default function AdminReports({ searchFilter }) {
             <button
               onClick={handleExportExcel}
               disabled={filteredReports.length === 0}
-              className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3.5 py-2 text-xs font-bold rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FileSpreadsheet className="h-4 w-4" />
               Export Excel
@@ -250,7 +250,7 @@ export default function AdminReports({ searchFilter }) {
             <button
               onClick={handleExportPDF}
               disabled={filteredReports.length === 0}
-              className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3.5 py-2 text-xs font-bold rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-700 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FileText className="h-4 w-4" />
               Export PDF Registry
@@ -263,31 +263,31 @@ export default function AdminReports({ searchFilter }) {
           
           {/* Employee dropdown (only for Admin) */}
           <div className="space-y-1">
-            <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Employee</label>
+            <label className="text-[10px] text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">Employee</label>
             <select
               value={selectedEmployee}
               onChange={(e) => setSelectedEmployee(e.target.value)}
               disabled={currentUser?.role !== 'admin'}
-              className="w-full px-3 py-2 text-xs rounded-xl glass-input focus:outline-none bg-slate-950 cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500 cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed"
             >
-              <option value="">All Employees</option>
+              <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">All Employees</option>
               {users.map(u => (
-                <option key={u.id} value={u.email}>{u.name}</option>
+                <option key={u.id} value={u.email} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{u.name}</option>
               ))}
             </select>
           </div>
 
           {/* Project dropdown */}
           <div className="space-y-1">
-            <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Project</label>
+            <label className="text-[10px] text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">Project</label>
             <select
               value={selectedProject}
               onChange={(e) => setSelectedProject(e.target.value)}
-              className="w-full px-3 py-2 text-xs rounded-xl glass-input focus:outline-none bg-slate-950 cursor-pointer"
+              className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500 cursor-pointer"
             >
-              <option value="">All Projects</option>
+              <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">All Projects</option>
               {projects.map(p => (
-                <option key={p.id} value={p.name}>
+                <option key={p.id} value={p.name} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
                   {p.name}{p.status === 'Completed' ? ' (Completed)' : ''}
                 </option>
               ))}
@@ -296,27 +296,27 @@ export default function AdminReports({ searchFilter }) {
 
           {/* Status dropdown */}
           <div className="space-y-1">
-            <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Status</label>
+            <label className="text-[10px] text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">Status</label>
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="w-full px-3 py-2 text-xs rounded-xl glass-input focus:outline-none bg-slate-950 cursor-pointer"
+              className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500 cursor-pointer"
             >
-              <option value="">All Statuses</option>
-              <option value="Approved">Approved</option>
-              <option value="Rejected">Rejected</option>
-              <option value="Pending">Pending</option>
+              <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">All Statuses</option>
+              <option value="Approved" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Approved</option>
+              <option value="Rejected" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Rejected</option>
+              <option value="Pending" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Pending</option>
             </select>
           </div>
 
           {/* Date Picker */}
           <div className="space-y-1">
-            <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Specific Date</label>
+            <label className="text-[10px] text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">Specific Date</label>
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full px-3 py-1.5 text-xs rounded-xl glass-input focus:outline-none cursor-pointer"
+              className="w-full px-3 py-1.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500 cursor-pointer"
             />
           </div>
 
@@ -324,7 +324,7 @@ export default function AdminReports({ searchFilter }) {
           <div className="flex items-end">
             <button
               onClick={handleResetFilters}
-              className="w-full py-2 text-xs font-semibold rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              className="w-full py-2 text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <RefreshCw className="h-3.5 w-3.5" />
               Reset Filters
@@ -336,11 +336,11 @@ export default function AdminReports({ searchFilter }) {
       </div>
 
       {/* Main Table view */}
-      <div className="glass-panel rounded-3xl shadow-glass overflow-hidden">
+      <div className="rounded-3xl border border-slate-200 dark:border-white/20 bg-white dark:bg-white/[0.08] backdrop-blur-2xl shadow-sm dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-800 bg-slate-950/20 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
+              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20 text-slate-600 dark:text-slate-400 text-[10px] font-extrabold uppercase tracking-wider">
                 <th className="px-6 py-4">Employee</th>
                 <th className="px-6 py-4">Project</th>
                 <th className="px-6 py-4">Date</th>
@@ -350,34 +350,34 @@ export default function AdminReports({ searchFilter }) {
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/40 text-xs text-slate-300">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 text-xs text-slate-900 dark:text-slate-200">
               {filteredReports.map((rep) => (
-                <tr key={rep.id} className="hover:bg-slate-800/10 transition-colors">
+                <tr key={rep.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/10 transition-colors">
                   <td className="px-6 py-4 flex items-center gap-2.5">
-                    <div className="h-7 w-7 rounded-full bg-slate-800 flex items-center justify-center font-bold text-xs text-nexora-purple">
+                    <div className="h-7 w-7 rounded-full bg-indigo-50 dark:bg-slate-800 border border-indigo-200 dark:border-slate-700 flex items-center justify-center font-bold text-xs text-indigo-600 dark:text-cyan-300">
                       {rep.employeeName.charAt(0)}
                     </div>
                     <div>
-                      <span className="font-semibold text-slate-200 block">{rep.employeeName}</span>
+                      <span className="font-bold text-slate-900 dark:text-white block">{rep.employeeName}</span>
                       <span className="text-[9px] text-slate-500">{rep.employeeId}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="font-medium text-slate-200">{rep.projectName}</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">{rep.projectName}</span>
                     <span className="text-[9px] text-slate-500 block truncate max-w-[120px]">{rep.moduleName || '-'}</span>
                   </td>
-                  <td className="px-6 py-4 text-slate-400 font-medium">
+                  <td className="px-6 py-4 text-slate-600 dark:text-slate-400 font-medium">
                     {rep.date}
                   </td>
-                  <td className="px-6 py-4 text-center font-semibold text-slate-200">
+                  <td className="px-6 py-4 text-center font-bold text-slate-900 dark:text-white">
                     {rep.hoursWorked} hrs
                   </td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex items-center justify-center gap-2">
-                      <span className="font-bold text-slate-200">{rep.percentageCompleted}%</span>
-                      <div className="w-12 h-1 bg-slate-800 rounded-full overflow-hidden hidden sm:block">
+                      <span className="font-bold text-slate-900 dark:text-white">{rep.percentageCompleted}%</span>
+                      <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden hidden sm:block">
                         <div 
-                          className="h-full bg-nexora-purple" 
+                          className="h-full bg-indigo-600 dark:bg-cyan-400" 
                           style={{ width: `${rep.percentageCompleted}%` }}
                         />
                       </div>
@@ -393,7 +393,7 @@ export default function AdminReports({ searchFilter }) {
                       <button
                         onClick={() => setSelectedReport(rep)}
                         title="Inspect DPR"
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/40 cursor-pointer"
+                        className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/40 cursor-pointer"
                       >
                         <Eye className="h-4 w-4" />
                       </button>
@@ -403,14 +403,14 @@ export default function AdminReports({ searchFilter }) {
                           <button
                             onClick={() => handleReview(rep.id, 'Approved')}
                             title="Approve Report"
-                            className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/15 hover:bg-emerald-500/20 cursor-pointer"
+                            className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/15 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 cursor-pointer"
                           >
                             <Check className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => handleReview(rep.id, 'Rejected')}
                             title="Reject Report"
-                            className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/15 hover:bg-rose-500/20 cursor-pointer"
+                            className="p-1.5 rounded-lg bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/15 hover:bg-rose-100 dark:hover:bg-rose-500/20 cursor-pointer"
                           >
                             <X className="h-4 w-4" />
                           </button>
@@ -420,7 +420,7 @@ export default function AdminReports({ searchFilter }) {
                         <button
                           onClick={() => handleDeleteReport(rep.id)}
                           title="Delete Report"
-                          className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/15 hover:bg-rose-500/20 cursor-pointer"
+                          className="p-1.5 rounded-lg bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/15 hover:bg-rose-100 dark:hover:bg-rose-500/20 cursor-pointer"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

@@ -54,10 +54,12 @@ ChartJS.register(
 );
 
 import { useDatabaseStore } from '../context/DatabaseContext';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Dashboard({ searchFilter, onNavigate }) {
   const [currentUser, setCurrentUser] = useState(() => getCurrentUser());
   const { users, projects, reports, announcements, invalidateStore } = useDatabaseStore();
+  const { isLight } = useTheme();
 
   const [selectedReport, setSelectedReport] = useState(null);
   const [showProjectsModal, setShowProjectsModal] = useState(false);
@@ -262,12 +264,12 @@ export default function Dashboard({ searchFilter, onNavigate }) {
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          labels: { color: '#ffffff', font: { size: 11, family: 'Inter', weight: 'bold' } }
+          labels: { color: isLight ? '#0f172a' : '#ffffff', font: { size: 11, family: 'Inter', weight: 'bold' } }
         }
       },
       scales: {
-        x: { grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: '#ffffff', font: { size: 11, weight: 'bold' } } },
-        y: { grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: '#ffffff', font: { size: 11, weight: 'bold' } } }
+        x: { grid: { color: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255, 255, 255, 0.1)' }, ticks: { color: isLight ? '#0f172a' : '#ffffff', font: { size: 11, weight: 'bold' } } },
+        y: { grid: { color: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255, 255, 255, 0.1)' }, ticks: { color: isLight ? '#0f172a' : '#ffffff', font: { size: 11, weight: 'bold' } } }
       }
     };
 
@@ -285,16 +287,16 @@ export default function Dashboard({ searchFilter, onNavigate }) {
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Bar Chart */}
-          <div className="lg:col-span-2 p-5 rounded-2xl border border-white/20 bg-white/[0.08] backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] flex flex-col h-80">
-            <h3 className="text-sm font-black text-white mb-3 text-left">Weekly Engineering Hours Log</h3>
+          <div className="lg:col-span-2 p-5 rounded-2xl border border-slate-200 dark:border-white/20 bg-white dark:bg-white/[0.08] backdrop-blur-2xl shadow-sm dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] flex flex-col h-80">
+            <h3 className="text-sm font-black text-slate-900 dark:text-white mb-3 text-left">Weekly Engineering Hours Log</h3>
             <div className="flex-1 relative">
               <Bar data={barChartData} options={chartOptions} />
             </div>
           </div>
 
           {/* Doughnut Chart */}
-          <div className="p-5 rounded-2xl border border-white/20 bg-white/[0.08] backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] flex flex-col h-80">
-            <h3 className="text-sm font-black text-white mb-3 text-left">DPR Project Allocation</h3>
+          <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/20 bg-white dark:bg-white/[0.08] backdrop-blur-2xl shadow-sm dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] flex flex-col h-80">
+            <h3 className="text-sm font-black text-slate-900 dark:text-white mb-3 text-left">DPR Project Allocation</h3>
             <div className="flex-1 relative flex items-center justify-center">
               <Doughnut 
                 data={doughnutChartData} 
@@ -304,7 +306,7 @@ export default function Dashboard({ searchFilter, onNavigate }) {
                   plugins: {
                     legend: {
                       position: 'bottom',
-                      labels: { color: '#ffffff', boxWidth: 10, font: { size: 10, weight: 'bold' } }
+                      labels: { color: isLight ? '#0f172a' : '#ffffff', boxWidth: 10, font: { size: 10, weight: 'bold' } }
                     }
                   }
                 }} 
@@ -317,12 +319,12 @@ export default function Dashboard({ searchFilter, onNavigate }) {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           
           {/* Reports Table Queue */}
-          <div className="xl:col-span-2 rounded-2xl border border-white/20 bg-white/[0.08] backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] p-5 flex flex-col">
+          <div className="xl:col-span-2 rounded-2xl border border-slate-200 dark:border-white/20 bg-white dark:bg-white/[0.08] backdrop-blur-2xl shadow-sm dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] p-5 flex flex-col">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-sm font-black text-white text-left">Recent Submissions Review Queue</h3>
+              <h3 className="text-sm font-black text-slate-900 dark:text-white text-left">Recent Submissions Review Queue</h3>
               <button 
                 onClick={() => onNavigate('reports')} 
-                className="text-xs font-bold text-cyan-400 hover:text-cyan-300 transition-all cursor-pointer"
+                className="text-xs font-bold text-indigo-600 dark:text-cyan-400 hover:underline transition-all cursor-pointer"
               >
                 View all reports
               </button>
@@ -331,31 +333,31 @@ export default function Dashboard({ searchFilter, onNavigate }) {
             <div className="overflow-x-auto flex-1">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-white/15 text-white/90 text-[11px] font-extrabold uppercase tracking-wider">
+                  <tr className="border-b border-slate-200 dark:border-white/15 text-slate-600 dark:text-white/90 text-[11px] font-extrabold uppercase tracking-wider">
                     <th className="pb-2.5">Member</th>
                     <th className="pb-2.5">Project</th>
                     <th className="pb-2.5 text-center">Status</th>
                     <th className="pb-2.5 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/10 text-xs text-white">
+                <tbody className="divide-y divide-slate-100 dark:divide-white/10 text-xs text-slate-900 dark:text-white">
                   {filteredReportsList.slice(0, 5).map((rep) => (
-                    <tr key={rep.id} className="hover:bg-white/5 transition-colors">
+                    <tr key={rep.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
                       <td className="py-3 flex items-center gap-2">
-                        <div className="h-7 w-7 rounded-full bg-white/15 border border-white/20 flex items-center justify-center font-bold text-[11px] text-cyan-300">
+                        <div className="h-7 w-7 rounded-full bg-indigo-50 dark:bg-white/15 border border-indigo-200 dark:border-white/20 flex items-center justify-center font-bold text-[11px] text-indigo-600 dark:text-cyan-300">
                           {rep.employeeName.charAt(0)}
                         </div>
                         <div>
-                          <span className="font-bold text-white block">{rep.employeeName}</span>
-                          <span className="text-[10px] text-slate-300">{rep.date}</span>
+                          <span className="font-bold text-slate-900 dark:text-white block">{rep.employeeName}</span>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-300">{rep.date}</span>
                         </div>
                       </td>
-                      <td className="py-3 font-semibold text-slate-100">{rep.projectName}</td>
+                      <td className="py-3 font-semibold text-slate-700 dark:text-slate-100">{rep.projectName}</td>
                       <td className="py-3 text-center">
                         <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-                          rep.status === 'Approved' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30' :
-                          rep.status === 'Rejected' ? 'bg-rose-500/20 text-rose-300 border-rose-400/30' :
-                          'bg-amber-500/20 text-amber-300 border-amber-400/30'
+                          rep.status === 'Approved' ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-400/30' :
+                          rep.status === 'Rejected' ? 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-400/30' :
+                          'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-400/30'
                         }`}>
                           {rep.status}
                         </span>
@@ -365,7 +367,7 @@ export default function Dashboard({ searchFilter, onNavigate }) {
                           <button
                             onClick={() => setSelectedReport(rep)}
                             title="Inspect Details"
-                            className="p-1.5 rounded-lg text-slate-200 hover:text-white hover:bg-white/15 border border-white/10 cursor-pointer"
+                            className="p-1.5 rounded-lg text-slate-600 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/15 border border-slate-200 dark:border-white/10 cursor-pointer"
                           >
                             <Eye className="h-4 w-4" />
                           </button>
@@ -375,14 +377,14 @@ export default function Dashboard({ searchFilter, onNavigate }) {
                               <button
                                 onClick={() => handleQuickReview(rep.id, 'Approved')}
                                 title="Approve"
-                                className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 hover:bg-emerald-500/30 cursor-pointer"
+                                className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-400/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/30 cursor-pointer"
                               >
                                 <Check className="h-4 w-4" />
                               </button>
                               <button
                                 onClick={() => handleQuickReview(rep.id, 'Rejected')}
                                 title="Reject"
-                                className="p-1.5 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-400/30 hover:bg-rose-500/30 cursor-pointer"
+                                className="p-1.5 rounded-lg bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-400/30 hover:bg-rose-100 dark:hover:bg-rose-500/30 cursor-pointer"
                               >
                                 <X className="h-4 w-4" />
                               </button>
@@ -394,7 +396,7 @@ export default function Dashboard({ searchFilter, onNavigate }) {
                   ))}
                   {filteredReportsList.length === 0 && (
                     <tr>
-                      <td colSpan="4" className="py-8 text-center text-slate-300">No reports found matching filters.</td>
+                      <td colSpan="4" className="py-8 text-center text-slate-500 dark:text-slate-300">No reports found matching filters.</td>
                     </tr>
                   )}
                 </tbody>
@@ -403,44 +405,44 @@ export default function Dashboard({ searchFilter, onNavigate }) {
           </div>
 
           {/* Announcement Composer */}
-          <div className="rounded-2xl border border-white/20 bg-white/[0.08] backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] p-5 flex flex-col justify-between text-left">
+          <div className="rounded-2xl border border-slate-200 dark:border-white/20 bg-white dark:bg-white/[0.08] backdrop-blur-2xl shadow-sm dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] p-5 flex flex-col justify-between text-left">
             <div>
-              <h3 className="text-sm font-black text-white mb-4 flex items-center gap-1.5">
-                <Megaphone className="h-4 w-4 text-cyan-400" />
+              <h3 className="text-sm font-black text-slate-900 dark:text-white mb-4 flex items-center gap-1.5">
+                <Megaphone className="h-4 w-4 text-indigo-600 dark:text-cyan-400" />
                 Publish Announcement
               </h3>
               
               <form onSubmit={handlePostAnnouncement} className="space-y-3.5">
                 <div>
-                  <label className="text-[10px] text-slate-200 font-bold uppercase tracking-wider block mb-1">Title</label>
+                  <label className="text-[10px] text-slate-600 dark:text-slate-200 font-bold uppercase tracking-wider block mb-1">Title</label>
                   <input
                     type="text"
                     required
                     value={annTitle}
                     onChange={(e) => setAnnTitle(e.target.value)}
                     placeholder="e.g. Q2 Performance Reviews..."
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-white/10 border border-white/20 text-white placeholder-slate-400 focus:outline-none focus:bg-white/15 focus:border-white/40"
+                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-white/10 border border-slate-300 dark:border-white/20 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 dark:focus:border-white/40"
                   />
                 </div>
                 
                 <div>
-                  <label className="text-[10px] text-slate-200 font-bold uppercase tracking-wider block mb-1">Message Content</label>
+                  <label className="text-[10px] text-slate-600 dark:text-slate-200 font-bold uppercase tracking-wider block mb-1">Message Content</label>
                   <textarea
                     rows="3"
                     required
                     value={annContent}
                     onChange={(e) => setAnnContent(e.target.value)}
                     placeholder="Enter details for the team members notifications feed..."
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-white/10 border border-white/20 text-white placeholder-slate-400 focus:outline-none focus:bg-white/15 focus:border-white/40 resize-none"
+                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-white/10 border border-slate-300 dark:border-white/20 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 dark:focus:border-white/40 resize-none"
                   />
                 </div>
                 
                 <button
                   type="submit"
-                  className="w-full py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 hover:brightness-110 active:scale-[0.98] transition-all text-white flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-indigo-600/30"
+                  className="w-full py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] transition-all text-white flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-indigo-600/30"
                 >
-                  <Send className="h-3.5 w-3.5" />
-                  Publish To Everyone
+                  <Send className="h-3.5 w-3.5 text-white" />
+                  <span>Publish To Everyone</span>
                 </button>
               </form>
             </div>
@@ -483,12 +485,12 @@ export default function Dashboard({ searchFilter, onNavigate }) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Personal Reports History List */}
-          <div className="lg:col-span-2 rounded-2xl border border-white/20 bg-white/[0.08] backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] p-5 flex flex-col text-left">
+          <div className="lg:col-span-2 rounded-2xl border border-slate-200 dark:border-white/20 bg-white dark:bg-white/[0.08] backdrop-blur-2xl shadow-sm dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] p-5 flex flex-col text-left">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-sm font-black text-white">My Recent Progress Submissions</h3>
+              <h3 className="text-sm font-black text-slate-900 dark:text-white">My Recent Progress Submissions</h3>
               <button 
                 onClick={() => onNavigate('reports')} 
-                className="text-xs font-bold text-cyan-400 hover:text-cyan-300 transition-all cursor-pointer"
+                className="text-xs font-bold text-indigo-600 dark:text-cyan-400 hover:underline transition-all cursor-pointer"
               >
                 View full history
               </button>
@@ -499,20 +501,20 @@ export default function Dashboard({ searchFilter, onNavigate }) {
                 <div 
                   key={rep.id} 
                   onClick={() => setSelectedReport(rep)}
-                  className="p-3.5 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 cursor-pointer transition-all flex items-center justify-between"
+                  className="p-3.5 rounded-xl border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 cursor-pointer transition-all flex items-center justify-between"
                 >
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs font-bold text-white">{rep.projectName} - {rep.moduleName}</span>
-                    <span className="text-[10px] text-slate-300 flex items-center gap-1.5">
-                      <Clock3 className="h-3 w-3 text-cyan-400" /> {rep.date} • {rep.hoursWorked} hrs worked
+                    <span className="text-xs font-bold text-slate-900 dark:text-white">{rep.projectName} - {rep.moduleName}</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-300 flex items-center gap-1.5">
+                      <Clock3 className="h-3 w-3 text-indigo-600 dark:text-cyan-400" /> {rep.date} • {rep.hoursWorked} hrs worked
                     </span>
                   </div>
                   
                   <div className="flex items-center gap-3">
                     <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-                      rep.status === 'Approved' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30' :
-                      rep.status === 'Rejected' ? 'bg-rose-500/20 text-rose-300 border-rose-400/30' :
-                      'bg-amber-500/20 text-amber-300 border-amber-400/30'
+                      rep.status === 'Approved' ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-400/30' :
+                      rep.status === 'Rejected' ? 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-400/30' :
+                      'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-400/30'
                     }`}>
                       {rep.status}
                     </span>
@@ -520,7 +522,7 @@ export default function Dashboard({ searchFilter, onNavigate }) {
                 </div>
               ))}
               {recentActivity.length === 0 && (
-                <div className="py-12 text-center text-slate-300 text-xs">
+                <div className="py-12 text-center text-slate-500 dark:text-slate-300 text-xs">
                   No reports logged yet. Start by creating a report.
                 </div>
               )}
@@ -528,25 +530,25 @@ export default function Dashboard({ searchFilter, onNavigate }) {
           </div>
 
           {/* Announcements Card Board */}
-          <div className="rounded-2xl border border-white/20 bg-white/[0.08] backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] p-5 flex flex-col text-left">
-            <h3 className="text-sm font-black text-white mb-4 flex items-center gap-1.5 border-b border-white/15 pb-2.5">
-              <BellRing className="h-4 w-4 text-cyan-400 animate-bounce" />
+          <div className="rounded-2xl border border-slate-200 dark:border-white/20 bg-white dark:bg-white/[0.08] backdrop-blur-2xl shadow-sm dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] p-5 flex flex-col text-left">
+            <h3 className="text-sm font-black text-slate-900 dark:text-white mb-4 flex items-center gap-1.5 border-b border-slate-200 dark:border-white/15 pb-2.5">
+              <BellRing className="h-4 w-4 text-indigo-600 dark:text-cyan-400 animate-bounce" />
               Company Announcements
             </h3>
             
             <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1">
               {db.announcements.map((ann) => (
-                <div key={ann.id} className="p-3.5 rounded-xl bg-white/5 border border-white/15">
-                  <h4 className="text-xs font-bold text-white">{ann.title}</h4>
-                  <p className="text-[11px] text-slate-200 mt-1 leading-relaxed">{ann.content}</p>
-                  <div className="flex justify-between items-center text-[9px] text-slate-300 mt-3 font-medium">
+                <div key={ann.id} className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/15">
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">{ann.title}</h4>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-200 mt-1 leading-relaxed">{ann.content}</p>
+                  <div className="flex justify-between items-center text-[9px] text-slate-500 dark:text-slate-300 mt-3 font-medium">
                     <span>By {ann.sender}</span>
                     <span>{ann.date}</span>
                   </div>
                 </div>
               ))}
               {db.announcements.length === 0 && (
-                <div className="text-center text-slate-400 text-xs py-8">No announcements posted.</div>
+                <div className="text-center text-slate-500 dark:text-slate-400 text-xs py-8">No announcements posted.</div>
               )}
             </div>
           </div>

@@ -128,7 +128,7 @@ export default function CheckInWidget({ currentUser, todayRecord, settings, onCh
   const isLoading = actionState.status === 'loading';
 
   return (
-    <div className="rounded-3xl border p-6 md:p-8 shadow-md relative overflow-hidden bg-white" style={{ borderColor: '#cbd5e1' }}>
+    <div className="rounded-3xl border border-slate-200 dark:border-white/15 p-6 md:p-8 shadow-xl relative overflow-hidden bg-white dark:bg-white/[0.07] backdrop-blur-2xl text-left">
       
       {/* Centered In-Widget Loading & Notification Overlay */}
       <AnimatePresence>
@@ -144,7 +144,7 @@ export default function CheckInWidget({ currentUser, todayRecord, settings, onCh
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl border border-slate-200 flex flex-col items-center text-center space-y-4"
+                className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col items-center text-center space-y-4"
               >
                 <div className="relative flex items-center justify-center h-20 w-20">
                   <motion.div
@@ -152,21 +152,21 @@ export default function CheckInWidget({ currentUser, todayRecord, settings, onCh
                     transition={{ repeat: Infinity, duration: 1.2, ease: 'linear' }}
                     className="absolute inset-0 rounded-full border-3 border-indigo-600 border-t-transparent shadow-md"
                   />
-                  <div className="h-14 w-14 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
+                  <div className="h-14 w-14 rounded-full bg-indigo-50 dark:bg-indigo-950 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
                     <Clock className="h-7 w-7 animate-pulse" />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <h3 className="text-lg font-black text-slate-900">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white">
                     {actionState.actionType === 'checkin' ? 'Marking Attendance...' : 'Logging Check-Out...'}
                   </h3>
-                  <p className="text-xs font-bold text-slate-500">
+                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
                     {actionState.message}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-[11px] font-extrabold">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-[11px] font-extrabold">
                   <span className="h-2 w-2 rounded-full bg-indigo-600 animate-ping" />
                   GoNexora Attendance Cloud Sync
                 </div>
@@ -179,11 +179,11 @@ export default function CheckInWidget({ currentUser, todayRecord, settings, onCh
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.85, opacity: 0, y: 10 }}
                 transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-                className="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border-2 border-emerald-500 flex flex-col items-center text-center space-y-5 relative"
+                className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border-2 border-emerald-500 flex flex-col items-center text-center space-y-5 relative"
               >
                 <button
                   onClick={closeNotification}
-                  className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                  className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -194,45 +194,45 @@ export default function CheckInWidget({ currentUser, todayRecord, settings, onCh
                     initial={{ scale: 0 }}
                     animate={{ scale: [0, 1.2, 1] }}
                     transition={{ duration: 0.5 }}
-                    className="h-20 w-20 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 border-2 border-emerald-300 shadow-lg shadow-emerald-200"
+                    className="h-20 w-20 rounded-full bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-emerald-600 border-2 border-emerald-300 dark:border-emerald-700 shadow-lg shadow-emerald-200 dark:shadow-emerald-950"
                   >
-                    <CheckCircle2 className="h-11 w-11 text-emerald-600" />
+                    <CheckCircle2 className="h-11 w-11 text-emerald-600 dark:text-emerald-400" />
                   </motion.div>
                 </div>
 
                 <div className="space-y-1">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-black">
-                    <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-[11px] font-black">
+                    <Sparkles className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                     Verified & Recorded
                   </div>
-                  <h3 className="text-xl font-black text-slate-900 tracking-tight">
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
                     {actionState.message}
                   </h3>
-                  <p className="text-xs font-extrabold text-slate-500">
+                  <p className="text-xs font-extrabold text-slate-500 dark:text-slate-400">
                     {currentUser?.name} • {currentUser?.id}
                   </p>
                 </div>
 
                 {/* Detailed Summary Card */}
-                <div className="w-full bg-slate-50 rounded-2xl p-4 border border-slate-200 text-left space-y-2.5 text-xs">
+                <div className="w-full bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 text-left space-y-2.5 text-xs">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-bold">Timestamp:</span>
-                    <span className="font-black text-slate-900 font-mono text-sm">{actionState.timestamp}</span>
+                    <span className="text-slate-500 dark:text-slate-400 font-bold">Timestamp:</span>
+                    <span className="font-black text-slate-900 dark:text-white font-mono text-sm">{actionState.timestamp}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-bold">Attendance Status:</span>
-                    <span className="font-black px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    <span className="text-slate-500 dark:text-slate-400 font-bold">Attendance Status:</span>
+                    <span className="font-black px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40">
                       {actionState.statusBadge}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-bold">Location:</span>
-                    <span className="font-black text-slate-800">Nexora HQ (Verified GPS)</span>
+                    <span className="text-slate-500 dark:text-slate-400 font-bold">Location:</span>
+                    <span className="font-black text-slate-800 dark:text-slate-200">Nexora HQ (Verified GPS)</span>
                   </div>
                   {actionState.remarksNote && (
-                    <div className="flex items-start justify-between pt-1 border-t border-slate-200">
-                      <span className="text-slate-500 font-bold">Remarks:</span>
-                      <span className="font-bold text-slate-800 italic max-w-[200px] text-right truncate">{actionState.remarksNote}</span>
+                    <div className="flex items-start justify-between pt-1 border-t border-slate-200 dark:border-slate-800">
+                      <span className="text-slate-500 dark:text-slate-400 font-bold">Remarks:</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200 italic max-w-[200px] text-right truncate">{actionState.remarksNote}</span>
                     </div>
                   )}
                 </div>
@@ -254,22 +254,22 @@ export default function CheckInWidget({ currentUser, todayRecord, settings, onCh
                 initial={{ scale: 0.85, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.85, opacity: 0 }}
-                className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl border-2 border-rose-400 flex flex-col items-center text-center space-y-4 relative"
+                className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl border-2 border-rose-400 flex flex-col items-center text-center space-y-4 relative"
               >
                 <button
                   onClick={closeNotification}
-                  className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                  className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                 >
                   <X className="h-4 w-4" />
                 </button>
 
-                <div className="h-16 w-16 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 border border-rose-300">
-                  <AlertCircle className="h-8 w-8 text-rose-600" />
+                <div className="h-16 w-16 rounded-full bg-rose-100 dark:bg-rose-950 flex items-center justify-center text-rose-600 border border-rose-300 dark:border-rose-700">
+                  <AlertCircle className="h-8 w-8 text-rose-600 dark:text-rose-400" />
                 </div>
 
                 <div className="space-y-1">
-                  <h3 className="text-lg font-black text-slate-900">Attendance Error</h3>
-                  <p className="text-xs font-bold text-rose-600">{actionState.message}</p>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white">Attendance Error</h3>
+                  <p className="text-xs font-bold text-rose-600 dark:text-rose-400">{actionState.message}</p>
                 </div>
 
                 <button
@@ -288,44 +288,44 @@ export default function CheckInWidget({ currentUser, todayRecord, settings, onCh
         
         {/* Left Side: Live Digital Clock & Info */}
         <div className="space-y-4 text-center lg:text-left">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-extrabold" style={{ backgroundColor: '#eef2ff', color: '#3730a3', border: '1px solid #c7d2fe' }}>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-[#818cf8] border border-indigo-200 dark:border-indigo-800/60">
             <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
             GoNexora Smart Attendance Tracker
           </div>
 
           <div>
-            <h2 className="text-4xl md:text-5xl font-black tracking-tight font-mono" style={{ color: '#000000' }}>
+            <h2 className="text-4xl md:text-5xl font-black tracking-tight font-mono text-slate-900 dark:text-white">
               {formatTime(time)}
             </h2>
-            <p className="text-sm font-extrabold mt-1" style={{ color: '#1e293b' }}>
+            <p className="text-sm font-extrabold mt-1 text-slate-700 dark:text-slate-200">
               {formatDate(time)}
             </p>
           </div>
 
           <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 text-xs font-bold">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border" style={{ backgroundColor: '#f8fafc', color: '#000000', borderColor: '#cbd5e1' }}>
-              <MapPin className="h-3.5 w-3.5 text-indigo-600" />
-              <span>Location: <strong style={{ color: '#000000', fontWeight: '900' }}>Nexora HQ (Verified)</strong></span>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-slate-800 dark:text-slate-200">
+              <MapPin className="h-3.5 w-3.5 text-indigo-600 dark:text-[#818cf8]" />
+              <span>Location: <strong className="text-slate-900 dark:text-white font-black">Nexora HQ (Verified)</strong></span>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-extrabold" style={{ backgroundColor: '#ecfdf5', color: '#064e3b', borderColor: '#a7f3d0' }}>
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-700" />
-              <span style={{ color: '#064e3b' }}>Flexible Entry Allowed</span>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 font-extrabold">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span>Flexible Entry Allowed</span>
             </div>
           </div>
         </div>
 
         {/* Right Side: Interactive Action Box */}
-        <div className="w-full lg:w-auto min-w-[340px] border rounded-2xl p-5 space-y-4 shadow-sm" style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1' }}>
-          <div className="flex items-center justify-between border-b pb-3" style={{ borderColor: '#cbd5e1' }}>
-            <span className="text-xs font-black uppercase tracking-wider" style={{ color: '#000000' }}>
+        <div className="w-full lg:w-auto min-w-[340px] border border-slate-200 dark:border-white/10 rounded-2xl p-5 space-y-4 shadow-sm bg-white dark:bg-slate-900/60">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
+            <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
               Today's Attendance Status
             </span>
             {todayRecord ? (
-              <span className="text-xs font-black px-3 py-1 rounded-full border" style={{ backgroundColor: '#d1fae5', color: '#064e3b', borderColor: '#34d399' }}>
+              <span className="text-xs font-black px-3 py-1 rounded-full border bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/40">
                 {todayRecord.status === 'Late' ? 'Present' : (todayRecord.status || 'Present')}
               </span>
             ) : (
-              <span className="text-xs font-bold px-3 py-1 rounded-full border" style={{ backgroundColor: '#f1f5f9', color: '#1e293b', borderColor: '#cbd5e1' }}>
+              <span className="text-xs font-bold px-3 py-1 rounded-full border bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700">
                 Not Marked
               </span>
             )}
@@ -333,15 +333,15 @@ export default function CheckInWidget({ currentUser, todayRecord, settings, onCh
 
           {/* Times Breakdown */}
           <div className="grid grid-cols-2 gap-3 text-center">
-            <div className="p-3.5 rounded-xl border" style={{ backgroundColor: '#f8fafc', borderColor: '#cbd5e1' }}>
-              <span className="text-[10px] font-black uppercase block" style={{ color: '#1e293b' }}>CHECK-IN</span>
-              <span className="text-base font-black font-mono block mt-1" style={{ color: '#000000' }}>
+            <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40">
+              <span className="text-[10px] font-black uppercase block text-slate-600 dark:text-slate-400">CHECK-IN</span>
+              <span className="text-base font-black font-mono block mt-1 text-slate-900 dark:text-white">
                 {displayCheckInTime}
               </span>
             </div>
-            <div className="p-3.5 rounded-xl border" style={{ backgroundColor: '#f8fafc', borderColor: '#cbd5e1' }}>
-              <span className="text-[10px] font-black uppercase block" style={{ color: '#1e293b' }}>CHECK-OUT (OPTIONAL)</span>
-              <span className="text-base font-black font-mono block mt-1" style={{ color: '#000000' }}>
+            <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40">
+              <span className="text-[10px] font-black uppercase block text-slate-600 dark:text-slate-400">CHECK-OUT (OPTIONAL)</span>
+              <span className="text-base font-black font-mono block mt-1 text-slate-900 dark:text-white">
                 {displayCheckOutTime}
               </span>
             </div>
@@ -355,26 +355,24 @@ export default function CheckInWidget({ currentUser, todayRecord, settings, onCh
                 value={remarks}
                 onChange={(e) => setRemarks(e.target.value)}
                 disabled={isLoading}
-                className="w-full px-3.5 py-2.5 text-xs rounded-xl border focus:outline-none focus:border-indigo-600 font-bold"
-                style={{ backgroundColor: '#ffffff', color: '#000000', borderColor: '#cbd5e1' }}
+                className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-bold"
               />
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleIn}
                 disabled={isLoading}
-                className="w-full py-3.5 px-4 rounded-xl text-white font-black text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 transition-all"
-                style={{ backgroundColor: '#4f46e5', color: '#ffffff' }}
+                className="w-full py-3.5 px-4 rounded-xl text-white font-black text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 transition-all bg-indigo-600 hover:bg-indigo-500"
               >
                 {isLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin text-white" />
-                    <span style={{ color: '#ffffff' }}>Recording Check-In...</span>
+                    <span>Recording Check-In...</span>
                   </>
                 ) : (
                   <>
-                    <LogIn className="h-4 w-4" style={{ color: '#ffffff' }} />
-                    <span style={{ color: '#ffffff' }}>Daily Check-In</span>
+                    <LogIn className="h-4 w-4 text-white" />
+                    <span>Daily Check-In</span>
                   </>
                 )}
               </motion.button>
@@ -383,9 +381,9 @@ export default function CheckInWidget({ currentUser, todayRecord, settings, onCh
 
           {hasCheckedIn && (
             <div className="space-y-3">
-              <div className="p-3 rounded-xl border text-xs font-black text-center flex items-center justify-center gap-2" style={{ backgroundColor: '#d1fae5', color: '#064e3b', borderColor: '#34d399' }}>
-                <ShieldCheck className="h-4 w-4 text-emerald-700" />
-                <span style={{ color: '#064e3b' }}>Today's Attendance Recorded (Present)</span>
+              <div className="p-3 rounded-xl border border-emerald-300 dark:border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/40 text-xs font-black text-center flex items-center justify-center gap-2 text-emerald-800 dark:text-emerald-300">
+                <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                <span>Today's Attendance Recorded (Present)</span>
               </div>
 
               {!hasCheckedOut && (
@@ -394,25 +392,24 @@ export default function CheckInWidget({ currentUser, todayRecord, settings, onCh
                   whileTap={{ scale: 0.98 }}
                   onClick={handleOut}
                   disabled={isLoading}
-                  className="w-full py-3 px-4 rounded-xl text-white font-black text-xs shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 transition-all"
-                  style={{ backgroundColor: '#0f172a', color: '#ffffff' }}
+                  className="w-full py-3 px-4 rounded-xl text-white font-black text-xs shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 transition-all bg-slate-900 hover:bg-slate-800"
                 >
                   {isLoading ? (
                     <>
                       <Loader2 className="h-3.5 w-3.5 animate-spin text-white" />
-                      <span style={{ color: '#ffffff' }}>Logging Check-Out...</span>
+                      <span>Logging Check-Out...</span>
                     </>
                   ) : (
                     <>
-                      <LogOut className="h-3.5 w-3.5" style={{ color: '#ffffff' }} />
-                      <span style={{ color: '#ffffff' }}>Optional Check-Out</span>
+                      <LogOut className="h-3.5 w-3.5 text-white" />
+                      <span>Optional Check-Out</span>
                     </>
                   )}
                 </motion.button>
               )}
 
               {hasCheckedOut && (
-                <div className="text-[11px] text-center font-extrabold" style={{ color: '#1e293b' }}>
+                <div className="text-[11px] text-center font-extrabold text-slate-700 dark:text-slate-300">
                   Checked out at {todayRecord.checkOutTime}
                 </div>
               )}
@@ -424,4 +421,3 @@ export default function CheckInWidget({ currentUser, todayRecord, settings, onCh
     </div>
   );
 }
-

@@ -5,13 +5,29 @@
 @layer base {
   body {
     font-family: 'Inter', sans-serif;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  
+  html.dark body {
     background-color: #0b0f19;
-    color: #f8fafc;
+    color: #ffffff;
+  }
+  
+  html.light body {
+    background-color: #f1f5f9;
+    color: #0f172a;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Outfit', sans-serif;
+  }
+  
+  html.dark h1, html.dark h2, html.dark h3, html.dark h4, html.dark h5, html.dark h6 {
     color: #ffffff;
+  }
+  
+  html.light h1, html.light h2, html.light h3, html.light h4, html.light h5, html.light h6 {
+    color: #0f172a !important;
   }
 }
 
@@ -21,66 +37,296 @@
   height: 6px;
 }
 
-::-webkit-scrollbar-track {
+html.dark ::-webkit-scrollbar-track {
   background: #0f172a;
 }
 
-::-webkit-scrollbar-thumb {
+html.dark ::-webkit-scrollbar-thumb {
   background: #334155;
   border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+html.light ::-webkit-scrollbar-track {
+  background: #f1f5f9;
 }
 
-/* Premium Luminous White Frosted Glass Panel styling */
+html.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+/* Premium Glass Panel & Cards */
 .glass-panel, .white-glass-card {
+  border-radius: 1rem !important;
+  transition: all 0.2s ease !important;
+}
+
+html.dark .glass-panel, html.dark .white-glass-card {
   background: rgba(255, 255, 255, 0.08) !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  border-radius: 1rem !important;
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
   backdrop-filter: blur(20px) !important;
   -webkit-backdrop-filter: blur(20px) !important;
   color: #ffffff !important;
 }
 
+html.light .glass-panel, html.light .white-glass-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03) !important;
+  color: #0f172a !important;
+}
+
 .glass-panel-light, .white-glass-card-light {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
   border-radius: 0.75rem !important;
   backdrop-filter: blur(14px) !important;
   -webkit-backdrop-filter: blur(14px) !important;
+}
+
+html.dark .glass-panel-light, html.dark .white-glass-card-light {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
   color: #ffffff !important;
 }
 
+html.light .glass-panel-light, html.light .white-glass-card-light {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* Glass Inputs */
 .glass-input, .white-glass-input {
-  background-color: rgba(255, 255, 255, 0.08) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  color: #ffffff !important;
   border-radius: 0.75rem !important;
   backdrop-filter: blur(12px) !important;
   transition: all 0.2s ease !important;
 }
 
-.glass-input:focus, .white-glass-input:focus {
+html.dark .glass-input, html.dark .white-glass-input {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
+html.dark .glass-input:focus, html.dark .white-glass-input:focus {
   background-color: rgba(255, 255, 255, 0.14) !important;
   border-color: rgba(255, 255, 255, 0.5) !important;
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2) !important;
   outline: none !important;
 }
 
+html.light .glass-input, html.light .white-glass-input {
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+html.light .glass-input:focus, html.light .white-glass-input:focus {
+  background-color: #ffffff !important;
+  border-color: #4f46e5 !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
+  outline: none !important;
+}
+
+/* Glass Buttons */
 .white-glass-btn {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.25) !important;
-  color: #ffffff !important;
   backdrop-filter: blur(12px) !important;
   transition: all 0.2s ease !important;
 }
 
-.white-glass-btn:hover {
+html.dark .white-glass-btn {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
+}
+
+html.dark .white-glass-btn:hover {
   background: rgba(255, 255, 255, 0.2) !important;
   border-color: rgba(255, 255, 255, 0.45) !important;
+}
+
+html.light .white-glass-btn {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+html.light .white-glass-btn:hover {
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+}
+
+/* Portal Mesh Backgrounds */
+.portal-grey-mesh {
+  transition: background 0.3s ease;
+}
+
+html.dark .portal-grey-mesh {
+  background: 
+    radial-gradient(circle at 15% 15%, rgba(51, 65, 85, 0.25) 0%, transparent 45%),
+    radial-gradient(circle at 85% 25%, rgba(71, 85, 105, 0.2) 0%, transparent 40%),
+    radial-gradient(circle at 50% 85%, rgba(30, 41, 59, 0.4) 0%, transparent 60%),
+    linear-gradient(180deg, #090d16 0%, #0f172a 50%, #090d16 100%);
+}
+
+html.light .portal-grey-mesh {
+  background: 
+    radial-gradient(circle at 15% 15%, rgba(199, 210, 254, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 85% 25%, rgba(186, 230, 253, 0.25) 0%, transparent 45%),
+    radial-gradient(circle at 50% 85%, rgba(226, 232, 240, 0.5) 0%, transparent 60%),
+    linear-gradient(180deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+}
+
+.sidebar-grey-mesh {
+  transition: background 0.3s ease;
+}
+
+html.dark .sidebar-grey-mesh {
+  background: 
+    radial-gradient(circle at 50% 10%, rgba(71, 85, 105, 0.22) 0%, transparent 50%),
+    radial-gradient(circle at 20% 80%, rgba(51, 65, 85, 0.18) 0%, transparent 50%),
+    linear-gradient(180deg, #0b0f19 0%, #0d1322 50%, #080c14 100%);
+  border-right-color: rgba(30, 41, 59, 0.8) !important;
+}
+
+html.light .sidebar-grey-mesh {
+  background: 
+    radial-gradient(circle at 50% 10%, rgba(224, 231, 255, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 20% 80%, rgba(207, 250, 254, 0.2) 0%, transparent 50%),
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%);
+  border-right-color: #e2e8f0 !important;
+}
+
+/* LIGHT THEME EXPLICIT VISIBILITY OVERRIDES */
+html.light .text-white:not(button.bg-indigo-600 *):not(button.bg-indigo-700 *):not(button.bg-blue-600 *):not(button.bg-emerald-600 *):not(button.bg-emerald-700 *):not(button.bg-rose-600 *):not(button.bg-slate-900 *):not(button.bg-gradient-to-r *):not([type="submit"] *):not(.keep-white) {
+  color: #0f172a !important;
+}
+
+html.light .text-slate-100, 
+html.light .text-slate-200, 
+html.light .text-slate-300 {
+  color: #334155 !important;
+}
+
+html.light .text-slate-400 {
+  color: #64748b !important;
+}
+
+html.light .text-slate-500 {
+  color: #64748b !important;
+}
+
+/* Light Theme Header */
+html.light header {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light header h2 {
+  color: #0f172a !important;
+}
+
+html.light header input {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+html.light header input::placeholder {
+  color: #94a3b8 !important;
+}
+
+html.light header button {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+html.light header button:hover {
+  background-color: #e2e8f0 !important;
+}
+
+/* Light Theme Sidebar Items */
+html.light .sidebar-grey-mesh button:not(.bg-indigo-600) {
+  color: #1e293b !important;
+}
+
+html.light .sidebar-grey-mesh button:not(.bg-indigo-600) span {
+  color: #0f172a !important;
+}
+
+html.light .sidebar-grey-mesh button.bg-indigo-600,
+html.light .sidebar-grey-mesh button.bg-indigo-600 span {
+  color: #ffffff !important;
+}
+
+html.light .sidebar-grey-mesh .text-indigo-300 {
+  color: #4f46e5 !important;
+}
+
+html.light .sidebar-grey-mesh .text-cyan-300 {
+  color: #0284c7 !important;
+}
+
+/* Light Theme Tables */
+html.light table thead tr {
+  background-color: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+html.light table th {
+  color: #475569 !important;
+  background-color: #f8fafc !important;
+}
+
+html.light table td {
+  color: #0f172a !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+
+html.light table tr:hover {
+  background-color: #f8fafc !important;
+}
+
+/* Light Theme Inputs */
+html.light input, html.light select, html.light textarea {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+html.light input::placeholder, html.light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Preserve White Text on Solid Action Buttons */
+button.bg-indigo-600,
+button.bg-indigo-700,
+button.bg-blue-600,
+button.bg-emerald-600,
+button.bg-emerald-700,
+button.bg-rose-600,
+button.bg-slate-900,
+button.bg-gradient-to-r,
+[type="submit"],
+.btn-primary,
+.keep-white {
+  color: #ffffff !important;
+}
+
+button.bg-indigo-600 *,
+button.bg-indigo-700 *,
+button.bg-blue-600 *,
+button.bg-emerald-600 *,
+button.bg-emerald-700 *,
+button.bg-rose-600 *,
+button.bg-slate-900 *,
+button.bg-gradient-to-r *,
+[type="submit"] *,
+.keep-white * {
+  color: #ffffff !important;
 }
 
 /* Clean, corporate style page tags */
@@ -104,147 +350,3 @@
 .shadow-glass-hover:hover {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
 }
-
-/* Shimmer animation for card loadings */
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-.shimmer-bg {
-  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-/* Zero-Egress Pure CSS GPU Background Animations */
-@keyframes floatSlow1 {
-  0%, 100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(30px, -25px, 0) scale(1.08);
-  }
-}
-
-@keyframes floatSlow2 {
-  0%, 100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(-35px, 30px, 0) scale(0.94);
-  }
-}
-
-@keyframes floatSlow3 {
-  0%, 100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(25px, 25px, 0) scale(1.05);
-  }
-}
-
-.animate-float-1 {
-  animation: floatSlow1 16s ease-in-out infinite;
-}
-
-.animate-float-2 {
-  animation: floatSlow2 20s ease-in-out infinite;
-}
-
-.animate-float-3 {
-  animation: floatSlow3 24s ease-in-out infinite;
-}
-
-.bg-grid-slate-pattern {
-  background-image: radial-gradient(rgba(148, 163, 184, 0.16) 1.2px, transparent 1.2px);
-  background-size: 28px 28px;
-}
-
-.bg-dots-grey {
-  background-image: radial-gradient(rgba(100, 116, 139, 0.22) 1px, transparent 1px);
-  background-size: 20px 20px;
-}
-
-.portal-grey-mesh {
-  background: 
-    radial-gradient(circle at 15% 15%, rgba(51, 65, 85, 0.25) 0%, transparent 45%),
-    radial-gradient(circle at 85% 25%, rgba(71, 85, 105, 0.2) 0%, transparent 40%),
-    radial-gradient(circle at 50% 85%, rgba(30, 41, 59, 0.4) 0%, transparent 60%),
-    linear-gradient(180deg, #090d16 0%, #0f172a 50%, #090d16 100%);
-}
-
-.sidebar-grey-mesh {
-  background: 
-    radial-gradient(circle at 50% 10%, rgba(71, 85, 105, 0.22) 0%, transparent 50%),
-    radial-gradient(circle at 20% 80%, rgba(51, 65, 85, 0.18) 0%, transparent 50%),
-    linear-gradient(180deg, #0b0f19 0%, #0d1322 50%, #080c14 100%);
-}
-
-/* Light Theme Adaptations */
-html.light body {
-  background-color: #f1f5f9;
-  color: #0f172a;
-}
-
-html.light h1, html.light h2, html.light h3, html.light h4, html.light h5, html.light h6 {
-  color: #0f172a !important;
-}
-
-html.light .portal-grey-mesh {
-  background: 
-    radial-gradient(circle at 15% 15%, rgba(199, 210, 254, 0.4) 0%, transparent 50%),
-    radial-gradient(circle at 85% 25%, rgba(186, 230, 253, 0.35) 0%, transparent 45%),
-    radial-gradient(circle at 50% 85%, rgba(226, 232, 240, 0.6) 0%, transparent 60%),
-    linear-gradient(180deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
-}
-
-html.light .sidebar-grey-mesh {
-  background: 
-    radial-gradient(circle at 50% 10%, rgba(224, 231, 255, 0.4) 0%, transparent 50%),
-    radial-gradient(circle at 20% 80%, rgba(207, 250, 254, 0.3) 0%, transparent 50%),
-    linear-gradient(180deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%);
-  border-right-color: #e2e8f0 !important;
-}
-
-html.light .glass-panel, html.light .white-glass-card {
-  background: rgba(255, 255, 255, 0.85) !important;
-  border: 1px solid rgba(226, 232, 240, 0.9) !important;
-  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.05) !important;
-  color: #0f172a !important;
-}
-
-html.light .glass-panel-light, html.light .white-glass-card-light {
-  background: rgba(248, 250, 252, 0.9) !important;
-  border: 1px solid rgba(226, 232, 240, 0.7) !important;
-  color: #0f172a !important;
-}
-
-html.light .glass-input, html.light .white-glass-input {
-  background-color: #ffffff !important;
-  border: 1px solid #cbd5e1 !important;
-  color: #0f172a !important;
-}
-
-html.light .glass-input:focus, html.light .white-glass-input:focus {
-  background-color: #ffffff !important;
-  border-color: #4f46e5 !important;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
-}
-
-html.light .white-glass-btn {
-  background: #ffffff !important;
-  border: 1px solid #cbd5e1 !important;
-  color: #0f172a !important;
-}
-
-html.light .white-glass-btn:hover {
-  background: #f8fafc !important;
-  border-color: #94a3b8 !important;
-}
-

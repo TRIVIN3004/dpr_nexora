@@ -17,7 +17,7 @@ export default function ProjectsModal({ isOpen, onClose, projects }) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+          className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
         />
 
         {/* Modal Content */}
@@ -25,22 +25,22 @@ export default function ProjectsModal({ isOpen, onClose, projects }) {
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-2xl glass-panel border border-slate-800/80 bg-slate-950/95 shadow-glass-hover p-6 flex flex-col text-left"
+          className="relative w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-950/95 shadow-2xl p-6 flex flex-col text-left"
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-slate-900 pb-4 mb-4">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-900 pb-4 mb-4">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-nexora-purple/10 border border-nexora-purple/20 text-nexora-purple">
+              <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800/60 text-indigo-600 dark:text-[#818cf8]">
                 <Layers className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-100">Nexora Project Registry</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Overview of active initiatives and completed milestones</p>
+                <h3 className="text-base font-black text-slate-900 dark:text-slate-100">Nexora Project Registry</h3>
+                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">Overview of active initiatives and completed milestones</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all cursor-pointer"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 transition-all cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
@@ -51,28 +51,28 @@ export default function ProjectsModal({ isOpen, onClose, projects }) {
             
             {/* Ongoing Projects Section */}
             <div className="space-y-3">
-              <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 font-sans">
+              <h4 className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1.5 font-sans">
                 <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
                 Ongoing Initiatives ({ongoingProjects.length})
               </h4>
               
               {ongoingProjects.length === 0 ? (
-                <div className="flex items-center gap-2 p-4 rounded-xl bg-slate-900/20 border border-slate-900 text-xs text-slate-500">
-                  <AlertCircle className="h-4 w-4 text-slate-600" />
+                <div className="flex items-center gap-2 p-4 rounded-xl bg-slate-50 dark:bg-slate-900/20 border border-slate-200 dark:border-slate-900 text-xs text-slate-500">
+                  <AlertCircle className="h-4 w-4 text-slate-400" />
                   No ongoing projects currently active.
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                   {ongoingProjects.map((p) => (
-                    <div key={p.id} className="p-4 rounded-xl bg-slate-900/35 border border-slate-900 flex flex-col justify-between gap-2.5">
+                    <div key={p.id} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/35 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-2.5">
                       <div>
                         <div className="flex items-start justify-between gap-2">
-                          <h5 className="font-bold text-slate-200 text-xs">{p.name}</h5>
-                          <span className="text-[8px] font-extrabold px-1.5 py-0.5 rounded-full border bg-amber-500/10 text-amber-400 border-amber-500/20 whitespace-nowrap uppercase tracking-wider">
+                          <h5 className="font-bold text-slate-900 dark:text-slate-200 text-xs">{p.name}</h5>
+                          <span className="text-[8px] font-extrabold px-1.5 py-0.5 rounded-full border bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 whitespace-nowrap uppercase tracking-wider">
                             {p.status || 'In Progress'}
                           </span>
                         </div>
-                        <p className="text-[10px] text-slate-500 mt-1 leading-relaxed line-clamp-2">{p.description || 'No description provided.'}</p>
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed line-clamp-2">{p.description || 'No description provided.'}</p>
                       </div>
                     </div>
                   ))}
@@ -82,28 +82,28 @@ export default function ProjectsModal({ isOpen, onClose, projects }) {
 
             {/* Completed Projects Section */}
             <div className="space-y-3">
-              <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 font-sans">
+              <h4 className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1.5 font-sans">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                 Completed Milestones ({completedProjects.length})
               </h4>
 
               {completedProjects.length === 0 ? (
-                <div className="flex items-center gap-2 p-4 rounded-xl bg-slate-900/20 border border-slate-900 text-xs text-slate-500">
-                  <AlertCircle className="h-4 w-4 text-slate-600" />
+                <div className="flex items-center gap-2 p-4 rounded-xl bg-slate-50 dark:bg-slate-900/20 border border-slate-200 dark:border-slate-900 text-xs text-slate-500">
+                  <AlertCircle className="h-4 w-4 text-slate-400" />
                   No projects marked as completed yet.
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                   {completedProjects.map((p) => (
-                    <div key={p.id} className="p-4 rounded-xl bg-slate-900/35 border border-slate-900 flex flex-col justify-between gap-2.5 opacity-80 hover:opacity-100 transition-opacity">
+                    <div key={p.id} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/35 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-2.5 opacity-80 hover:opacity-100 transition-opacity">
                       <div>
                         <div className="flex items-start justify-between gap-2">
-                          <h5 className="font-bold text-slate-450 text-xs line-through">{p.name}</h5>
-                          <span className="text-[8px] font-extrabold px-1.5 py-0.5 rounded-full border bg-emerald-500/10 text-emerald-400 border-emerald-500/20 whitespace-nowrap uppercase tracking-wider">
+                          <h5 className="font-bold text-slate-500 dark:text-slate-400 text-xs line-through">{p.name}</h5>
+                          <span className="text-[8px] font-extrabold px-1.5 py-0.5 rounded-full border bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 whitespace-nowrap uppercase tracking-wider">
                             Completed
                           </span>
                         </div>
-                        <p className="text-[10px] text-slate-500 mt-1 leading-relaxed line-clamp-2">{p.description || 'No description provided.'}</p>
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed line-clamp-2">{p.description || 'No description provided.'}</p>
                       </div>
                     </div>
                   ))}

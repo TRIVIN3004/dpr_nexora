@@ -59,12 +59,12 @@ export default function Sidebar({ currentTab, onTabChange, isCollapsed, setIsCol
       <div className="absolute -bottom-10 right-0 w-36 h-36 rounded-full bg-slate-700/10 blur-3xl pointer-events-none" />
 
       {/* Brand Logo Header */}
-      <div className="relative z-10 flex h-16 items-center justify-between px-6 border-b border-white/10 bg-slate-950/50 backdrop-blur-md">
+      <div className="relative z-10 flex h-16 items-center justify-between px-6 border-b border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-950/50 backdrop-blur-md">
         <div className="flex items-center gap-3">
           <img 
             src="/logo.png" 
             alt="GoNexora Logo" 
-            className="h-10 w-10 rounded-full object-cover border border-indigo-400/60 shadow-md bg-black p-0.5" 
+            className="h-10 w-10 rounded-full object-cover border border-indigo-500/60 shadow-md bg-black p-0.5" 
           />
           {!isCollapsed && (
             <motion.div
@@ -73,10 +73,10 @@ export default function Sidebar({ currentTab, onTabChange, isCollapsed, setIsCol
               exit={{ opacity: 0, x: -10 }}
               className="flex flex-col"
             >
-              <span className="text-sm font-black text-white tracking-wide">
+              <span className="text-sm font-black text-slate-900 dark:text-white tracking-wide">
                 GoNexora Techs
               </span>
-              <span className="text-[9px] text-indigo-300 font-bold tracking-widest uppercase">
+              <span className="text-[9px] text-indigo-600 dark:text-indigo-300 font-bold tracking-widest uppercase">
                 DPR & Attendance
               </span>
             </motion.div>
@@ -86,21 +86,21 @@ export default function Sidebar({ currentTab, onTabChange, isCollapsed, setIsCol
         {/* Desktop Collapse Trigger */}
         <button 
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="hidden md:flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-950/70 hover:bg-indigo-900/80 border border-indigo-800/60 text-[#818cf8] cursor-pointer transition-colors backdrop-blur-md shadow-sm"
+          className="hidden md:flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 dark:bg-indigo-950/70 hover:bg-slate-200 dark:hover:bg-indigo-900/80 border border-slate-300 dark:border-indigo-800/60 text-slate-700 dark:text-[#818cf8] cursor-pointer transition-colors backdrop-blur-md shadow-sm"
         >
-          {isCollapsed ? <ChevronRight className="h-3.5 w-3.5 text-[#818cf8]" /> : <ChevronLeft className="h-3.5 w-3.5 text-[#818cf8]" />}
+          {isCollapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
         </button>
 
         {/* Mobile Close Trigger */}
         <button 
           onClick={() => setMobileOpen(false)}
-          className="md:hidden text-slate-300 hover:text-white"
+          className="md:hidden text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
         >
           <X className="h-5 w-5" />
         </button>
       </div>
 
-      {/* Nav List with Glassy Effects, Consistent Dark Blue Icons, and Pure White Fonts */}
+      {/* Nav List with Consistent Dark Blue Icons and High Contrast Fonts */}
       <nav className="flex-1 space-y-2.5 px-3.5 py-6 overflow-y-auto">
         {filteredItems.map((item) => {
           const Icon = item.icon;
@@ -114,15 +114,15 @@ export default function Sidebar({ currentTab, onTabChange, isCollapsed, setIsCol
               }}
               className={`w-full group relative flex items-center gap-3.5 py-3 px-3.5 rounded-xl text-sm font-bold tracking-wide transition-all duration-200 cursor-pointer ${
                 isActive 
-                  ? 'text-white bg-gradient-to-r from-indigo-900/60 via-indigo-950/40 to-blue-950/30 backdrop-blur-xl border border-indigo-500/60 shadow-lg shadow-indigo-950/50' 
-                  : 'text-white hover:text-white hover:bg-white/10 hover:backdrop-blur-md hover:border hover:border-white/15'
+                  ? 'bg-indigo-600 dark:bg-gradient-to-r dark:from-indigo-900/60 dark:via-indigo-950/40 dark:to-blue-950/30 text-white border border-indigo-500 dark:border-indigo-500/60 shadow-lg shadow-indigo-600/25 dark:shadow-indigo-950/50' 
+                  : 'text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 hover:backdrop-blur-md hover:border hover:border-slate-200 dark:hover:border-white/15'
               }`}
             >
               {/* Constant Perfect Dark Blue Icon Container for all icons */}
-              <div className={`p-2 rounded-xl flex items-center justify-center transition-all duration-200 bg-indigo-950/80 text-[#818cf8] border border-indigo-800/70 shadow-[0_0_10px_rgba(99,102,241,0.35)] ${
+              <div className={`p-2 rounded-xl flex items-center justify-center transition-all duration-200 bg-slate-900 dark:bg-indigo-950/80 text-[#818cf8] border border-slate-800 dark:border-indigo-800/70 shadow-[0_0_10px_rgba(99,102,241,0.35)] ${
                 isActive 
-                  ? 'bg-indigo-950 text-[#818cf8] border-indigo-500/80 shadow-[0_0_14px_rgba(129,140,248,0.7)] ring-1 ring-indigo-400/50' 
-                  : 'group-hover:bg-indigo-900/90 group-hover:text-[#a5b4fc] group-hover:border-indigo-600/70 group-hover:shadow-[0_0_12px_rgba(129,140,248,0.5)]'
+                  ? 'bg-slate-950 dark:bg-indigo-950 text-[#a5b4fc] dark:text-[#818cf8] border-indigo-400 dark:border-indigo-500/80 shadow-[0_0_14px_rgba(129,140,248,0.7)] ring-1 ring-indigo-400/50' 
+                  : 'group-hover:bg-slate-800 dark:group-hover:bg-indigo-900/90 group-hover:text-[#a5b4fc] group-hover:border-indigo-600/70 group-hover:shadow-[0_0_12px_rgba(129,140,248,0.5)]'
               }`}>
                 <Icon className={`h-4.5 w-4.5 transition-transform duration-200 drop-shadow-[0_0_8px_rgba(129,140,248,0.8)] ${
                   isActive 
@@ -136,7 +136,9 @@ export default function Sidebar({ currentTab, onTabChange, isCollapsed, setIsCol
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.05 }}
-                  className="truncate text-white font-black text-sm tracking-wide drop-shadow-sm"
+                  className={`truncate font-black text-sm tracking-wide ${
+                    isActive ? 'text-white' : 'text-slate-800 dark:text-white'
+                  }`}
                 >
                   {item.label}
                 </motion.span>
@@ -153,13 +155,13 @@ export default function Sidebar({ currentTab, onTabChange, isCollapsed, setIsCol
         })}
       </nav>
 
-      {/* Sidebar Footer Account Details with Frosted Glass */}
-      <div className="p-4 border-t border-white/10 bg-white/5 backdrop-blur-md relative z-10">
+      {/* Sidebar Footer Account Details */}
+      <div className="p-4 border-t border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 backdrop-blur-md relative z-10">
         <div className="flex items-center gap-3">
           <img 
             src={user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150"} 
             alt={user?.name} 
-            className="h-9 w-9 rounded-full object-cover border-2 border-indigo-400/50 shadow-md bg-slate-900"
+            className="h-9 w-9 rounded-full object-cover border-2 border-indigo-500/50 shadow-md bg-slate-900"
           />
           {!isCollapsed && (
             <motion.div 
@@ -167,8 +169,8 @@ export default function Sidebar({ currentTab, onTabChange, isCollapsed, setIsCol
               animate={{ opacity: 1 }}
               className="flex flex-col text-left truncate"
             >
-              <span className="text-sm font-bold text-white truncate tracking-wide">{user?.name}</span>
-              <span className="text-[11px] text-cyan-300 font-semibold uppercase tracking-wider truncate">{user?.role}</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-white truncate tracking-wide">{user?.name}</span>
+              <span className="text-[11px] text-indigo-600 dark:text-cyan-300 font-semibold uppercase tracking-wider truncate">{user?.role}</span>
             </motion.div>
           )}
         </div>

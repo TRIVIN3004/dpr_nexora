@@ -3,9 +3,11 @@ import { Bar, Line, Doughnut } from 'react-chartjs-2';
 import { BarChart3, TrendingUp, Layers, Award } from 'lucide-react';
 import StatCard from '../components/StatCard';
 import { useDatabaseStore } from '../context/DatabaseContext';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Analytics() {
   const { users, projects, reports } = useDatabaseStore();
+  const { isLight } = useTheme();
 
   const db = useMemo(() => ({
     users: users || [],
@@ -85,7 +87,7 @@ export default function Analytics() {
             'rgba(236, 72, 153, 0.55)',
             'rgba(99, 102, 241, 0.55)',
           ],
-          borderColor: 'rgba(255, 255, 255, 0.08)',
+          borderColor: isLight ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.08)',
           borderWidth: 1
         }
       ]
@@ -114,7 +116,7 @@ export default function Analytics() {
           label: 'Total Team Hours / Day',
           data: dailyHours,
           borderColor: '#a855f7',
-          backgroundColor: 'rgba(168, 85, 247, 0.05)',
+          backgroundColor: isLight ? 'rgba(168, 85, 247, 0.1)' : 'rgba(168, 85, 247, 0.05)',
           borderWidth: 2,
           tension: 0.45,
           pointBackgroundColor: '#a855f7',
@@ -133,12 +135,12 @@ export default function Analytics() {
       doughnutChartData,
       lineChartData
     };
-  }, [db]);
+  }, [db, isLight]);
 
   if (!db || !analyticsStatsAndCharts) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 rounded-full border-4 border-nexora-purple border-t-transparent animate-spin" />
+        <div className="h-8 w-8 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin" />
       </div>
     );
   }
@@ -159,12 +161,12 @@ export default function Analytics() {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        labels: { color: '#334155', font: { family: 'Inter', size: 10 } }
+        labels: { color: isLight ? '#0f172a' : '#ffffff', font: { family: 'Inter', size: 10, weight: 'bold' } }
       }
     },
     scales: {
-      x: { grid: { color: 'rgba(0, 0, 0, 0.04)' }, ticks: { color: '#475569', font: { size: 9 } } },
-      y: { grid: { color: 'rgba(0, 0, 0, 0.04)' }, ticks: { color: '#475569', font: { size: 9 } } }
+      x: { grid: { color: isLight ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.08)' }, ticks: { color: isLight ? '#0f172a' : '#ffffff', font: { size: 10, weight: 'bold' } } },
+      y: { grid: { color: isLight ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.08)' }, ticks: { color: isLight ? '#0f172a' : '#ffffff', font: { size: 10, weight: 'bold' } } }
     }
   };
 
@@ -183,24 +185,24 @@ export default function Analytics() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Bar chart - Employee hours */}
-        <div className="glass-panel p-5 rounded-2xl shadow-glass flex flex-col h-80 text-left">
-          <h3 className="text-sm font-bold text-slate-300 mb-4">Employee Workload Allocation</h3>
+        <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/20 bg-white dark:bg-white/[0.08] backdrop-blur-2xl shadow-sm dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] flex flex-col h-80 text-left">
+          <h3 className="text-sm font-black text-slate-900 dark:text-white mb-4">Employee Workload Allocation</h3>
           <div className="flex-1 relative">
             <Bar data={barChartData} options={chartOptions} />
           </div>
         </div>
 
         {/* Line chart - Hours timeline */}
-        <div className="glass-panel p-5 rounded-2xl shadow-glass flex flex-col h-80 text-left">
-          <h3 className="text-sm font-bold text-slate-300 mb-4">Sprint Delivery Hours Curve</h3>
+        <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/20 bg-white dark:bg-white/[0.08] backdrop-blur-2xl shadow-sm dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] flex flex-col h-80 text-left">
+          <h3 className="text-sm font-black text-slate-900 dark:text-white mb-4">Sprint Delivery Hours Curve</h3>
           <div className="flex-1 relative">
             <Line data={lineChartData} options={chartOptions} />
           </div>
         </div>
 
         {/* Doughnut Chart - Project progress */}
-        <div className="lg:col-span-2 glass-panel p-5 rounded-2xl shadow-glass flex flex-col h-80 text-left">
-          <h3 className="text-sm font-bold text-slate-300 mb-3">Average Project Status Completion rates</h3>
+        <div className="lg:col-span-2 p-5 rounded-2xl border border-slate-200 dark:border-white/20 bg-white dark:bg-white/[0.08] backdrop-blur-2xl shadow-sm dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] flex flex-col h-80 text-left">
+          <h3 className="text-sm font-black text-slate-900 dark:text-white mb-3">Average Project Status Completion Rates</h3>
           <div className="flex-1 relative flex items-center justify-center">
             <Doughnut 
               data={doughnutChartData} 
@@ -210,7 +212,7 @@ export default function Analytics() {
                 plugins: {
                   legend: {
                     position: 'right',
-                    labels: { color: '#94a3b8', boxWidth: 12, font: { size: 10 } }
+                    labels: { color: isLight ? '#0f172a' : '#ffffff', boxWidth: 12, font: { size: 10, weight: 'bold' } }
                   }
                 }
               }} 

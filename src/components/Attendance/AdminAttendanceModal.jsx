@@ -68,48 +68,38 @@ export default function AdminAttendanceModal({ isOpen, onClose, users = [], init
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="w-full max-w-xl border rounded-2xl shadow-xl overflow-hidden"
-          style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1' }}
+          className="w-full max-w-xl border border-slate-200 dark:border-white/20 rounded-2xl shadow-2xl overflow-hidden bg-white dark:bg-[#0f172a] text-slate-900 dark:text-white"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b" style={{ backgroundColor: '#0f172a', borderColor: '#1e293b' }}>
-            <div className="flex items-center gap-2 font-black text-base" style={{ color: '#ffffff' }}>
-              <ShieldAlert className="h-5 w-5 text-indigo-400" />
-              <span style={{ color: '#ffffff' }}>{initialRecord ? 'Edit Attendance Record' : 'Mark Manual Attendance'}</span>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-950/80">
+            <div className="flex items-center gap-2 font-black text-base text-slate-900 dark:text-white">
+              <ShieldAlert className="h-5 w-5 text-indigo-600 dark:text-[#818cf8]" />
+              <span>{initialRecord ? 'Edit Attendance Record' : 'Mark Manual Attendance'}</span>
             </div>
             <button 
               onClick={onClose}
-              className="p-1 rounded-lg hover:bg-slate-800 transition-colors"
-              style={{ color: '#ffffff' }}
+              className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
             >
-              <X className="h-5 w-5 text-white" />
+              <X className="h-5 w-5" />
             </button>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-4" style={{ backgroundColor: '#ffffff' }}>
+          <form onSubmit={handleSubmit} className="p-6 space-y-4 text-left">
             
             {/* Employee Selection */}
             <div>
-              <label className="block text-xs font-black mb-1.5" style={{ color: '#000000' }}>
+              <label className="block text-xs font-black mb-1.5 text-slate-700 dark:text-slate-200">
                 Select Employee
               </label>
               <select
                 value={employeeId}
                 onChange={(e) => setEmployeeId(e.target.value)}
                 disabled={!!initialRecord}
-                className="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:border-indigo-600 font-black"
-                style={{ 
-                  backgroundColor: !!initialRecord ? '#f1f5f9' : '#ffffff', 
-                  color: '#000000', 
-                  WebkitTextFillColor: '#000000', 
-                  borderColor: '#cbd5e1', 
-                  border: '1px solid #cbd5e1',
-                  opacity: 1
-                }}
+                className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-black disabled:opacity-60"
               >
                 {users.map((u) => (
-                  <option key={u.id} value={u.id} style={{ color: '#000000', backgroundColor: '#ffffff' }}>
+                  <option key={u.id} value={u.id}>
                     {u.name} ({u.id}) - {u.department || 'Engineering'}
                   </option>
                 ))}
@@ -119,122 +109,95 @@ export default function AdminAttendanceModal({ isOpen, onClose, users = [], init
             {/* Date & Status Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-black mb-1.5" style={{ color: '#000000' }}>
+                <label className="block text-xs font-black mb-1.5 text-slate-700 dark:text-slate-200">
                   Date
                 </label>
                 <input
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:border-indigo-600 font-black"
-                  style={{ backgroundColor: '#ffffff', color: '#000000', WebkitTextFillColor: '#000000', borderColor: '#cbd5e1', border: '1px solid #cbd5e1', opacity: 1 }}
+                  className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-black"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-black mb-1.5" style={{ color: '#000000' }}>
+                <label className="block text-xs font-black mb-1.5 text-slate-700 dark:text-slate-200">
                   Attendance Status
                 </label>
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:border-indigo-600 font-black"
-                  style={{ backgroundColor: '#ffffff', color: '#000000', WebkitTextFillColor: '#000000', borderColor: '#cbd5e1', border: '1px solid #cbd5e1', opacity: 1 }}
+                  className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-black"
                 >
-                  <option value="Present" style={{ color: '#000000', backgroundColor: '#ffffff' }}>Present</option>
-                  <option value="Absent" style={{ color: '#000000', backgroundColor: '#ffffff' }}>Absent</option>
-                  <option value="Half Day" style={{ color: '#000000', backgroundColor: '#ffffff' }}>Half Day</option>
-                  <option value="Leave" style={{ color: '#000000', backgroundColor: '#ffffff' }}>Leave</option>
+                  <option value="Present">Present</option>
+                  <option value="Absent">Absent</option>
+                  <option value="Half Day">Half Day</option>
+                  <option value="Leave">Leave</option>
                 </select>
               </div>
             </div>
 
-            {/* Check-In / Check-Out Times */}
+            {/* Timings */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-black mb-1.5" style={{ color: '#000000' }}>
+                <label className="block text-xs font-black mb-1.5 text-slate-700 dark:text-slate-200">
                   Check-In Time
                 </label>
                 <input
                   type="time"
                   value={checkInTime}
                   onChange={(e) => setCheckInTime(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:border-indigo-600 font-black"
-                  style={{ backgroundColor: '#ffffff', color: '#000000', WebkitTextFillColor: '#000000', borderColor: '#cbd5e1', border: '1px solid #cbd5e1', opacity: 1 }}
+                  className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-mono font-bold"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-black mb-1.5" style={{ color: '#000000' }}>
+                <label className="block text-xs font-black mb-1.5 text-slate-700 dark:text-slate-200">
                   Check-Out Time
                 </label>
                 <input
                   type="time"
                   value={checkOutTime}
                   onChange={(e) => setCheckOutTime(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:border-indigo-600 font-black"
-                  style={{ backgroundColor: '#ffffff', color: '#000000', WebkitTextFillColor: '#000000', borderColor: '#cbd5e1', border: '1px solid #cbd5e1', opacity: 1 }}
+                  className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-mono font-bold"
                 />
               </div>
             </div>
 
             {/* Remarks */}
             <div>
-              <label className="block text-xs font-black mb-1.5" style={{ color: '#000000' }}>
-                Admin Remarks / Override Reason
+              <label className="block text-xs font-black mb-1.5 text-slate-700 dark:text-slate-200">
+                Remarks / Reason
               </label>
-              <textarea
-                rows={2}
+              <input
+                type="text"
                 value={remarks}
                 onChange={(e) => setRemarks(e.target.value)}
-                placeholder="Reason for manual entry or status edit..."
-                className="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:border-indigo-600 font-black placeholder-slate-500"
-                style={{ backgroundColor: '#ffffff', color: '#000000', WebkitTextFillColor: '#000000', borderColor: '#cbd5e1', border: '1px solid #cbd5e1', opacity: 1 }}
-                required
+                placeholder="e.g. Approved leave, Client on-site, Manual correction"
+                className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-bold"
               />
             </div>
 
-            {/* Audit History Timeline */}
-            {initialRecord?.editHistory && initialRecord.editHistory.length > 0 && (
-              <div className="pt-2 border-t" style={{ borderColor: '#e2e8f0' }}>
-                <span className="text-xs font-black flex items-center gap-1.5 mb-2" style={{ color: '#000000' }}>
-                  <History className="h-3.5 w-3.5 text-indigo-600" />
-                  Edit Audit Trail
-                </span>
-                <div className="max-h-24 overflow-y-auto space-y-1.5 text-[11px] p-2.5 rounded-xl border" style={{ backgroundColor: '#f8fafc', borderColor: '#cbd5e1' }}>
-                  {initialRecord.editHistory.map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between border-b pb-1 last:border-0" style={{ color: '#1e293b', borderColor: '#cbd5e1' }}>
-                      <span className="font-bold">{item.updatedBy}: {item.previousStatus} ➔ {item.newStatus}</span>
-                      <span style={{ color: '#64748b' }}>{new Date(item.updatedAt).toLocaleDateString()}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="flex items-center justify-end gap-3 pt-4 border-t" style={{ borderColor: '#cbd5e1' }}>
+            {/* Action buttons */}
+            <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-white/10">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2.5 rounded-xl text-white text-xs font-black cursor-pointer shadow-xs"
-                style={{ backgroundColor: '#0f172a', color: '#ffffff' }}
+                className="px-4 py-2 rounded-xl text-xs font-bold border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="px-5 py-2.5 rounded-xl text-white text-xs font-black shadow-sm cursor-pointer disabled:opacity-50"
-                style={{ backgroundColor: '#4f46e5', color: '#ffffff' }}
+                className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold shadow-md transition-colors disabled:opacity-50"
               >
                 {saving ? 'Saving...' : 'Save Attendance Record'}
               </button>
             </div>
 
           </form>
-
         </motion.div>
       </div>
     </AnimatePresence>

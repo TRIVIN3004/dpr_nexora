@@ -40,6 +40,7 @@ import ReactivateUserModal from '../components/Attendance/ReactivateUserModal';
 
 import { getDatabase, getCurrentUser } from '../utils/database';
 import { useDatabaseStore } from '../context/DatabaseContext';
+import { useTheme } from '../context/ThemeContext';
 import { 
   getAttendanceRecords, 
   getAttendanceSettings, 
@@ -83,6 +84,7 @@ ChartJS.register(
 );
 
 export default function Attendance() {
+  const { isLight } = useTheme();
   const [currentUser, setCurrentUser] = useState(null);
   const [users, setUsers] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -348,17 +350,15 @@ export default function Attendance() {
 
   const exportTodayPDF = (categoryType) => {
     const list = getTodayCategoryData(categoryType);
-    const categoryTitle = categoryType.toUpperCase();
     const doc = new jsPDF();
-
-    const fillColor = categoryType === 'present' ? [5, 150, 105] : categoryType === 'absent' ? [225, 29, 72] : categoryType === 'leave' ? [217, 119, 6] : [79, 70, 229];
-
+    const categoryTitle = categoryType === 'present' ? 'Present Employees' : categoryType === 'absent' ? 'Absent Employees' : categoryType === 'leave' ? 'On-Leave Employees' : 'Complete Roster';
+    
     doc.setFontSize(18);
-    doc.text(`Nexora Tech - Today's ${categoryTitle} Attendance List`, 14, 20);
+    doc.text(`Nexora Tech - Today's ${categoryTitle}`, 14, 20);
     doc.setFontSize(10);
-    doc.text(`Date: ${todayStr} | Total Count: ${list.length} Employees`, 14, 28);
+    doc.text(`Date: ${todayStr} | Total Listed: ${list.length}`, 14, 28);
 
-    const tableColumn = ["Employee ID", "Employee Name", "Department", "Assigned Project", "Check-In", "Check-Out", "Status", "Remarks"];
+    const tableColumn = ["Emp ID", "Name", "Department", "Assigned Project", "In Time", "Out Time", "Status"];
     const tableRows = list.map(item => [
       item.user.id,
       item.user.name,
@@ -366,8 +366,7 @@ export default function Attendance() {
       (item.user.assignedProjects && item.user.assignedProjects[0]) || 'Nexora ERP',
       item.record?.checkInTime || '--:--',
       item.record?.checkOutTime || '--:--',
-      item.status,
-      item.record?.remarks || 'N/A'
+      item.status
     ]);
 
     doc.autoTable({
@@ -375,17 +374,17 @@ export default function Attendance() {
       body: tableRows,
       startY: 34,
       theme: 'grid',
-      headStyles: { fillColor },
+      headStyles: { fillColor: categoryType === 'present' ? [5, 150, 105] : categoryType === 'absent' ? [225, 29, 72] : [79, 70, 229] },
       styles: { fontSize: 8 }
     });
 
-    doc.save(`Today_${categoryTitle}_Attendance_${todayStr}.pdf`);
-    showToast(`Today's ${categoryTitle} PDF list downloaded!`);
+    doc.save(`Today_${categoryTitle}_${todayStr}.pdf`);
+    showToast(`Today's ${categoryTitle} PDF downloaded!`);
   };
 
   const exportTodayExcel = (categoryType) => {
     const list = getTodayCategoryData(categoryType);
-    const categoryTitle = categoryType.toUpperCase();
+    const categoryTitle = categoryType === 'present' ? 'Present' : categoryType === 'absent' ? 'Absent' : categoryType === 'leave' ? 'Leave' : 'All_Summary';
 
     const exportData = list.map(item => ({
       "Date": todayStr,
@@ -413,7 +412,7 @@ export default function Attendance() {
         label: 'Attendance Rate (%)',
         data: [96, 94, 91, avgAttendanceRate],
         borderColor: '#4f46e5',
-        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+        backgroundColor: isLight ? 'rgba(79, 70, 229, 0.08)' : 'rgba(79, 70, 229, 0.2)',
         fill: true,
         tension: 0.4
       }
@@ -446,43 +445,43 @@ export default function Attendance() {
   const myStats = employeeStatsMap[currentUser.id] || calculateEmployeeStats(currentUser.id, records, settings);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-left">
 
       {/* Staff Low Attendance Warning Banner */}
       {!isAdmin && myStats.attendancePct < 75 && myStats.attendancePct >= 50 && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex items-center justify-between gap-4 shadow-sm"
+          className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 flex items-center justify-between gap-4 shadow-sm"
         >
           <div className="flex items-center gap-3">
-            <AlertTriangle className="h-6 w-6 text-amber-600 shrink-0" />
+            <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-400 shrink-0" />
             <div>
-              <h4 className="text-xs font-extrabold uppercase tracking-wider text-amber-800">
+              <h4 className="text-xs font-extrabold uppercase tracking-wider text-amber-800 dark:text-amber-300">
                 Attendance Policy Warning
               </h4>
-              <p className="text-xs font-medium text-amber-900 mt-0.5">
+              <p className="text-xs font-medium text-amber-900 dark:text-amber-200 mt-0.5">
                 Your attendance is currently below the company requirement of 75%. Please improve your attendance.
               </p>
             </div>
           </div>
-          <span className="px-3 py-1 rounded-full bg-amber-200 text-amber-900 text-xs font-bold font-mono">
+          <span className="px-3 py-1 rounded-full bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 text-xs font-bold font-mono">
             {myStats.attendancePct}% Attendance
           </span>
         </motion.div>
       )}
 
       {/* Header Container */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-5 rounded-2xl border border-white/20 bg-white/[0.08] backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.37)]">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-5 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl">
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-white/10 border border-white/20 text-cyan-300 shadow-sm">
+          <div className="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800/60 text-indigo-600 dark:text-[#818cf8] shadow-sm">
             <CalendarCheck className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-xl md:text-2xl font-black tracking-tight text-white">
+            <h1 className="text-xl md:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
               Attendance Management
             </h1>
-            <p className="text-xs font-semibold text-slate-300">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-300">
               Workforce monitoring, automated policy checks, and attendance analytics
             </p>
           </div>
@@ -494,16 +493,16 @@ export default function Attendance() {
               setSelectedRecord(null);
               setShowAdminModal(true);
             }}
-            className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 hover:brightness-110 text-white text-xs font-bold shadow-lg shadow-indigo-600/30 flex items-center gap-2 cursor-pointer transition-all active:scale-[0.98]"
+            className="py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md flex items-center gap-2 cursor-pointer transition-all active:scale-[0.98]"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4 text-white" />
             <span>Mark Manual Attendance</span>
           </button>
         )}
       </div>
 
-      {/* Tab Controls with White Glassy Style */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar border-b border-white/15">
+      {/* Tab Controls */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar border-b border-slate-200 dark:border-white/15">
         {[
           { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
           { id: 'checkin', label: 'Mark Attendance', icon: Clock },
@@ -521,8 +520,8 @@ export default function Attendance() {
               onClick={() => setActiveTab(t.id)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer whitespace-nowrap ${
                 isActive
-                  ? 'bg-gradient-to-r from-indigo-600 to-cyan-600 text-white shadow-md border border-white/20'
-                  : 'text-white/90 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/10'
+                  ? 'bg-indigo-600 dark:bg-gradient-to-r dark:from-indigo-600 dark:to-cyan-600 text-white shadow-md border border-indigo-500/50'
+                  : 'text-slate-700 dark:text-white/90 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 border border-transparent hover:border-slate-200 dark:hover:border-white/10'
               }`}
             >
               <Icon className="h-4 w-4" />
@@ -577,24 +576,24 @@ export default function Attendance() {
               </div>
 
               {/* Personal Policy Breakdown Progress Banner */}
-              <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+              <div className="p-6 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl space-y-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-white/10 pb-3">
                   <div>
-                    <h3 className="text-sm font-extrabold" style={{ color: '#0f172a' }}>
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white">
                       My Attendance Policy Standing
                     </h3>
-                    <p className="text-xs font-semibold text-slate-500">
+                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-300">
                       Nexora Technologies Employee Policy Compliance Tracker
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-600">Employment Status:</span>
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Employment Status:</span>
                     <span className={`px-3 py-1 rounded-full text-xs font-extrabold border ${
                       myStats.attendancePct >= 75 
-                        ? 'bg-emerald-100 text-emerald-800 border-emerald-300' 
+                        ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/40' 
                         : myStats.attendancePct >= 50 
-                        ? 'bg-amber-100 text-amber-800 border-amber-300' 
-                        : 'bg-rose-100 text-rose-800 border-rose-300'
+                        ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/40' 
+                        : 'bg-rose-100 dark:bg-rose-500/20 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-500/40'
                     }`}>
                       {myStats.attendancePct >= 75 ? 'Active (Good Standing)' : myStats.attendancePct >= 50 ? 'Warning Notice' : 'Terminated'}
                     </span>
@@ -603,11 +602,11 @@ export default function Attendance() {
 
                 {/* Progress Bar */}
                 <div className="space-y-2">
-                  <div className="flex justify-between text-xs font-bold" style={{ color: '#334155' }}>
-                    <span>My Attendance: <strong className="text-indigo-600 font-extrabold">{myStats.attendancePct}%</strong></span>
-                    <span>Company Requirement: <strong className="text-emerald-700">75%</strong></span>
+                  <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-200">
+                    <span>My Attendance: <strong className="text-indigo-600 dark:text-indigo-400 font-extrabold">{myStats.attendancePct}%</strong></span>
+                    <span>Company Requirement: <strong className="text-emerald-700 dark:text-emerald-400">75%</strong></span>
                   </div>
-                  <div className="relative w-full h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                  <div className="relative w-full h-4 bg-slate-100 dark:bg-slate-800/80 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700">
                     <div className="absolute top-0 bottom-0 left-[75%] w-0.5 bg-rose-500 z-10" title="75% Requirement Threshold" />
                     
                     <motion.div 
@@ -626,21 +625,21 @@ export default function Attendance() {
 
                 {/* Detailed Breakdown Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase block">Present Days</span>
-                    <span className="text-base font-extrabold text-slate-900 font-mono">{myStats.presentDays}</span>
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/40">
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block">Present Days</span>
+                    <span className="text-base font-extrabold text-slate-900 dark:text-white font-mono">{myStats.presentDays}</span>
                   </div>
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase block">Absent Days</span>
-                    <span className="text-base font-extrabold text-slate-900 font-mono">{myStats.absentDays}</span>
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/40">
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block">Absent Days</span>
+                    <span className="text-base font-extrabold text-slate-900 dark:text-white font-mono">{myStats.absentDays}</span>
                   </div>
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase block">Approved Leaves</span>
-                    <span className="text-base font-extrabold text-slate-900 font-mono">{myStats.leaveDays}</span>
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/40">
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block">Approved Leaves</span>
+                    <span className="text-base font-extrabold text-slate-900 dark:text-white font-mono">{myStats.leaveDays}</span>
                   </div>
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase block">Total Working Days</span>
-                    <span className="text-base font-extrabold text-slate-900 font-mono">{myStats.totalWorkingDays}</span>
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/40">
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block">Total Working Days</span>
+                    <span className="text-base font-extrabold text-slate-900 dark:text-white font-mono">{myStats.totalWorkingDays}</span>
                   </div>
                 </div>
               </div>
@@ -681,30 +680,30 @@ export default function Attendance() {
                 />
               </div>
 
-              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-3">
-                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+              <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl space-y-3">
+                <h4 className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider">
                   Attendance Policy Tiers & Status Indicators
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                  <div className="p-3 rounded-xl bg-cyan-50 border border-cyan-200 text-center">
-                    <span className="text-xs font-black text-cyan-700 block">95%+</span>
-                    <span className="text-[10px] text-slate-600 uppercase font-bold">Excellent</span>
+                  <div className="p-3 rounded-xl bg-cyan-50 dark:bg-cyan-950/40 border border-cyan-200 dark:border-cyan-800/60 text-center">
+                    <span className="text-xs font-black text-cyan-700 dark:text-cyan-300 block">95%+</span>
+                    <span className="text-[10px] text-slate-600 dark:text-slate-400 uppercase font-bold">Excellent</span>
                   </div>
-                  <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
-                    <span className="text-xs font-black text-emerald-700 block">90% - 94%</span>
-                    <span className="text-[10px] text-slate-600 uppercase font-bold">Very Good</span>
+                  <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-center">
+                    <span className="text-xs font-black text-emerald-700 dark:text-emerald-300 block">90% - 94%</span>
+                    <span className="text-[10px] text-slate-600 dark:text-slate-400 uppercase font-bold">Very Good</span>
                   </div>
-                  <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-center">
-                    <span className="text-xs font-black text-blue-700 block">75% - 89%</span>
-                    <span className="text-[10px] text-slate-600 uppercase font-bold">Good</span>
+                  <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 text-center">
+                    <span className="text-xs font-black text-blue-700 dark:text-blue-300 block">75% - 89%</span>
+                    <span className="text-[10px] text-slate-600 dark:text-slate-400 uppercase font-bold">Good</span>
                   </div>
-                  <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-center">
-                    <span className="text-xs font-black text-amber-700 block">50% - 74%</span>
-                    <span className="text-[10px] text-slate-600 uppercase font-bold">Warning</span>
+                  <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-center">
+                    <span className="text-xs font-black text-amber-700 dark:text-amber-300 block">50% - 74%</span>
+                    <span className="text-[10px] text-slate-600 dark:text-slate-400 uppercase font-bold">Warning</span>
                   </div>
-                  <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-center">
-                    <span className="text-xs font-black text-rose-700 block">&lt; 50%</span>
-                    <span className="text-[10px] text-slate-600 uppercase font-bold">Terminated</span>
+                  <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-center">
+                    <span className="text-xs font-black text-rose-700 dark:text-rose-300 block">&lt; 50%</span>
+                    <span className="text-[10px] text-slate-600 dark:text-slate-400 uppercase font-bold">Terminated</span>
                   </div>
                 </div>
               </div>
@@ -713,8 +712,8 @@ export default function Attendance() {
 
           {/* Charts Visualizations Section */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
-              <h4 className="text-sm font-bold" style={{ color: '#0f172a' }}>
+            <div className="lg:col-span-2 p-5 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl space-y-4">
+              <h4 className="text-sm font-black text-slate-900 dark:text-white">
                 {isAdmin ? 'Monthly Attendance Trend' : 'My Monthly Attendance Trend'}
               </h4>
               <div className="h-64">
@@ -725,16 +724,24 @@ export default function Attendance() {
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                      y: { min: 40, max: 100, grid: { color: 'rgba(0,0,0,0.05)' } },
-                      x: { grid: { color: 'rgba(0,0,0,0.05)' } }
+                      y: { 
+                        min: 40, 
+                        max: 100, 
+                        ticks: { color: isLight ? '#475569' : '#cbd5e1' },
+                        grid: { color: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)' } 
+                      },
+                      x: { 
+                        ticks: { color: isLight ? '#475569' : '#cbd5e1' },
+                        grid: { color: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)' } 
+                      }
                     }
                   }} 
                 />
               </div>
             </div>
 
-            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
-              <h4 className="text-sm font-bold" style={{ color: '#0f172a' }}>
+            <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl space-y-4">
+              <h4 className="text-sm font-black text-slate-900 dark:text-white">
                 Department Distribution
               </h4>
               <div className="h-64 flex items-center justify-center">
@@ -743,7 +750,15 @@ export default function Attendance() {
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom', labels: { color: '#334155', font: { size: 10 } } } }
+                    plugins: { 
+                      legend: { 
+                        position: 'bottom', 
+                        labels: { 
+                          color: isLight ? '#334155' : '#ffffff', 
+                          font: { size: 10, weight: 'bold' } 
+                        } 
+                      } 
+                    }
                   }}
                 />
               </div>
@@ -755,35 +770,41 @@ export default function Attendance() {
       {/* MARK ATTENDANCE TAB */}
       {activeTab === 'checkin' && (
         <div className="space-y-6">
-          <div className="flex items-center justify-center gap-3 p-1.5 rounded-2xl bg-white border border-slate-200 max-w-md mx-auto shadow-sm">
+          <div className="flex items-center justify-center gap-3 p-1.5 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl max-w-md mx-auto shadow-sm">
             <button
               onClick={() => setCheckInMethod('daily')}
               className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer ${
-                checkInMethod === 'daily' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-800 bg-slate-100 hover:bg-slate-200'
+                checkInMethod === 'daily' 
+                  ? 'bg-indigo-600 text-white shadow-sm' 
+                  : 'text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10'
               }`}
             >
-              <Clock className="h-4 w-4 text-indigo-600" />
-              <span style={{ color: checkInMethod === 'daily' ? '#ffffff' : '#0f172a' }}>Check-In / Out</span>
+              <Clock className="h-4 w-4" />
+              <span>Check-In / Out</span>
             </button>
 
             <button
               onClick={() => setCheckInMethod('qr')}
               className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer ${
-                checkInMethod === 'qr' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-800 bg-slate-100 hover:bg-slate-200'
+                checkInMethod === 'qr' 
+                  ? 'bg-indigo-600 text-white shadow-sm' 
+                  : 'text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10'
               }`}
             >
-              <QrCode className="h-4 w-4 text-indigo-600" />
-              <span style={{ color: checkInMethod === 'qr' ? '#ffffff' : '#0f172a' }}>QR Code</span>
+              <QrCode className="h-4 w-4" />
+              <span>QR Code</span>
             </button>
 
             <button
               onClick={() => setCheckInMethod('face')}
               className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer ${
-                checkInMethod === 'face' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-800 bg-slate-100 hover:bg-slate-200'
+                checkInMethod === 'face' 
+                  ? 'bg-indigo-600 text-white shadow-sm' 
+                  : 'text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10'
               }`}
             >
-              <ScanFace className="h-4 w-4 text-indigo-600" />
-              <span style={{ color: checkInMethod === 'face' ? '#ffffff' : '#0f172a' }}>Face Scan</span>
+              <ScanFace className="h-4 w-4" />
+              <span>Face Scan</span>
             </button>
           </div>
 
@@ -818,58 +839,58 @@ export default function Attendance() {
         <div className="space-y-4">
           
           {/* Today's Category Export Toolbar */}
-          <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="p-4 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
-              <h3 className="text-base font-extrabold" style={{ color: '#000000' }}>
+              <h3 className="text-base font-black text-slate-900 dark:text-white">
                 Live Workforce Roster - {todayStr}
               </h3>
-              <p className="text-xs font-semibold text-slate-500 mt-0.5">
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-300 mt-0.5">
                 Export today's attendance lists separately by Present, Absent, or Leave status.
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
               {/* Present Export */}
-              <div className="flex items-center gap-1 bg-emerald-50 p-1.5 rounded-xl border border-emerald-200">
-                <span className="text-[11px] font-extrabold text-emerald-900 px-1.5">Present ({presentTodayCount})</span>
+              <div className="flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/40 p-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800/60">
+                <span className="text-[11px] font-extrabold text-emerald-900 dark:text-emerald-300 px-1.5">Present ({presentTodayCount})</span>
                 <button
                   onClick={() => exportTodayPDF('present')}
                   title="Download Present List PDF"
                   className="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold flex items-center gap-1 cursor-pointer shadow-xs"
                 >
-                  <FileText className="h-3 w-3" /> PDF
+                  <FileText className="h-3 w-3 text-white" /> PDF
                 </button>
                 <button
                   onClick={() => exportTodayExcel('present')}
                   title="Download Present List Excel"
                   className="px-2 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[10px] font-extrabold flex items-center gap-1 cursor-pointer shadow-xs"
                 >
-                  <FileSpreadsheet className="h-3 w-3" /> Excel
+                  <FileSpreadsheet className="h-3 w-3 text-white" /> Excel
                 </button>
               </div>
 
               {/* Absent Export */}
-              <div className="flex items-center gap-1 bg-rose-50 p-1.5 rounded-xl border border-rose-200">
-                <span className="text-[11px] font-extrabold text-rose-900 px-1.5">Absent ({absentTodayCount})</span>
+              <div className="flex items-center gap-1 bg-rose-50 dark:bg-rose-950/40 p-1.5 rounded-xl border border-rose-200 dark:border-rose-800/60">
+                <span className="text-[11px] font-extrabold text-rose-900 dark:text-rose-300 px-1.5">Absent ({absentTodayCount})</span>
                 <button
                   onClick={() => exportTodayPDF('absent')}
                   title="Download Absent List PDF"
                   className="px-2 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-extrabold flex items-center gap-1 cursor-pointer shadow-xs"
                 >
-                  <FileText className="h-3 w-3" /> PDF
+                  <FileText className="h-3 w-3 text-white" /> PDF
                 </button>
                 <button
                   onClick={() => exportTodayExcel('absent')}
                   title="Download Absent List Excel"
                   className="px-2 py-1 rounded-lg bg-rose-700 hover:bg-rose-800 text-white text-[10px] font-extrabold flex items-center gap-1 cursor-pointer shadow-xs"
                 >
-                  <FileSpreadsheet className="h-3 w-3" /> Excel
+                  <FileSpreadsheet className="h-3 w-3 text-white" /> Excel
                 </button>
               </div>
 
               {/* Leave Export */}
-              <div className="flex items-center gap-1 bg-amber-50 p-1.5 rounded-xl border border-amber-200">
-                <span className="text-[11px] font-extrabold text-amber-900 px-1.5">
+              <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-950/40 p-1.5 rounded-xl border border-amber-200 dark:border-amber-800/60">
+                <span className="text-[11px] font-extrabold text-amber-900 dark:text-amber-300 px-1.5">
                   Leave ({records.filter(r => r.date === todayStr && (r.status === 'Leave' || r.status === 'Half Day')).length})
                 </span>
                 <button
@@ -877,91 +898,91 @@ export default function Attendance() {
                   title="Download Leave List PDF"
                   className="px-2 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-extrabold flex items-center gap-1 cursor-pointer shadow-xs"
                 >
-                  <FileText className="h-3 w-3" /> PDF
+                  <FileText className="h-3 w-3 text-white" /> PDF
                 </button>
                 <button
                   onClick={() => exportTodayExcel('leave')}
                   title="Download Leave List Excel"
                   className="px-2 py-1 rounded-lg bg-amber-700 hover:bg-amber-800 text-white text-[10px] font-extrabold flex items-center gap-1 cursor-pointer shadow-xs"
                 >
-                  <FileSpreadsheet className="h-3 w-3" /> Excel
+                  <FileSpreadsheet className="h-3 w-3 text-white" /> Excel
                 </button>
               </div>
 
               {/* Full Summary Export */}
-              <div className="flex items-center gap-1 bg-indigo-50 p-1.5 rounded-xl border border-indigo-200">
-                <span className="text-[11px] font-extrabold text-indigo-900 px-1.5">All Summary</span>
+              <div className="flex items-center gap-1 bg-indigo-50 dark:bg-indigo-950/40 p-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800/60">
+                <span className="text-[11px] font-extrabold text-indigo-900 dark:text-indigo-300 px-1.5">All Summary</span>
                 <button
                   onClick={() => exportTodayPDF('all')}
                   title="Download Complete Today Attendance PDF"
                   className="px-2 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-extrabold flex items-center gap-1 cursor-pointer shadow-xs"
                 >
-                  <FileText className="h-3 w-3" /> PDF
+                  <FileText className="h-3 w-3 text-white" /> PDF
                 </button>
                 <button
                   onClick={() => exportTodayExcel('all')}
                   title="Download Complete Today Attendance Excel"
                   className="px-2 py-1 rounded-lg bg-indigo-700 hover:bg-indigo-800 text-white text-[10px] font-extrabold flex items-center gap-1 cursor-pointer shadow-xs"
                 >
-                  <FileSpreadsheet className="h-3 w-3" /> Excel
+                  <FileSpreadsheet className="h-3 w-3 text-white" /> Excel
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-[#0b0f19] shadow-sm">
             <table className="w-full text-left text-xs">
-              <thead style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
+              <thead className="bg-slate-100 dark:bg-slate-950/80 text-slate-700 dark:text-white border-b border-slate-200 dark:border-white/10">
                 <tr>
-                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Employee</th>
-                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Department</th>
-                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Assigned Project</th>
-                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Check-In</th>
-                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Check-Out</th>
-                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Status</th>
-                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Remarks</th>
-                  {isAdmin && <th className="p-3.5 text-right font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Admin Action</th>}
+                  <th className="p-3.5 font-extrabold uppercase">Employee</th>
+                  <th className="p-3.5 font-extrabold uppercase">Department</th>
+                  <th className="p-3.5 font-extrabold uppercase">Assigned Project</th>
+                  <th className="p-3.5 font-extrabold uppercase">Check-In</th>
+                  <th className="p-3.5 font-extrabold uppercase">Check-Out</th>
+                  <th className="p-3.5 font-extrabold uppercase">Status</th>
+                  <th className="p-3.5 font-extrabold uppercase">Remarks</th>
+                  {isAdmin && <th className="p-3.5 text-right font-extrabold uppercase">Admin Action</th>}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 bg-white">
+              <tbody className="divide-y divide-slate-200 dark:divide-white/10">
                 {users.map((u) => {
                   const r = records.find(rec => rec.employeeId === u.id && rec.date === todayStr);
                   const isPresent = r?.status === 'Present';
                   const isLate = r?.status === 'Late';
 
                   return (
-                    <tr key={u.id} className="hover:bg-slate-50 transition-colors bg-white">
+                    <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
                       <td className="p-3.5 flex items-center gap-3">
                         <img 
                           src={u.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150"} 
                           alt={u.name} 
-                          className="h-8 w-8 rounded-full object-cover border border-slate-300"
+                          className="h-8 w-8 rounded-full object-cover border border-slate-300 dark:border-slate-700"
                         />
                         <div>
-                          <span className="font-extrabold text-sm block" style={{ color: '#090d16' }}>{u.name}</span>
-                          <span className="text-[10px] font-mono font-bold" style={{ color: '#475569' }}>{u.id}</span>
+                          <span className="font-extrabold text-sm block text-slate-900 dark:text-white">{u.name}</span>
+                          <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400">{u.id}</span>
                         </div>
                       </td>
-                      <td className="p-3.5 font-semibold" style={{ color: '#334155' }}>{u.department || 'Engineering'}</td>
-                      <td className="p-3.5 font-semibold" style={{ color: '#334155' }}>{(u.assignedProjects && u.assignedProjects[0]) || 'Nexora ERP'}</td>
-                      <td className="p-3.5 font-mono font-bold" style={{ color: '#0f172a' }}>{r?.checkInTime || '--:--'}</td>
-                      <td className="p-3.5 font-mono font-bold" style={{ color: '#0f172a' }}>{r?.checkOutTime || '--:--'}</td>
+                      <td className="p-3.5 font-semibold text-slate-700 dark:text-slate-300">{u.department || 'Engineering'}</td>
+                      <td className="p-3.5 font-semibold text-slate-700 dark:text-slate-300">{(u.assignedProjects && u.assignedProjects[0]) || 'Nexora ERP'}</td>
+                      <td className="p-3.5 font-mono font-bold text-slate-900 dark:text-white">{r?.checkInTime || '--:--'}</td>
+                      <td className="p-3.5 font-mono font-bold text-slate-900 dark:text-white">{r?.checkOutTime || '--:--'}</td>
                       <td className="p-3.5">
                         {isPresent ? (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold border" style={{ backgroundColor: '#d1fae5', color: '#065f46', borderColor: '#6ee7b7' }}>
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold border bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/40">
                             Present
                           </span>
                         ) : isLate ? (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold border" style={{ backgroundColor: '#fef3c7', color: '#92400e', borderColor: '#fcd34d' }}>
-                            Present
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold border bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/40">
+                            Present (Late)
                           </span>
                         ) : (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold border" style={{ backgroundColor: '#f1f5f9', color: '#0f172a', borderColor: '#cbd5e1' }}>
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold border bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700">
                             Not Marked
                           </span>
                         )}
                       </td>
-                      <td className="p-3.5 font-medium truncate max-w-xs" style={{ color: '#475569' }}>{r?.remarks || 'N/A'}</td>
+                      <td className="p-3.5 font-medium truncate max-w-xs text-slate-600 dark:text-slate-400">{r?.remarks || 'N/A'}</td>
                       {isAdmin && (
                         <td className="p-3.5 text-right">
                           <button
@@ -969,8 +990,7 @@ export default function Attendance() {
                               setSelectedRecord(r || { employeeId: u.id, employeeName: u.name, date: todayStr, status: 'Present' });
                               setShowAdminModal(true);
                             }}
-                            className="px-3.5 py-1.5 rounded-lg text-white text-[11px] font-extrabold cursor-pointer shadow-xs"
-                            style={{ backgroundColor: '#0f172a', color: '#ffffff' }}
+                            className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-extrabold cursor-pointer shadow-xs transition-colors"
                           >
                             Edit
                           </button>
@@ -985,7 +1005,6 @@ export default function Attendance() {
         </div>
       )}
 
-      {/* ATTENDANCE CALENDAR TAB */}
       {/* ATTENDANCE CALENDAR TAB */}
       {activeTab === 'calendar' && (() => {
         const calYear = calendarDate.getFullYear();
@@ -1029,32 +1048,32 @@ export default function Attendance() {
 
         return (
           <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between p-4 rounded-2xl border shadow-sm bg-white gap-3" style={{ borderColor: '#cbd5e1' }}>
+            <div className="flex flex-wrap items-center justify-between p-4 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl gap-3">
               <div>
-                <h3 className="text-base font-black text-slate-900">
+                <h3 className="text-base font-black text-slate-900 dark:text-white">
                   Interactive Attendance Calendar - {calendarDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
                 </h3>
-                <span className="text-[11px] font-bold text-slate-500">
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-300">
                   Employee: {currentUser?.name} ({currentUser?.id}) • Today: {todayStr}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setCalendarDate(new Date())}
-                  className="px-3 py-1.5 rounded-xl text-xs font-black bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition-colors cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl text-xs font-black bg-indigo-50 dark:bg-indigo-600/30 text-indigo-700 dark:text-indigo-200 hover:bg-indigo-100 dark:hover:bg-indigo-600/50 border border-indigo-200 dark:border-indigo-500/40 transition-colors cursor-pointer"
                 >
                   Today
                 </button>
                 <button 
                   onClick={() => setCalendarDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
-                  className="p-2 rounded-xl transition-colors cursor-pointer shadow-xs bg-white text-slate-800 border border-slate-300 hover:bg-slate-50"
+                  className="p-2 rounded-xl transition-colors cursor-pointer shadow-xs bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-white border border-slate-200 dark:border-white/15 hover:bg-slate-200 dark:hover:bg-white/20"
                   title="Previous Month"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
                 <button 
                   onClick={() => setCalendarDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
-                  className="p-2 rounded-xl transition-colors cursor-pointer shadow-xs bg-white text-slate-800 border border-slate-300 hover:bg-slate-50"
+                  className="p-2 rounded-xl transition-colors cursor-pointer shadow-xs bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-white border border-slate-200 dark:border-white/15 hover:bg-slate-200 dark:hover:bg-white/20"
                   title="Next Month"
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -1062,9 +1081,9 @@ export default function Attendance() {
               </div>
             </div>
 
-            <div className="grid grid-cols-7 gap-2 text-center text-xs font-black text-slate-700">
+            <div className="grid grid-cols-7 gap-2 text-center text-xs font-black text-slate-700 dark:text-slate-200">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                <div key={day} className="p-2 rounded-xl border bg-white border-slate-200">{day}</div>
+                <div key={day} className="p-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5">{day}</div>
               ))}
             </div>
 
@@ -1073,40 +1092,48 @@ export default function Attendance() {
                 const isToday = cell.dateKey === todayStr;
                 const rec = records.find(r => r.employeeId === currentUser?.id && r.date === cell.dateKey);
 
-                let cellStyle = { backgroundColor: '#ffffff', color: '#000000', borderColor: '#e2e8f0', border: '1px solid #e2e8f0' };
-                if (!cell.isCurrentMonth) {
-                  cellStyle = { backgroundColor: '#f8fafc', color: '#94a3b8', borderColor: '#f1f5f9', border: '1px solid #f1f5f9' };
-                } else if (rec?.status === 'Present') {
-                  cellStyle = { backgroundColor: '#ecfdf5', color: '#064e3b', borderColor: '#a7f3d0', border: '1px solid #a7f3d0' };
-                } else if (rec?.status === 'Late') {
-                  cellStyle = { backgroundColor: '#fffbeb', color: '#92400e', borderColor: '#fde68a', border: '1px solid #fde68a' };
-                } else if (rec?.status === 'Absent') {
-                  cellStyle = { backgroundColor: '#fef2f2', color: '#9f1239', borderColor: '#fecaca', border: '1px solid #fecaca' };
-                }
-
                 return (
                   <div 
                     key={i}
-                    className={`h-24 p-2.5 rounded-2xl flex flex-col justify-between transition-all shadow-xs ${
-                      isToday ? 'ring-2 ring-emerald-500 ring-offset-1' : ''
+                    className={`h-24 p-2.5 rounded-2xl flex flex-col justify-between transition-all shadow-xs border ${
+                      isToday 
+                        ? 'ring-2 ring-emerald-500 ring-offset-1 bg-emerald-50 dark:bg-emerald-500/20 border-emerald-400' 
+                        : !cell.isCurrentMonth
+                          ? 'bg-slate-50/50 dark:bg-white/[0.02] border-slate-100 dark:border-white/5 opacity-40'
+                          : rec?.status === 'Present'
+                            ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30'
+                            : rec?.status === 'Late'
+                              ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30'
+                              : rec?.status === 'Absent'
+                                ? 'bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'
+                                : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10'
                     }`}
-                    style={cellStyle}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-black" style={{ color: cellStyle.color }}>{cell.day}</span>
+                      <span className={`text-xs font-black ${
+                        isToday 
+                          ? 'text-emerald-700 dark:text-emerald-300' 
+                          : cell.isCurrentMonth 
+                            ? 'text-slate-900 dark:text-white' 
+                            : 'text-slate-400 dark:text-slate-500'
+                      }`}>
+                        {cell.day}
+                      </span>
                       {isToday && (
-                        <span className="text-[9px] font-black text-emerald-700 uppercase tracking-tight">
+                        <span className="text-[9px] font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-tight">
                           Today
                         </span>
                       )}
                     </div>
                     {rec ? (
                       <div className="text-[10px] font-extrabold truncate">
-                        <span style={{ color: cellStyle.color }}>{rec.status}</span>
-                        <span className="block font-mono text-[9px]" style={{ color: cellStyle.color }}>{rec.checkInTime}</span>
+                        <span className={rec.status === 'Present' ? 'text-emerald-700 dark:text-emerald-300' : rec.status === 'Late' ? 'text-amber-700 dark:text-amber-300' : 'text-rose-700 dark:text-rose-300'}>
+                          {rec.status}
+                        </span>
+                        <span className="block font-mono text-[9px] text-slate-500 dark:text-slate-400">{rec.checkInTime}</span>
                       </div>
                     ) : cell.isCurrentMonth ? (
-                      <span className="text-[9px] font-bold text-slate-400">--</span>
+                      <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">--</span>
                     ) : null}
                   </div>
                 );
@@ -1119,7 +1146,7 @@ export default function Attendance() {
       {/* REPORTS & HISTORY TAB */}
       {activeTab === 'history' && (
         <div className="space-y-4">
-          <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+          <div className="p-4 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
               <div className="relative flex-1 min-w-[180px]">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
@@ -1128,19 +1155,17 @@ export default function Attendance() {
                   placeholder="Search Employee..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border focus:outline-none focus:border-indigo-600 font-extrabold"
-                  style={{ backgroundColor: '#ffffff', color: '#000000', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
+                  className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-extrabold"
                 />
               </div>
 
               <select
                 value={filterDepartment}
                 onChange={(e) => setFilterDepartment(e.target.value)}
-                className="px-3 py-2 text-xs rounded-xl border focus:outline-none font-extrabold cursor-pointer"
-                style={{ backgroundColor: '#ffffff', color: '#000000', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
+                className="px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none font-extrabold cursor-pointer"
               >
                 {departmentsList.map(d => (
-                  <option key={d} value={d} style={{ backgroundColor: '#ffffff', color: '#000000' }}>
+                  <option key={d} value={d}>
                     Dept: {d}
                   </option>
                 ))}
@@ -1149,11 +1174,10 @@ export default function Attendance() {
               <select
                 value={filterProject}
                 onChange={(e) => setFilterProject(e.target.value)}
-                className="px-3 py-2 text-xs rounded-xl border focus:outline-none font-extrabold cursor-pointer"
-                style={{ backgroundColor: '#ffffff', color: '#000000', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
+                className="px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none font-extrabold cursor-pointer"
               >
                 {projectsListOptions.map(p => (
-                  <option key={p} value={p} style={{ backgroundColor: '#ffffff', color: '#000000' }}>
+                  <option key={p} value={p}>
                     Project: {p}
                   </option>
                 ))}
@@ -1162,21 +1186,20 @@ export default function Attendance() {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-2 text-xs rounded-xl border focus:outline-none font-extrabold cursor-pointer"
-                style={{ backgroundColor: '#ffffff', color: '#000000', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
+                className="px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none font-extrabold cursor-pointer"
               >
-                <option value="All" style={{ backgroundColor: '#ffffff', color: '#000000' }}>Status: All</option>
-                <option value="Present" style={{ backgroundColor: '#ffffff', color: '#000000' }}>Present</option>
-                <option value="Late" style={{ backgroundColor: '#ffffff', color: '#000000' }}>Late</option>
-                <option value="Absent" style={{ backgroundColor: '#ffffff', color: '#000000' }}>Absent</option>
-                <option value="Leave" style={{ backgroundColor: '#ffffff', color: '#000000' }}>Leave</option>
+                <option value="All">Status: All</option>
+                <option value="Present">Present</option>
+                <option value="Late">Late</option>
+                <option value="Absent">Absent</option>
+                <option value="Leave">Leave</option>
               </select>
             </div>
 
             <div className="flex items-center gap-2">
               <button
                 onClick={exportPDF}
-                className="py-2 px-3.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                className="py-2 px-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
               >
                 <FileText className="h-4 w-4" />
                 <span>Export PDF</span>
@@ -1184,7 +1207,7 @@ export default function Attendance() {
 
               <button
                 onClick={exportExcel}
-                className="py-2 px-3.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                className="py-2 px-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
               >
                 <FileSpreadsheet className="h-4 w-4" />
                 <span>Export Excel</span>
@@ -1192,43 +1215,43 @@ export default function Attendance() {
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-[#0b0f19] shadow-sm">
             <table className="w-full text-left text-xs">
-              <thead style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
+              <thead className="bg-slate-100 dark:bg-slate-950/80 text-slate-700 dark:text-white border-b border-slate-200 dark:border-white/10">
                 <tr>
-                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Date</th>
-                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Employee</th>
-                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Department</th>
-                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Project</th>
-                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Check-In</th>
-                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Check-Out</th>
-                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Status</th>
-                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Method</th>
-                  <th className="p-3.5 font-extrabold uppercase" style={{ color: '#ffffff', backgroundColor: '#0f172a' }}>Remarks</th>
+                  <th className="p-3.5 font-extrabold uppercase">Date</th>
+                  <th className="p-3.5 font-extrabold uppercase">Employee</th>
+                  <th className="p-3.5 font-extrabold uppercase">Department</th>
+                  <th className="p-3.5 font-extrabold uppercase">Project</th>
+                  <th className="p-3.5 font-extrabold uppercase">Check-In</th>
+                  <th className="p-3.5 font-extrabold uppercase">Check-Out</th>
+                  <th className="p-3.5 font-extrabold uppercase">Status</th>
+                  <th className="p-3.5 font-extrabold uppercase">Method</th>
+                  <th className="p-3.5 font-extrabold uppercase">Remarks</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 bg-white">
+              <tbody className="divide-y divide-slate-200 dark:divide-white/10">
                 {filteredHistory.slice(0, 50).map((r) => (
-                  <tr key={r.id} className="hover:bg-slate-50 transition-colors bg-white">
-                    <td className="p-3.5 font-mono font-bold" style={{ color: '#0f172a' }}>{r.date}</td>
-                    <td className="p-3.5 font-extrabold" style={{ color: '#090d16' }}>{r.employeeName} ({r.employeeId})</td>
-                    <td className="p-3.5 font-semibold" style={{ color: '#334155' }}>{r.department || 'N/A'}</td>
-                    <td className="p-3.5 font-semibold" style={{ color: '#334155' }}>{r.project || 'N/A'}</td>
-                    <td className="p-3.5 font-mono font-bold" style={{ color: '#0f172a' }}>{r.checkInTime || '--:--'}</td>
-                    <td className="p-3.5 font-mono font-bold" style={{ color: '#0f172a' }}>{r.checkOutTime || '--:--'}</td>
+                  <tr key={r.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                    <td className="p-3.5 font-mono font-bold text-slate-900 dark:text-white">{r.date}</td>
+                    <td className="p-3.5 font-extrabold text-slate-900 dark:text-white">{r.employeeName} ({r.employeeId})</td>
+                    <td className="p-3.5 font-semibold text-slate-700 dark:text-slate-300">{r.department || 'N/A'}</td>
+                    <td className="p-3.5 font-semibold text-slate-700 dark:text-slate-300">{r.project || 'N/A'}</td>
+                    <td className="p-3.5 font-mono font-bold text-slate-900 dark:text-white">{r.checkInTime || '--:--'}</td>
+                    <td className="p-3.5 font-mono font-bold text-slate-900 dark:text-white">{r.checkOutTime || '--:--'}</td>
                     <td className="p-3.5">
                       {r.status === 'Present' || r.status === 'Late' ? (
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold border" style={{ backgroundColor: '#d1fae5', color: '#065f46', borderColor: '#6ee7b7' }}>
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold border bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/40">
                           Present
                         </span>
                       ) : (
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold border" style={{ backgroundColor: '#fee2e2', color: '#9f1239', borderColor: '#fca5a5' }}>
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold border bg-rose-100 dark:bg-rose-500/20 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-500/40">
                           {r.status}
                         </span>
                       )}
                     </td>
-                    <td className="p-3.5 font-medium" style={{ color: '#475569' }}>{r.markedBy || 'Self'}</td>
-                    <td className="p-3.5 font-medium truncate max-w-xs" style={{ color: '#475569' }}>{r.remarks || 'N/A'}</td>
+                    <td className="p-3.5 font-medium text-slate-600 dark:text-slate-400">{r.markedBy || 'Self'}</td>
+                    <td className="p-3.5 font-medium truncate max-w-xs text-slate-600 dark:text-slate-400">{r.remarks || 'N/A'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1240,30 +1263,30 @@ export default function Attendance() {
       {/* WARNINGS & DEACTIVATIONS TAB */}
       {activeTab === 'warnings' && (
         <div className="space-y-6">
-          <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
-            <div className="flex items-center gap-2 text-amber-700 font-bold text-sm">
-              <AlertTriangle className="h-5 w-5 text-amber-600" />
+          <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl space-y-4">
+            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-bold text-sm">
+              <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
               <span>Active Attendance Warnings (50% - 74%)</span>
             </div>
 
             {warningsList.length === 0 ? (
-              <p className="text-xs text-slate-500 italic">No employees currently under attendance warning status.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 italic">No employees currently under attendance warning status.</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {warningsList.map(u => {
                   const st = employeeStatsMap[u.id];
                   return (
-                    <div key={u.id} className="p-4 rounded-xl bg-slate-50 border border-amber-200 flex items-center justify-between">
+                    <div key={u.id} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-amber-200 dark:border-amber-800/60 flex items-center justify-between">
                       <div className="space-y-1">
-                        <h4 className="text-xs font-bold text-slate-900">{u.name} ({u.id})</h4>
-                        <p className="text-[11px] text-slate-600">{u.department} • {u.email}</p>
-                        <span className="inline-block text-[10px] text-amber-800 font-bold bg-amber-100 px-2 py-0.5 rounded border border-amber-200">
+                        <h4 className="text-xs font-bold text-slate-900 dark:text-white">{u.name} ({u.id})</h4>
+                        <p className="text-[11px] text-slate-600 dark:text-slate-400">{u.department} • {u.email}</p>
+                        <span className="inline-block text-[10px] text-amber-800 dark:text-amber-300 font-bold bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800/60">
                           Warning Notice Issued
                         </span>
                       </div>
                       <div className="text-right">
-                        <span className="text-lg font-black text-amber-700 font-mono block">{st?.attendancePct}%</span>
-                        <span className="text-[10px] text-slate-500">Req: 75%</span>
+                        <span className="text-lg font-black text-amber-700 dark:text-amber-400 font-mono block">{st?.attendancePct}%</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400">Req: 75%</span>
                       </div>
                     </div>
                   );
@@ -1272,30 +1295,30 @@ export default function Attendance() {
             )}
           </div>
 
-          <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
-            <div className="flex items-center gap-2 text-rose-700 font-bold text-sm">
-              <UserX className="h-5 w-5 text-rose-600" />
+          <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl space-y-4">
+            <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400 font-bold text-sm">
+              <UserX className="h-5 w-5 text-rose-600 dark:text-rose-400" />
               <span>Deactivated / Terminated Accounts (&lt;50% Attendance)</span>
             </div>
 
             {terminatedList.length === 0 ? (
-              <p className="text-xs text-slate-500 italic">No accounts deactivated under attendance policy.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 italic">No accounts deactivated under attendance policy.</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {terminatedList.map(u => {
                   const st = employeeStatsMap[u.id];
                   return (
-                    <div key={u.id} className="p-4 rounded-xl bg-slate-50 border border-rose-200 flex items-center justify-between">
+                    <div key={u.id} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-rose-200 dark:border-rose-800/60 flex items-center justify-between">
                       <div className="space-y-1">
-                        <h4 className="text-xs font-bold text-slate-900">{u.name} ({u.id})</h4>
-                        <p className="text-[11px] text-slate-600">Reason: Attendance Below Company Policy</p>
-                        <span className="inline-block text-[10px] text-rose-800 font-bold bg-rose-100 px-2 py-0.5 rounded border border-rose-200">
+                        <h4 className="text-xs font-bold text-slate-900 dark:text-white">{u.name} ({u.id})</h4>
+                        <p className="text-[11px] text-slate-600 dark:text-slate-400">Reason: Attendance Below Company Policy</p>
+                        <span className="inline-block text-[10px] text-rose-800 dark:text-rose-300 font-bold bg-rose-100 dark:bg-rose-950/60 px-2 py-0.5 rounded border border-rose-200 dark:border-rose-800/60">
                           Login Access Revoked
                         </span>
                       </div>
 
                       <div className="text-right space-y-2">
-                        <span className="text-lg font-black text-rose-700 font-mono block">{st?.attendancePct || 42}%</span>
+                        <span className="text-lg font-black text-rose-700 dark:text-rose-400 font-mono block">{st?.attendancePct || 42}%</span>
                         {isAdmin && (
                           <button
                             onClick={() => {
@@ -1319,25 +1342,24 @@ export default function Attendance() {
 
       {/* SETTINGS TAB */}
       {activeTab === 'settings' && isAdmin && (
-        <form onSubmit={handleSaveSettings} className="p-6 rounded-2xl border shadow-sm space-y-6 max-w-3xl" style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1' }}>
-          <div className="border-b pb-4" style={{ borderColor: '#cbd5e1' }}>
-            <h3 className="text-base font-extrabold" style={{ color: '#000000' }}>Attendance Policy Parameters</h3>
-            <p className="text-xs font-semibold" style={{ color: '#334155' }}>Configure global office timings, late entries, working days, and policy threshold percentages.</p>
+        <form onSubmit={handleSaveSettings} className="p-6 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl space-y-6 max-w-3xl">
+          <div className="border-b border-slate-100 dark:border-white/10 pb-4">
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Attendance Policy Parameters</h3>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-300">Configure global office timings, late entries, working days, and policy threshold percentages.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-extrabold mb-1" style={{ color: '#1e293b' }}>Office End Time (Reference)</label>
+              <label className="block text-xs font-extrabold mb-1 text-slate-700 dark:text-slate-200">Office End Time (Reference)</label>
               <input 
                 type="time" 
                 value={settingsForm.officeEndTime} 
                 onChange={(e) => setSettingsForm({ ...settingsForm, officeEndTime: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl text-xs focus:outline-none focus:border-indigo-600 font-extrabold"
-                style={{ backgroundColor: '#ffffff', color: '#000000', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
+                className="w-full px-3 py-2 rounded-xl text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-extrabold"
               />
             </div>
             <div className="flex items-center pt-5">
-              <span className="text-xs font-extrabold px-3 py-2 rounded-xl border" style={{ backgroundColor: '#ecfdf5', color: '#064e3b', borderColor: '#a7f3d0' }}>
+              <span className="text-xs font-extrabold px-3 py-2 rounded-xl border bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60">
                 ✓ Flexible Entry Enabled (No Office Start Time Restriction)
               </span>
             </div>
@@ -1345,44 +1367,40 @@ export default function Attendance() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-extrabold mb-1" style={{ color: '#1e293b' }}>Required Minimum %</label>
+              <label className="block text-xs font-extrabold mb-1 text-slate-700 dark:text-slate-200">Required Minimum %</label>
               <input 
                 type="number" 
                 value={settingsForm.minimumAttendancePct} 
                 onChange={(e) => setSettingsForm({ ...settingsForm, minimumAttendancePct: Number(e.target.value) })}
-                className="w-full px-3 py-2 rounded-xl text-xs focus:outline-none focus:border-indigo-600 font-extrabold"
-                style={{ backgroundColor: '#ffffff', color: '#000000', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
+                className="w-full px-3 py-2 rounded-xl text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-extrabold"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-extrabold mb-1" style={{ color: '#1e293b' }}>Warning Threshold %</label>
+              <label className="block text-xs font-extrabold mb-1 text-slate-700 dark:text-slate-200">Warning Threshold %</label>
               <input 
                 type="number" 
                 value={settingsForm.warningPercentage} 
                 onChange={(e) => setSettingsForm({ ...settingsForm, warningPercentage: Number(e.target.value) })}
-                className="w-full px-3 py-2 rounded-xl text-xs focus:outline-none focus:border-indigo-600 font-extrabold"
-                style={{ backgroundColor: '#ffffff', color: '#000000', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
+                className="w-full px-3 py-2 rounded-xl text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-extrabold"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-extrabold mb-1" style={{ color: '#1e293b' }}>Termination Threshold %</label>
+              <label className="block text-xs font-extrabold mb-1 text-slate-700 dark:text-slate-200">Termination Threshold %</label>
               <input 
                 type="number" 
                 value={settingsForm.terminationPercentage} 
                 onChange={(e) => setSettingsForm({ ...settingsForm, terminationPercentage: Number(e.target.value) })}
-                className="w-full px-3 py-2 rounded-xl text-xs focus:outline-none focus:border-indigo-600 font-extrabold"
-                style={{ backgroundColor: '#ffffff', color: '#000000', borderColor: '#cbd5e1', border: '1px solid #cbd5e1' }}
+                className="w-full px-3 py-2 rounded-xl text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-extrabold"
               />
             </div>
           </div>
 
-          <div className="pt-4 border-t flex justify-end" style={{ borderColor: '#cbd5e1' }}>
+          <div className="pt-4 border-t border-slate-100 dark:border-white/10 flex justify-end">
             <button
               type="submit"
-              className="py-2.5 px-6 rounded-xl text-white text-xs font-extrabold shadow-sm cursor-pointer"
-              style={{ backgroundColor: '#4f46e5', color: '#ffffff' }}
+              className="py-2.5 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold shadow-sm cursor-pointer transition-colors"
             >
               Save Policy Configuration
             </button>
@@ -1416,13 +1434,13 @@ export default function Attendance() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.85, opacity: 0, y: 15 }}
               transition={{ type: 'spring', damping: 22, stiffness: 320 }}
-              className={`bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl border-2 flex flex-col items-center text-center space-y-4 relative ${
+              className={`bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl border-2 flex flex-col items-center text-center space-y-4 relative ${
                 toast.type === 'error' ? 'border-rose-400' : 'border-emerald-500'
               }`}
             >
               <button
                 onClick={() => setToast(null)}
-                className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <XCircle className="h-4 w-4" />
               </button>
@@ -1438,8 +1456,8 @@ export default function Attendance() {
               </div>
 
               <div className="space-y-1">
-                <h3 className="text-lg font-black text-slate-900">{toast.title || 'Notification'}</h3>
-                <p className="text-xs font-bold text-slate-600 leading-relaxed">{toast.message}</p>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">{toast.title || 'Notification'}</h3>
+                <p className="text-xs font-bold text-slate-600 dark:text-slate-300 leading-relaxed">{toast.message}</p>
               </div>
 
               <button

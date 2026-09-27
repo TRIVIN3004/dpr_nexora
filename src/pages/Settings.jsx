@@ -123,30 +123,30 @@ export default function Settings() {
       
       {/* Toast alert */}
       {toast && (
-        <div className="fixed top-5 right-5 z-50 px-4 py-2.5 rounded-xl bg-slate-900 border border-nexora-purple shadow-glow-purple text-xs text-slate-200 animate-slide-in flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-nexora-purple animate-ping" />
+        <div className="fixed top-5 right-5 z-50 px-4 py-2.5 rounded-xl bg-slate-900 border border-indigo-500 shadow-lg text-xs text-white animate-slide-in flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-indigo-400 animate-ping" />
           {toast}
         </div>
       )}
 
       {/* Title block */}
-      <div className="glass-panel p-5 rounded-2xl shadow-glass border border-slate-800/40">
-        <h3 className="text-base font-bold text-slate-200">System Preferences & Settings</h3>
-        <p className="text-xs text-slate-500 mt-1 font-medium">Modify account info, company rules, and client triggers</p>
+      <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl">
+        <h3 className="text-base font-black text-slate-900 dark:text-white">System Preferences & Settings</h3>
+        <p className="text-xs text-slate-500 dark:text-slate-300 mt-1 font-semibold">Modify account info, company rules, and client triggers</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Navigation sidebar */}
-        <div className="lg:col-span-1 glass-panel p-4 rounded-2xl shadow-glass space-y-2 h-fit">
-          <div className="flex items-center gap-2 px-3.5 py-3 rounded-xl bg-slate-900 text-nexora-purple text-xs font-bold font-sans">
+        <div className="lg:col-span-1 p-4 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl space-y-2 h-fit">
+          <div className="flex items-center gap-2 px-3.5 py-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-[#818cf8] border border-indigo-200 dark:border-indigo-800/60 text-xs font-bold font-sans">
             <User className="h-4 w-4" /> Personal Account
           </div>
-          <div className="flex items-center gap-2 px-3.5 py-3 text-slate-400 hover:text-white rounded-xl text-xs font-medium font-sans">
+          <div className="flex items-center gap-2 px-3.5 py-3 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-xl text-xs font-semibold transition-colors">
             <Bell className="h-4 w-4" /> Notifications Config
           </div>
           {isAdmin && (
-            <div className="flex items-center gap-2 px-3.5 py-3 text-slate-400 hover:text-white rounded-xl text-xs font-medium font-sans">
+            <div className="flex items-center gap-2 px-3.5 py-3 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-xl text-xs font-semibold transition-colors">
               <Building2 className="h-4 w-4" /> Company Rules
             </div>
           )}
@@ -156,21 +156,21 @@ export default function Settings() {
         <div className="lg:col-span-2 space-y-6">
           
           {/* Section 1: User Profile Settings */}
-          <div className="glass-panel p-5 rounded-2xl shadow-glass space-y-4">
-            <h4 className="text-xs font-extrabold text-slate-300 uppercase tracking-widest border-b border-slate-800/40 pb-2 flex items-center gap-2">
-              <Shield className="h-4.5 w-4.5 text-nexora-purple" />
+          <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl space-y-4">
+            <h4 className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-widest border-b border-slate-100 dark:border-white/10 pb-2 flex items-center gap-2">
+              <Shield className="h-4.5 w-4.5 text-indigo-600 dark:text-[#818cf8]" />
               General Profile Settings
             </h4>
 
             <form onSubmit={handleProfileSave} className="space-y-4 text-xs">
               
               {/* Profile Picture Section */}
-              <div className="flex flex-col md:flex-row items-start gap-4 p-4 rounded-xl bg-slate-900/40 border border-slate-800/40">
+              <div className="flex flex-col md:flex-row items-start gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/40">
                 <div className="relative group mx-auto md:mx-0 flex-shrink-0 cursor-pointer">
                   <img
                     src={avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'}
                     alt="Profile Avatar"
-                    className="h-16 w-16 rounded-full object-cover border border-slate-750 shadow-md group-hover:opacity-75 transition-opacity"
+                    className="h-16 w-16 rounded-full object-cover border-2 border-indigo-400 shadow-md group-hover:opacity-75 transition-opacity"
                   />
                   <label className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white text-[9px] font-bold">
                     <Camera className="h-4 w-4 mb-0.5" />
@@ -185,8 +185,8 @@ export default function Settings() {
                 </div>
                 <div className="space-y-2.5 flex-grow w-full">
                   <div>
-                    <h5 className="text-[11px] font-bold text-slate-300">Profile Picture</h5>
-                    <p className="text-[10px] text-slate-500 mt-0.5">Click the avatar to upload a local picture, or select a preset below.</p>
+                    <h5 className="text-[11px] font-bold text-slate-900 dark:text-slate-200">Profile Picture</h5>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Click the avatar to upload a local picture, or select a preset below.</p>
                   </div>
                   
                   {/* Preset Avatars */}
@@ -198,7 +198,9 @@ export default function Settings() {
                         onClick={() => setAvatarUrl(preset.url)}
                         title={preset.name}
                         className={`h-7 w-7 rounded-full overflow-hidden border cursor-pointer transition-all ${
-                          avatarUrl === preset.url ? 'border-nexora-purple scale-110 ring-1 ring-nexora-purple/50' : 'border-slate-800 hover:border-slate-600'
+                          avatarUrl === preset.url 
+                            ? 'border-indigo-600 scale-110 ring-2 ring-indigo-500/50' 
+                            : 'border-slate-300 dark:border-slate-700 hover:border-slate-500'
                         }`}
                       >
                         <img src={preset.url} alt={preset.name} className="h-full w-full object-cover" />
@@ -208,13 +210,13 @@ export default function Settings() {
 
                   {/* Remote URL input option */}
                   <div className="space-y-0.5">
-                    <label className="text-[10px] text-slate-400 font-medium">Or enter external image URL</label>
+                    <label className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Or enter external image URL</label>
                     <input
                       type="text"
                       placeholder="https://example.com/avatar.png"
                       value={avatarUrl}
                       onChange={(e) => setAvatarUrl(e.target.value)}
-                      className="w-full px-3 py-1.5 rounded-lg glass-input text-[11px] focus:outline-none"
+                      className="w-full px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white text-[11px] focus:outline-none focus:border-indigo-500"
                     />
                   </div>
                 </div>
@@ -222,40 +224,40 @@ export default function Settings() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-slate-400 font-semibold">Display Name</label>
+                  <label className="text-slate-700 dark:text-slate-300 font-semibold">Display Name</label>
                   <input
                     type="text"
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl glass-input focus:outline-none"
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-slate-400 font-semibold">Contact Phone</label>
+                  <label className="text-slate-700 dark:text-slate-300 font-semibold">Contact Phone</label>
                   <input
                     type="text"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl glass-input focus:outline-none"
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-slate-400 font-semibold">Work Email Address</label>
+                <label className="text-slate-700 dark:text-slate-300 font-semibold">Work Email Address</label>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl glass-input focus:outline-none"
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
               <button
                 type="submit"
-                className="px-4 py-2 rounded-xl bg-nexora-purple text-white hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer font-bold"
+                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black transition-all cursor-pointer shadow-md"
               >
                 Update Account Information
               </button>
@@ -263,53 +265,53 @@ export default function Settings() {
           </div>
 
           {/* Section 2: Password modifier */}
-          <div className="glass-panel p-5 rounded-2xl shadow-glass space-y-4">
-            <h4 className="text-xs font-extrabold text-slate-300 uppercase tracking-widest border-b border-slate-800/40 pb-2 flex items-center gap-2">
-              <Key className="h-4.5 w-4.5 text-nexora-blue" />
+          <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl space-y-4">
+            <h4 className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-widest border-b border-slate-100 dark:border-white/10 pb-2 flex items-center gap-2">
+              <Key className="h-4.5 w-4.5 text-indigo-600 dark:text-[#818cf8]" />
               Change System Password
             </h4>
 
             <form onSubmit={handlePasswordSave} className="space-y-4 text-xs">
               <div className="space-y-1">
-                <label className="text-slate-400 font-semibold">Current Password</label>
+                <label className="text-slate-700 dark:text-slate-300 font-semibold">Current Password</label>
                 <input
                   type="password"
                   required
                   value={currPassword}
                   onChange={(e) => setCurrPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-3 py-2.5 rounded-xl glass-input focus:outline-none"
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-slate-400 font-semibold">New Password</label>
+                  <label className="text-slate-700 dark:text-slate-300 font-semibold">New Password</label>
                   <input
                     type="password"
                     required
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-3 py-2.5 rounded-xl glass-input focus:outline-none"
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-slate-400 font-semibold">Confirm New Password</label>
+                  <label className="text-slate-700 dark:text-slate-300 font-semibold">Confirm New Password</label>
                   <input
                     type="password"
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-3 py-2.5 rounded-xl glass-input focus:outline-none"
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500"
                   />
                 </div>
               </div>
 
               <button
                 type="submit"
-                className="px-4 py-2 rounded-xl bg-slate-900 border border-slate-850 hover:border-slate-700 text-slate-200 transition-all cursor-pointer font-bold"
+                className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white transition-all cursor-pointer font-black"
               >
                 Change Security Token
               </button>
@@ -317,23 +319,23 @@ export default function Settings() {
           </div>
 
           {/* Section 3: Notification Toggles */}
-          <div className="glass-panel p-5 rounded-2xl shadow-glass space-y-4">
-            <h4 className="text-xs font-extrabold text-slate-300 uppercase tracking-widest border-b border-slate-800/40 pb-2 flex items-center gap-2">
-              <Bell className="h-4.5 w-4.5 text-nexora-purple" />
+          <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl space-y-4">
+            <h4 className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-widest border-b border-slate-100 dark:border-white/10 pb-2 flex items-center gap-2">
+              <Bell className="h-4.5 w-4.5 text-indigo-600 dark:text-[#818cf8]" />
               Notifications Configuration
             </h4>
 
-            <div className="space-y-3.5 text-xs text-slate-300">
+            <div className="space-y-3.5 text-xs text-slate-700 dark:text-slate-300">
               <label className="flex items-center gap-3.5 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={emailDprSubmission}
                   onChange={(e) => setEmailDprSubmission(e.target.checked)}
-                  className="rounded border-slate-850 text-nexora-purple focus:ring-nexora-purple bg-slate-950/45 h-4 w-4"
+                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4"
                 />
                 <div>
-                  <span className="font-bold text-slate-200 block">Email Alerts for submissions</span>
-                  <span className="text-[10px] text-slate-500">Sends alerts when team member submits reports</span>
+                  <span className="font-bold text-slate-900 dark:text-slate-200 block">Email Alerts for submissions</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400">Sends alerts when team member submits reports</span>
                 </div>
               </label>
 
@@ -342,11 +344,11 @@ export default function Settings() {
                   type="checkbox"
                   checked={emailWeeklyDigest}
                   onChange={(e) => setEmailWeeklyDigest(e.target.checked)}
-                  className="rounded border-slate-850 text-nexora-purple focus:ring-nexora-purple bg-slate-950/45 h-4 w-4"
+                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4"
                 />
                 <div>
-                  <span className="font-bold text-slate-200 block">Weekly Digest Digests</span>
-                  <span className="text-[10px] text-slate-500">Recaps sprint tasks progress every Friday</span>
+                  <span className="font-bold text-slate-900 dark:text-slate-200 block">Weekly Digest Summaries</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400">Recaps sprint tasks progress every Friday</span>
                 </div>
               </label>
 
@@ -355,11 +357,11 @@ export default function Settings() {
                   type="checkbox"
                   checked={pushStatusUpdate}
                   onChange={(e) => setPushStatusUpdate(e.target.checked)}
-                  className="rounded border-slate-850 text-nexora-purple focus:ring-nexora-purple bg-slate-950/45 h-4 w-4"
+                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4"
                 />
                 <div>
-                  <span className="font-bold text-slate-200 block">In-App Live Stream Alerts</span>
-                  <span className="text-[10px] text-slate-500">Recaps status notifications directly on header bell</span>
+                  <span className="font-bold text-slate-900 dark:text-slate-200 block">In-App Live Stream Alerts</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400">Recaps status notifications directly on header bell</span>
                 </div>
               </label>
             </div>
@@ -367,47 +369,47 @@ export default function Settings() {
 
           {/* Section 4: Company Profile Configuration (Only for Admins) */}
           {isAdmin && (
-            <div className="glass-panel p-5 rounded-2xl shadow-glass space-y-4">
-              <h4 className="text-xs font-extrabold text-slate-300 uppercase tracking-widest border-b border-slate-800/40 pb-2 flex items-center gap-2">
-                <Building2 className="h-4.5 w-4.5 text-nexora-blue" />
+            <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl space-y-4">
+              <h4 className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-widest border-b border-slate-100 dark:border-white/10 pb-2 flex items-center gap-2">
+                <Building2 className="h-4.5 w-4.5 text-indigo-600 dark:text-[#818cf8]" />
                 Nexora Tech Rules & Compliance
               </h4>
 
               <form onSubmit={handleCompanySave} className="space-y-4 text-xs">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-slate-400 font-semibold">Company Name</label>
+                    <label className="text-slate-700 dark:text-slate-300 font-semibold">Company Name</label>
                     <input
                       type="text"
                       value={companyName}
                       onChange={(e) => setCompanyName(e.target.value)}
-                      className="w-full px-3 py-2.5 rounded-xl glass-input focus:outline-none"
+                      className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-slate-400 font-semibold">Report Submission Cutoff</label>
+                    <label className="text-slate-700 dark:text-slate-300 font-semibold">Report Submission Cutoff</label>
                     <input
                       type="time"
                       value={reportCutoff}
                       onChange={(e) => setReportCutoff(e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded-xl glass-input focus:outline-none cursor-pointer"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500 cursor-pointer"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-slate-400 font-semibold">Authorized Email Domains</label>
+                  <label className="text-slate-700 dark:text-slate-300 font-semibold">Authorized Email Domains</label>
                   <input
                     type="text"
                     value={companyDomain}
                     onChange={(e) => setCompanyDomain(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl glass-input focus:outline-none"
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-nexora-blue to-nexora-purple text-white shadow-glow-purple font-bold hover:brightness-110 cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-md cursor-pointer"
                 >
                   Save Compliance Directives
                 </button>

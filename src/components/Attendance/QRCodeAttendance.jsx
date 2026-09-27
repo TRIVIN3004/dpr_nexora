@@ -26,7 +26,7 @@ export default function QRCodeAttendance({ currentUser, onScanComplete }) {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 rounded-3xl border shadow-md bg-white relative overflow-hidden" style={{ borderColor: '#cbd5e1' }}>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 rounded-3xl border border-slate-200 dark:border-white/15 shadow-xl bg-white dark:bg-white/[0.07] backdrop-blur-2xl relative overflow-hidden text-left">
       
       {/* Centered In-Widget Notification Overlay */}
       <AnimatePresence>
@@ -42,11 +42,11 @@ export default function QRCodeAttendance({ currentUser, onScanComplete }) {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.85, opacity: 0, y: 10 }}
               transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-              className="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border-2 border-emerald-500 flex flex-col items-center text-center space-y-5 relative"
+              className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border-2 border-emerald-500 flex flex-col items-center text-center space-y-5 relative"
             >
               <button
                 onClick={() => setScanResult(null)}
-                className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -56,39 +56,39 @@ export default function QRCodeAttendance({ currentUser, onScanComplete }) {
                   initial={{ scale: 0 }}
                   animate={{ scale: [0, 1.2, 1] }}
                   transition={{ duration: 0.5 }}
-                  className="h-20 w-20 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 border-2 border-emerald-300 shadow-lg shadow-emerald-200"
+                  className="h-20 w-20 rounded-full bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-emerald-600 border-2 border-emerald-300 dark:border-emerald-700 shadow-lg shadow-emerald-200 dark:shadow-emerald-950"
                 >
-                  <CheckCircle2 className="h-11 w-11 text-emerald-600" />
+                  <CheckCircle2 className="h-11 w-11 text-emerald-600 dark:text-emerald-400" />
                 </motion.div>
               </div>
 
               <div className="space-y-1">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-black">
-                  <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-[11px] font-black">
+                  <Sparkles className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                   QR Attendance Verified
                 </div>
-                <h3 className="text-xl font-black text-slate-900 tracking-tight">
+                <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
                   Attendance Marked Successfully!
                 </h3>
-                <p className="text-xs font-extrabold text-slate-500">
+                <p className="text-xs font-extrabold text-slate-500 dark:text-slate-400">
                   {currentUser?.name} • {currentUser?.id}
                 </p>
               </div>
 
-              <div className="w-full bg-slate-50 rounded-2xl p-4 border border-slate-200 text-left space-y-2 text-xs">
+              <div className="w-full bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 text-left space-y-2 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500 font-bold">Time Verified:</span>
-                  <span className="font-black text-slate-900 font-mono text-sm">{scanResult.time}</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-bold">Time Verified:</span>
+                  <span className="font-black text-slate-900 dark:text-white font-mono text-sm">{scanResult.time}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500 font-bold">Attendance Status:</span>
-                  <span className="font-black px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  <span className="text-slate-500 dark:text-slate-400 font-bold">Attendance Status:</span>
+                  <span className="font-black px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40">
                     Present (QR Verified)
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500 font-bold">Department:</span>
-                  <span className="font-black text-slate-800">{currentUser?.department || 'Engineering'}</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-bold">Department:</span>
+                  <span className="font-black text-slate-800 dark:text-slate-200">{currentUser?.department || 'Engineering'}</span>
                 </div>
               </div>
 
@@ -107,14 +107,14 @@ export default function QRCodeAttendance({ currentUser, onScanComplete }) {
       </AnimatePresence>
 
       {/* Left: Employee QR Badge Generator */}
-      <div className="flex flex-col items-center justify-center p-6 rounded-2xl border text-center space-y-4" style={{ backgroundColor: '#f8fafc', borderColor: '#cbd5e1' }}>
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold" style={{ backgroundColor: '#eef2ff', color: '#4338ca', border: '1px solid #c7d2fe' }}>
+      <div className="flex flex-col items-center justify-center p-6 rounded-2xl border border-slate-200 dark:border-white/10 text-center space-y-4 bg-slate-50 dark:bg-slate-900/40">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-[#818cf8] border border-indigo-200 dark:border-indigo-800/60">
           <Sparkles className="h-3.5 w-3.5" />
           Digital Employee Badge
         </div>
 
-        <div className="relative p-4 rounded-2xl shadow-md border-2" style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1' }}>
-          <div className="w-44 h-44 p-2 rounded-xl flex flex-col justify-between items-center relative overflow-hidden" style={{ backgroundColor: '#000000' }}>
+        <div className="relative p-4 rounded-2xl shadow-md border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950">
+          <div className="w-44 h-44 p-2 rounded-xl flex flex-col justify-between items-center relative overflow-hidden bg-black">
             <div className="grid grid-cols-6 gap-1 w-full h-full p-2 rounded bg-white">
               {Array.from({ length: 36 }).map((_, i) => (
                 <div 
@@ -136,18 +136,18 @@ export default function QRCodeAttendance({ currentUser, onScanComplete }) {
         </div>
 
         <div>
-          <h4 className="text-sm font-extrabold" style={{ color: '#090d16' }}>{currentUser?.name}</h4>
-          <p className="text-xs font-mono font-bold" style={{ color: '#334155' }}>{currentUser?.id} • {currentUser?.department || 'Engineering'}</p>
+          <h4 className="text-sm font-black text-slate-900 dark:text-white">{currentUser?.name}</h4>
+          <p className="text-xs font-mono font-bold text-slate-500 dark:text-slate-400">{currentUser?.id} • {currentUser?.department || 'Engineering'}</p>
         </div>
       </div>
 
       {/* Right: Live QR Scanner Simulation */}
-      <div className="flex flex-col items-center justify-center p-6 rounded-2xl border text-center space-y-4 relative" style={{ backgroundColor: '#f8fafc', borderColor: '#cbd5e1' }}>
-        <h4 className="text-xs font-extrabold uppercase tracking-wider" style={{ color: '#0f172a' }}>
+      <div className="flex flex-col items-center justify-center p-6 rounded-2xl border border-slate-200 dark:border-white/10 text-center space-y-4 relative bg-slate-50 dark:bg-slate-900/40">
+        <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white">
           Badge Camera Scanner
         </h4>
 
-        <div className="relative w-56 h-56 rounded-2xl border-2 border-dashed flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#ffffff', borderColor: '#818cf8' }}>
+        <div className="relative w-56 h-56 rounded-2xl border-2 border-dashed border-indigo-400 dark:border-indigo-500/70 bg-white dark:bg-slate-950 flex items-center justify-center overflow-hidden">
           {scanning ? (
             <div className="relative w-full h-full flex flex-col items-center justify-center">
               <motion.div 
@@ -155,13 +155,13 @@ export default function QRCodeAttendance({ currentUser, onScanComplete }) {
                 transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}
                 className="absolute w-full h-1 bg-gradient-to-r from-transparent via-indigo-600 to-transparent shadow"
               />
-              <Scan className="h-12 w-12 text-indigo-600 animate-pulse" />
-              <span className="text-xs font-mono mt-3 animate-pulse font-bold" style={{ color: '#4338ca' }}>Scanning QR Badge...</span>
+              <Scan className="h-12 w-12 text-indigo-600 dark:text-[#818cf8] animate-pulse" />
+              <span className="text-xs font-mono mt-3 animate-pulse font-bold text-indigo-600 dark:text-indigo-400">Scanning QR Badge...</span>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-3 p-4">
-              <QrCode className="h-12 w-12 text-indigo-600" />
-              <span className="text-xs font-bold" style={{ color: '#334155' }}>Align QR Code within the frame to verify</span>
+              <QrCode className="h-12 w-12 text-indigo-600 dark:text-[#818cf8]" />
+              <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Align QR Code within the frame to verify</span>
             </div>
           )}
         </div>
@@ -171,8 +171,7 @@ export default function QRCodeAttendance({ currentUser, onScanComplete }) {
           whileTap={{ scale: 0.97 }}
           onClick={triggerSimulatedScan}
           disabled={scanning}
-          className="py-2.5 px-5 rounded-xl text-white font-extrabold text-xs flex items-center gap-2 cursor-pointer disabled:opacity-50 shadow-sm"
-          style={{ backgroundColor: '#4f46e5', color: '#ffffff' }}
+          className="py-2.5 px-5 rounded-xl text-white font-extrabold text-xs flex items-center gap-2 cursor-pointer disabled:opacity-50 shadow-sm bg-indigo-600 hover:bg-indigo-500"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${scanning ? 'animate-spin' : ''}`} />
           <span>{scanning ? 'Scanning...' : 'Simulate QR Check-In'}</span>
@@ -182,4 +181,3 @@ export default function QRCodeAttendance({ currentUser, onScanComplete }) {
     </div>
   );
 }
-

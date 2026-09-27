@@ -47,15 +47,15 @@ export default function AttendanceStatCard({ title, value, subtitle, icon: Icon,
     <motion.div
       whileHover={{ y: -3 }}
       transition={{ duration: 0.2 }}
-      className={`relative overflow-hidden rounded-2xl border ${currentTheme.border} bg-white/[0.08] backdrop-blur-2xl p-5 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] hover:bg-white/[0.12] transition-all duration-300`}
+      className={`relative overflow-hidden rounded-2xl border border-slate-200 dark:border-white/20 bg-white dark:bg-white/[0.08] backdrop-blur-2xl p-5 shadow-sm dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] hover:bg-slate-50 dark:hover:bg-white/[0.12] transition-all duration-300`}
     >
       <div className="flex items-start justify-between">
         <div className="space-y-1.5">
-          <span className="text-xs font-black text-slate-200 uppercase tracking-wider">
+          <span className="text-xs font-black text-slate-600 dark:text-slate-200 uppercase tracking-wider">
             {title}
           </span>
           <div className="flex items-baseline gap-2">
-            <h3 className={`text-2xl md:text-3xl font-black tracking-tight text-white drop-shadow-sm`}>
+            <h3 className={`text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white drop-shadow-sm`}>
               {value}
             </h3>
             {badge && (
@@ -65,21 +65,21 @@ export default function AttendanceStatCard({ title, value, subtitle, icon: Icon,
             )}
           </div>
           {subtitle && (
-            <p className="text-xs font-medium text-slate-500">
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
               {subtitle}
             </p>
           )}
         </div>
 
-        <div className={`p-3 rounded-xl ${currentTheme.iconBg} border border-slate-100`}>
+        <div className={`p-3 rounded-xl ${currentTheme.iconBg} shadow-xs`}>
           <Icon className="h-5 w-5" />
         </div>
       </div>
 
       {trend && (
-        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-          <span className="text-slate-500 font-medium">Policy Status</span>
-          <span className={`font-semibold ${trend.positive ? 'text-emerald-600' : 'text-amber-600'}`}>
+        <div className="mt-4 pt-3 border-t border-slate-200 dark:border-white/10 flex items-center justify-between text-xs">
+          <span className="text-slate-500 dark:text-slate-400 font-medium">Policy Status</span>
+          <span className={`font-bold ${trend.positive ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
             {trend.label}
           </span>
         </div>
