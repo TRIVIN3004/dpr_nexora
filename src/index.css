@@ -34,39 +34,53 @@
   background: #475569;
 }
 
-/* Premium Dark Frosted Glass Panel styling */
-.glass-panel {
-  background: rgba(15, 23, 42, 0.78) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+/* Premium Luminous White Frosted Glass Panel styling */
+.glass-panel, .white-glass-card {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
   border-radius: 1rem !important;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35) !important;
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
   color: #ffffff !important;
 }
 
-.glass-panel-light {
-  background: rgba(30, 41, 59, 0.6) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+.glass-panel-light, .white-glass-card-light {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 0.75rem !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  color: #ffffff !important;
+}
+
+.glass-input, .white-glass-input {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
   border-radius: 0.75rem !important;
   backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  color: #f8fafc !important;
-}
-
-.glass-input {
-  background-color: rgba(15, 23, 42, 0.7) !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  color: #ffffff !important;
-  border-radius: 0.75rem !important;
-  backdrop-filter: blur(8px) !important;
   transition: all 0.2s ease !important;
 }
 
-.glass-input:focus {
-  border-color: #6366f1 !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
+.glass-input:focus, .white-glass-input:focus {
+  background-color: rgba(255, 255, 255, 0.14) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2) !important;
   outline: none !important;
+}
+
+.white-glass-btn {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
+  backdrop-filter: blur(12px) !important;
+  transition: all 0.2s ease !important;
+}
+
+.white-glass-btn:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
 }
 
 /* Clean, corporate style page tags */

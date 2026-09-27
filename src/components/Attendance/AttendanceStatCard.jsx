@@ -4,40 +4,40 @@ import { motion } from 'framer-motion';
 export default function AttendanceStatCard({ title, value, subtitle, icon: Icon, color = 'blue', trend, badge }) {
   const colorMap = {
     blue: {
-      border: 'border-blue-200 hover:border-blue-300',
-      iconBg: 'bg-blue-100/80 text-blue-600',
-      valueText: 'text-blue-700',
-      badgeBg: 'bg-blue-50 text-blue-600 border-blue-200'
+      border: 'border-white/20 hover:border-blue-400/50',
+      iconBg: 'bg-blue-500/20 text-cyan-300 border border-blue-400/30',
+      valueText: 'text-white',
+      badgeBg: 'bg-blue-500/20 text-cyan-300 border-blue-400/30'
     },
     purple: {
-      border: 'border-purple-200 hover:border-purple-300',
-      iconBg: 'bg-purple-100/80 text-purple-600',
-      valueText: 'text-purple-700',
-      badgeBg: 'bg-purple-50 text-purple-600 border-purple-200'
+      border: 'border-white/20 hover:border-purple-400/50',
+      iconBg: 'bg-purple-500/20 text-purple-300 border border-purple-400/30',
+      valueText: 'text-white',
+      badgeBg: 'bg-purple-500/20 text-purple-300 border-purple-400/30'
     },
     emerald: {
-      border: 'border-emerald-200 hover:border-emerald-300',
-      iconBg: 'bg-emerald-100/80 text-emerald-600',
-      valueText: 'text-emerald-700',
-      badgeBg: 'bg-emerald-50 text-emerald-600 border-emerald-200'
+      border: 'border-white/20 hover:border-emerald-400/50',
+      iconBg: 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30',
+      valueText: 'text-white',
+      badgeBg: 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30'
     },
     amber: {
-      border: 'border-amber-200 hover:border-amber-300',
-      iconBg: 'bg-amber-100/80 text-amber-600',
-      valueText: 'text-amber-700',
-      badgeBg: 'bg-amber-50 text-amber-600 border-amber-200'
+      border: 'border-white/20 hover:border-amber-400/50',
+      iconBg: 'bg-amber-500/20 text-amber-300 border border-amber-400/30',
+      valueText: 'text-white',
+      badgeBg: 'bg-amber-500/20 text-amber-300 border-amber-400/30'
     },
     rose: {
-      border: 'border-rose-200 hover:border-rose-300',
-      iconBg: 'bg-rose-100/80 text-rose-600',
-      valueText: 'text-rose-700',
-      badgeBg: 'bg-rose-50 text-rose-600 border-rose-200'
+      border: 'border-white/20 hover:border-rose-400/50',
+      iconBg: 'bg-rose-500/20 text-rose-300 border border-rose-400/30',
+      valueText: 'text-white',
+      badgeBg: 'bg-rose-500/20 text-rose-300 border-rose-400/30'
     },
     cyan: {
-      border: 'border-cyan-200 hover:border-cyan-300',
-      iconBg: 'bg-cyan-100/80 text-cyan-600',
-      valueText: 'text-cyan-700',
-      badgeBg: 'bg-cyan-50 text-cyan-600 border-cyan-200'
+      border: 'border-white/20 hover:border-cyan-400/50',
+      iconBg: 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/30',
+      valueText: 'text-white',
+      badgeBg: 'bg-cyan-500/20 text-cyan-300 border-cyan-400/30'
     }
   };
 
@@ -47,15 +47,15 @@ export default function AttendanceStatCard({ title, value, subtitle, icon: Icon,
     <motion.div
       whileHover={{ y: -3 }}
       transition={{ duration: 0.2 }}
-      className={`relative overflow-hidden rounded-2xl bg-white border ${currentTheme.border} p-5 shadow-sm hover:shadow-md transition-all duration-300`}
+      className={`relative overflow-hidden rounded-2xl border ${currentTheme.border} bg-white/[0.08] backdrop-blur-2xl p-5 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] hover:bg-white/[0.12] transition-all duration-300`}
     >
       <div className="flex items-start justify-between">
         <div className="space-y-1.5">
-          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <span className="text-xs font-black text-slate-200 uppercase tracking-wider">
             {title}
           </span>
           <div className="flex items-baseline gap-2">
-            <h3 className={`text-2xl md:text-3xl font-extrabold tracking-tight ${currentTheme.valueText}`}>
+            <h3 className={`text-2xl md:text-3xl font-black tracking-tight text-white drop-shadow-sm`}>
               {value}
             </h3>
             {badge && (

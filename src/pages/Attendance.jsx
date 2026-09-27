@@ -473,16 +473,16 @@ export default function Attendance() {
       )}
 
       {/* Header Container */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-5 rounded-2xl border border-white/20 bg-white/[0.08] backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.37)]">
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600">
+          <div className="p-3 rounded-xl bg-white/10 border border-white/20 text-cyan-300 shadow-sm">
             <CalendarCheck className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-xl md:text-2xl font-black tracking-tight" style={{ color: '#0f172a' }}>
+            <h1 className="text-xl md:text-2xl font-black tracking-tight text-white">
               Attendance Management
             </h1>
-            <p className="text-xs font-semibold text-slate-600">
+            <p className="text-xs font-semibold text-slate-300">
               Workforce monitoring, automated policy checks, and attendance analytics
             </p>
           </div>
@@ -494,7 +494,7 @@ export default function Attendance() {
               setSelectedRecord(null);
               setShowAdminModal(true);
             }}
-            className="py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm flex items-center gap-2 cursor-pointer"
+            className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 hover:brightness-110 text-white text-xs font-bold shadow-lg shadow-indigo-600/30 flex items-center gap-2 cursor-pointer transition-all active:scale-[0.98]"
           >
             <Plus className="h-4 w-4" />
             <span>Mark Manual Attendance</span>
@@ -502,8 +502,8 @@ export default function Attendance() {
         )}
       </div>
 
-      {/* Tab Controls */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar border-b border-slate-200">
+      {/* Tab Controls with White Glassy Style */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar border-b border-white/15">
         {[
           { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
           { id: 'checkin', label: 'Mark Attendance', icon: Clock },
@@ -521,8 +521,8 @@ export default function Attendance() {
               onClick={() => setActiveTab(t.id)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer whitespace-nowrap ${
                 isActive
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  ? 'bg-gradient-to-r from-indigo-600 to-cyan-600 text-white shadow-md border border-white/20'
+                  : 'text-white/90 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/10'
               }`}
             >
               <Icon className="h-4 w-4" />
