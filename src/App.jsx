@@ -186,7 +186,7 @@ export default function App() {
       )}
 
       {!isWelcomeLoading && user && !user.mustChangePassword && (
-        <div className="flex h-screen w-full bg-slate-900 overflow-hidden text-slate-100">
+        <div className="flex h-screen w-full bg-slate-900 overflow-hidden text-slate-900">
           
           {/* Toast Alert popup */}
           <AnimatePresence>
@@ -195,9 +195,9 @@ export default function App() {
                 initial={{ opacity: 0, y: -20, scale: 0.9 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -20, scale: 0.9 }}
-                className="fixed top-5 right-5 z-50 px-4 py-2.5 rounded-xl bg-slate-900 border border-nexora-purple shadow-glow-purple text-xs text-slate-100 font-semibold flex items-center gap-2"
+                className="fixed top-5 right-5 z-50 px-4 py-2.5 rounded-xl bg-slate-900 border border-indigo-500 shadow-xl text-xs text-slate-100 font-semibold flex items-center gap-2"
               >
-                <span className="h-2 w-2 rounded-full bg-nexora-purple animate-ping" />
+                <span className="h-2 w-2 rounded-full bg-indigo-400 animate-ping" />
                 {globalToast}
               </motion.div>
             )}
@@ -225,11 +225,22 @@ export default function App() {
               onUserChanged={handleUserSessionSwapped}
             />
 
-            {/* Content viewport area */}
-            <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-950/25 flex flex-col justify-between">
+            {/* Content viewport area with Animated Grey Background (0 Egress) */}
+            <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-100/90 relative flex flex-col justify-between">
               
-              {/* Animated Page Transitions */}
-              <div className="flex-1">
+              {/* Zero-Egress GPU Animated Grey Ambient Layer */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+                {/* Floating ambient grey-indigo gradient orbs */}
+                <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-slate-300/40 blur-[80px] animate-float-1" />
+                <div className="absolute top-1/2 -right-20 w-[420px] h-[420px] rounded-full bg-indigo-200/35 blur-[90px] animate-float-2" />
+                <div className="absolute -bottom-20 left-1/3 w-96 h-96 rounded-full bg-cyan-100/40 blur-[80px] animate-float-3" />
+                
+                {/* Subtle Modern Matrix Grid */}
+                <div className="absolute inset-0 bg-grid-slate-pattern opacity-50" />
+              </div>
+
+              {/* Animated Page Transitions Content */}
+              <div className="flex-1 relative z-10">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={currentTab}
@@ -245,9 +256,9 @@ export default function App() {
               </div>
 
               {/* Premium layout footer */}
-              <footer className="mt-8 pt-6 border-t border-darkBg-border/20 text-center select-none text-[10px] tracking-widest font-semibold text-slate-600 uppercase flex flex-col sm:flex-row justify-between items-center gap-2">
-                <span>© {new Date().getFullYear()} Nexora Technologies</span>
-                <span className="bg-gradient-to-r from-nexora-blue to-nexora-purple bg-clip-text text-transparent">
+              <footer className="mt-8 pt-6 border-t border-slate-300/60 text-center select-none text-[10px] tracking-widest font-bold text-slate-500 uppercase flex flex-col sm:flex-row justify-between items-center gap-2 relative z-10">
+                <span>© {new Date().getFullYear()} GoNexora Technologies</span>
+                <span className="bg-gradient-to-r from-indigo-600 to-cyan-600 bg-clip-text text-transparent font-extrabold">
                   Building Tomorrow, Today.
                 </span>
               </footer>

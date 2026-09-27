@@ -74,30 +74,33 @@ export default function Login({ onLoginSuccess }) {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden">
+    <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-slate-950">
       
-      {/* Background glowing gradients */}
-      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-nexora-purple/10 blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[500px] h-[500px] rounded-full bg-nexora-blue/10 blur-[120px] pointer-events-none" />
+      {/* Background glowing animated gradients */}
+      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[450px] h-[450px] rounded-full bg-indigo-600/15 blur-[120px] pointer-events-none animate-float-1" />
+      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[550px] h-[550px] rounded-full bg-cyan-600/15 blur-[130px] pointer-events-none animate-float-2" />
+      <div className="absolute inset-0 bg-grid-slate-pattern opacity-40 pointer-events-none" />
 
       {/* Main card */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md rounded-3xl glass-panel p-8 shadow-glass border border-slate-800 bg-slate-950/75 relative z-10 text-left"
+        className="w-full max-w-md rounded-3xl p-8 shadow-2xl border border-slate-800 bg-slate-900/90 backdrop-blur-xl relative z-10 text-left"
       >
         {/* Brand logo */}
-        <div className="flex flex-col items-center text-center mb-8">
-          <img 
-            src="/logo.png" 
-            alt="GoNexora Logo" 
-            className="h-16 w-16 rounded-2xl object-contain border border-slate-800 shadow-glow-purple mb-4 bg-black p-1" 
-          />
-          <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight">
+        <div className="flex flex-col items-center text-center mb-7">
+          <div className="p-2.5 rounded-3xl bg-black border border-slate-700/80 shadow-2xl mb-3.5 h-22 w-22 flex items-center justify-center shadow-indigo-950/60">
+            <img 
+              src="/logo.png" 
+              alt="GoNexora Logo" 
+              className="h-18 w-18 object-contain" 
+            />
+          </div>
+          <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight font-sans">
             GoNexora Techs
           </h1>
-          <p className="text-xs text-slate-400 mt-1.5 font-medium tracking-wide">
+          <p className="text-xs text-indigo-300 mt-1 font-extrabold uppercase tracking-wider">
             {isForgotMode ? "Reset your password securely" : "Building Tomorrow, Today • DPR Portal"}
           </p>
         </div>

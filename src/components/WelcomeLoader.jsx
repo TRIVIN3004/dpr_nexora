@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Sparkles, ShieldCheck } from 'lucide-react';
 
 export default function WelcomeLoader() {
   const [progress, setProgress] = useState(0);
-  const [statusText, setStatusText] = useState('Initializing Supabase handshake...');
+  const [statusText, setStatusText] = useState('Initializing GoNexora Core...');
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -14,106 +15,122 @@ export default function WelcomeLoader() {
         }
         return prev + 1;
       });
-    }, 25); // ~2.5 seconds to reach 100%
+    }, 22); // ~2.2s smooth loading
 
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     if (progress < 25) {
-      setStatusText('Initializing Supabase handshake...');
+      setStatusText('Initializing GoNexora Core Services...');
     } else if (progress < 55) {
-      setStatusText('Securing workspace sessions...');
+      setStatusText('Securing Workspace Session...');
     } else if (progress < 85) {
-      setStatusText('Synchronizing reports registry...');
+      setStatusText('Synchronizing Reports & Attendance...');
     } else {
-      setStatusText('Deploying dashboard viewport...');
+      setStatusText('Launching Workspace Viewport...');
     }
   }, [progress]);
 
-  // Framer Motion variant for text letters
-  const logoTextVariants = {
-    initial: { letterSpacing: '0.1em', opacity: 0, scale: 0.95 },
-    animate: { 
-      letterSpacing: '0.45em', 
-      opacity: 1, 
-      scale: 1,
-      transition: { duration: 2.2, ease: 'easeOut' }
-    }
-  };
-
   return (
     <div className="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-[#070b19] overflow-hidden select-none">
-      {/* Background glowing gradients */}
-      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[45vw] h-[45vw] rounded-full bg-nexora-purple/5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[45vw] h-[45vw] rounded-full bg-nexora-blue/5 blur-[120px] pointer-events-none" />
+      {/* Dynamic Animated Ambient Background Glows */}
+      <motion.div 
+        animate={{ 
+          scale: [1, 1.2, 1],
+          opacity: [0.15, 0.25, 0.15]
+        }}
+        transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+        className="absolute top-1/3 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[55vw] h-[55vw] rounded-full bg-indigo-600/20 blur-[130px] pointer-events-none" 
+      />
+      <motion.div 
+        animate={{ 
+          scale: [1.2, 1, 1.2],
+          opacity: [0.15, 0.25, 0.15]
+        }}
+        transition={{ repeat: Infinity, duration: 7, ease: "easeInOut" }}
+        className="absolute bottom-1/3 right-1/4 translate-x-1/2 translate-y-1/2 w-[55vw] h-[55vw] rounded-full bg-cyan-600/20 blur-[130px] pointer-events-none" 
+      />
 
-      {/* Futuristic Grid Overlay */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.007)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.007)_1px,transparent_1px)] bg-[size:30px_30px] opacity-60 pointer-events-none" />
+      {/* Futuristic Geometric Dot/Grid Matrix */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:32px_32px] opacity-70 pointer-events-none" />
 
       {/* Main Container */}
-      <div className="relative flex flex-col items-center justify-center max-w-sm w-full px-8 text-center space-y-8 z-10">
+      <div className="relative flex flex-col items-center justify-center max-w-md w-full px-6 text-center space-y-6 z-10">
         
-        {/* Glowing Spinner Orb */}
-        <div className="relative flex items-center justify-center h-24 w-24">
-          {/* Animated Neon Rings */}
+        {/* Large Brand Logo with Glowing Rings */}
+        <div className="relative flex items-center justify-center h-36 w-36">
+          {/* Outer glowing pulsing ring */}
           <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}
-            className="absolute inset-0 rounded-full border border-t-nexora-purple border-r-transparent border-b-nexora-blue border-l-transparent shadow-[0_0_15px_rgba(168,85,247,0.25)]"
+            animate={{ rotate: 360, scale: [1, 1.05, 1] }}
+            transition={{ rotate: { repeat: Infinity, duration: 4, ease: 'linear' }, scale: { repeat: Infinity, duration: 2, ease: 'easeInOut' } }}
+            className="absolute inset-0 rounded-full border-2 border-indigo-500/40 border-t-indigo-400 border-b-cyan-400 shadow-[0_0_30px_rgba(99,102,241,0.35)]"
           />
+          {/* Inner counter-rotating ring */}
           <motion.div
             animate={{ rotate: -360 }}
-            transition={{ repeat: Infinity, duration: 3, ease: 'linear' }}
-            className="absolute inset-2 rounded-full border border-t-transparent border-r-nexora-blue border-b-transparent border-l-nexora-purple opacity-65"
+            transition={{ repeat: Infinity, duration: 6, ease: 'linear' }}
+            className="absolute inset-2 rounded-full border border-dashed border-cyan-400/50 border-r-indigo-400 opacity-80"
           />
           
-          {/* Logo center image */}
-          <div className="p-3 rounded-2xl bg-black border border-slate-800 shadow-inner relative z-10 h-18 w-18 flex items-center justify-center">
-            <img src="/logo.png" alt="GoNexora Logo" className="h-12 w-12 object-contain" />
-          </div>
+          {/* Large Logo Card */}
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.6 }}
+            className="p-3.5 rounded-3xl bg-black border-2 border-slate-800 shadow-2xl relative z-10 h-28 w-28 flex items-center justify-center shadow-indigo-950/50"
+          >
+            <img 
+              src="/logo.png" 
+              alt="GoNexora Techs Logo" 
+              className="h-22 w-22 object-contain drop-shadow-md" 
+            />
+          </motion.div>
         </div>
 
-        {/* Brand/Logo header with glowing typography */}
-        <div className="space-y-2">
-          <motion.h1
-            variants={logoTextVariants}
-            initial="initial"
-            animate="animate"
-            className="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-slate-300 tracking-widest font-sans drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] mr-[-0.45em]"
-          >
+        {/* Clear, High-Contrast Typography */}
+        <motion.div 
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.2 }}
+          className="space-y-2"
+        >
+          <h1 className="text-3xl md:text-4xl font-black text-white tracking-wide font-sans drop-shadow-lg">
             GONEXORA TECHS
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 0.5, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.8 }}
-            className="text-[10px] uppercase font-bold tracking-widest text-slate-400 font-sans"
-          >
-            Building Tomorrow, Today • DPR Portal
-          </motion.p>
-        </div>
+          </h1>
+          
+          <div className="flex items-center justify-center gap-2 text-xs md:text-sm font-black tracking-widest text-indigo-300 uppercase">
+            <span>Building Tomorrow, Today</span>
+          </div>
+
+          <div className="pt-1">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/90 border border-slate-700/80 text-[11px] font-bold text-slate-300 tracking-wider">
+              <Sparkles className="h-3 w-3 text-indigo-400" />
+              DPR & Attendance Portal
+            </span>
+          </div>
+        </motion.div>
 
         {/* Loading Progress Wrapper */}
-        <div className="w-full space-y-3 pt-4">
+        <div className="w-full max-w-xs space-y-2.5 pt-2">
           {/* Dynamic loading text description */}
-          <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold uppercase tracking-wider h-4">
+          <div className="flex items-center justify-between text-[11px] text-slate-400 font-bold tracking-wide h-4">
             <motion.span
               key={statusText}
-              initial={{ opacity: 0, y: 4 }}
+              initial={{ opacity: 0, y: 3 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-slate-450"
+              className="truncate max-w-[200px]"
             >
               {statusText}
             </motion.span>
-            <span className="text-nexora-purple/95">{progress}%</span>
+            <span className="text-indigo-400 font-mono font-black">{progress}%</span>
           </div>
 
           {/* Sleek loading bar track */}
-          <div className="h-1 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-950/50">
+          <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5">
             <motion.div
               style={{ width: `${progress}%` }}
-              className="h-full bg-gradient-to-r from-nexora-blue via-nexora-purple to-pink-500 rounded-full shadow-[0_0_8px_rgba(168,85,247,0.6)]"
+              className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-400 rounded-full shadow-[0_0_10px_rgba(99,102,241,0.8)]"
             />
           </div>
         </div>

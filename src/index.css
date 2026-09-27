@@ -103,3 +103,49 @@
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
+
+/* Zero-Egress Pure CSS GPU Background Animations */
+@keyframes floatSlow1 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(30px, -25px, 0) scale(1.08);
+  }
+}
+
+@keyframes floatSlow2 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-35px, 30px, 0) scale(0.94);
+  }
+}
+
+@keyframes floatSlow3 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(25px, 25px, 0) scale(1.05);
+  }
+}
+
+.animate-float-1 {
+  animation: floatSlow1 16s ease-in-out infinite;
+}
+
+.animate-float-2 {
+  animation: floatSlow2 20s ease-in-out infinite;
+}
+
+.animate-float-3 {
+  animation: floatSlow3 24s ease-in-out infinite;
+}
+
+.bg-grid-slate-pattern {
+  background-image: radial-gradient(rgba(100, 116, 139, 0.18) 1.2px, transparent 1.2px);
+  background-size: 24px 24px;
+}
+
