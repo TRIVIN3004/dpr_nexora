@@ -58,21 +58,6 @@ export default function Login({ onLoginSuccess }) {
     }, 800);
   };
 
-  const handleQuickFill = (role) => {
-    setError('');
-    setSuccessMessage('');
-    if (role === 'admin') {
-      setEmail('trivin@nexora.com');
-      setPassword('123456');
-    } else if (role === 'member') {
-      setEmail('aakashraj@nexora.com');
-      setPassword('123456');
-    } else if (role === 'member2') {
-      setEmail('gopika@nexora.com');
-      setPassword('123456');
-    }
-  };
-
   return (
     <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden portal-grey-mesh select-none">
       
@@ -190,29 +175,6 @@ export default function Login({ onLoginSuccess }) {
                 "Authenticate Account"
               )}
             </button>
-
-            {/* Quick Demo Sign-in */}
-            <div className="mt-5 pt-4 border-t border-slate-800">
-              <p className="text-[11px] font-semibold text-slate-400 text-center mb-2">
-                Quick Demo Accounts
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleQuickFill('admin')}
-                  className="py-1.5 px-3 rounded-lg bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-xs font-semibold text-slate-300 hover:text-white transition-all text-center cursor-pointer"
-                >
-                  Admin (Trivin)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleQuickFill('member')}
-                  className="py-1.5 px-3 rounded-lg bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-xs font-semibold text-slate-300 hover:text-white transition-all text-center cursor-pointer"
-                >
-                  Member (Aakash)
-                </button>
-              </div>
-            </div>
           </form>
         ) : (
           <form onSubmit={handleForgotSubmit} className="space-y-4">
