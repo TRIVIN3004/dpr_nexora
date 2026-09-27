@@ -57,8 +57,8 @@ export default function Sidebar({ currentTab, onTabChange, isCollapsed, setIsCol
         <div className="flex items-center gap-3">
           <img 
             src="/logo.png" 
-            alt="Nexora Logo" 
-            className="h-9 w-9 rounded-xl object-cover border border-slate-800 shadow-glow-purple bg-slate-950" 
+            alt="GoNexora Logo" 
+            className="h-10 w-10 rounded-xl object-contain border border-slate-800 shadow-glow-purple bg-black p-0.5" 
           />
           {!isCollapsed && (
             <motion.div
@@ -68,10 +68,10 @@ export default function Sidebar({ currentTab, onTabChange, isCollapsed, setIsCol
               className="flex flex-col"
             >
               <span className="text-sm font-bold bg-gradient-to-r from-slate-50 via-slate-100 to-slate-200 bg-clip-text text-transparent">
-                Nexora Tech
+                GoNexora Techs
               </span>
-              <span className="text-[9px] text-slate-500 font-medium tracking-widest uppercase">
-                DPR Portal
+              <span className="text-[9px] text-slate-400 font-medium tracking-widest uppercase">
+                DPR & Attendance
               </span>
             </motion.div>
           )}

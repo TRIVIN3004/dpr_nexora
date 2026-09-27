@@ -16,7 +16,15 @@ let localWarningsCache = [];
 let localTerminationCache = [];
 
 // Helper to format date YYYY-MM-DD
-export const getTodayString = () => new Date().toISOString().split('T')[0];
+export const formatLocalDate = (date = new Date()) => {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+export const getTodayString = () => formatLocalDate(new Date());
 
 // Generate dynamic initial attendance seed data if Supabase table is fresh
 export const seedSampleAttendanceData = (users = []) => {
@@ -30,7 +38,7 @@ export const seedSampleAttendanceData = (users = []) => {
     const dayOfWeek = d.getDay();
     if (dayOfWeek === 0 || dayOfWeek === 6) continue; // skip weekends
 
-    const dateStr = d.toISOString().split('T')[0];
+    const dateStr = formatLocalDate(d);
 
     users.forEach((u, idx) => {
       // Create distinct attendance profiles so policy tiers (Excellent, Good, Warning, Terminated) are active

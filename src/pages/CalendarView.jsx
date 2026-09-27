@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { getCurrentUser } from '../utils/database';
+import { getCurrentUser, formatLocalDate, getTodayString } from '../utils/database';
 import { useDatabaseStore } from '../context/DatabaseContext';
-import { ChevronLeft, ChevronRight, Eye, Calendar as CalIcon, Clock, Layers } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Eye, Calendar as CalIcon, Clock, Layers, Sparkles } from 'lucide-react';
 import ReportModal from '../components/ReportModal';
 
 export default function CalendarView() {
   const [currentUser, setCurrentUser] = useState(null);
-  const { reports: dbReports } = useDatabaseStore();
+  const { reports: dbReports, invalidateStore } = useDatabaseStore();
   const reports = dbReports || [];
   const [currentDate, setCurrentDate] = useState(new Date());
   
@@ -32,48 +32,58 @@ export default function CalendarView() {
     setSelectedDayReports([]);
   };
 
+  const handleGoToday = () => {
+    const today = new Date();
+    setCurrentDate(new Date(today.getFullYear(), today.getMonth(), 1));
+    handleDayClick(getTodayString());
+  };
+
   // Month info
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
   ];
 
-  const firstDayIndex = new Date(year, month, 1).getDay(); // day of week index for first of month
+  const firstDayIndex = new Date(year, month, 1).getDay(); // day of week index for first of month (0 = Sun)
   const totalDays = new Date(year, month + 1, 0).getDate(); // last day of current month
   const prevMonthTotalDays = new Date(year, month, 0).getDate();
+
+  const formatYMD = (y, m, d) => {
+    return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  };
+
+  const todayStr = getTodayString();
 
   const daysArray = [];
 
   // Previous month padded days
   for (let i = firstDayIndex - 1; i >= 0; i--) {
+    const prevDay = prevMonthTotalDays - i;
+    const prevDate = new Date(year, month - 1, prevDay);
     daysArray.push({
-      day: prevMonthTotalDays - i,
+      day: prevDay,
       isCurrentMonth: false,
-      dateStr: new Date(year, month - 1, prevMonthTotalDays - i).toISOString().split('T')[0]
+      dateStr: formatYMD(prevDate.getFullYear(), prevDate.getMonth(), prevDate.getDate())
     });
   }
 
   // Current month days
   for (let i = 1; i <= totalDays; i++) {
-    const dateObj = new Date(year, month, i);
-    const offset = dateObj.getTimezoneOffset();
-    const localDate = new Date(dateObj.getTime() - (offset*60*1000));
-    const dStr = localDate.toISOString().split('T')[0];
-
     daysArray.push({
       day: i,
       isCurrentMonth: true,
-      dateStr: dStr
+      dateStr: formatYMD(year, month, i)
     });
   }
 
   // Next month padded days to complete grid of 42 (6 rows)
   const remainingCells = 42 - daysArray.length;
   for (let i = 1; i <= remainingCells; i++) {
+    const nextDate = new Date(year, month + 1, i);
     daysArray.push({
       day: i,
       isCurrentMonth: false,
-      dateStr: new Date(year, month + 1, i).toISOString().split('T')[0]
+      dateStr: formatYMD(nextDate.getFullYear(), nextDate.getMonth(), nextDate.getDate())
     });
   }
 
@@ -103,35 +113,49 @@ export default function CalendarView() {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
       
       {/* Interactive Calendar grid */}
-      <div className="lg:col-span-2 p-6 rounded-2xl border shadow-sm flex flex-col h-[560px]" style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1' }}>
+      <div className="lg:col-span-2 p-6 rounded-3xl border shadow-sm flex flex-col h-[580px] bg-white" style={{ borderColor: '#cbd5e1' }}>
         {/* Month Toolbar */}
-        <div className="flex justify-between items-center mb-5">
-          <div className="flex items-center gap-2">
-            <CalIcon className="h-5 w-5 text-indigo-600" />
-            <h3 className="text-base font-extrabold" style={{ color: '#000000' }}>
-              {monthNames[month]} {year}
-            </h3>
+        <div className="flex flex-wrap justify-between items-center mb-5 gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="h-9 w-9 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600">
+              <CalIcon className="h-5 w-5 text-indigo-600" />
+            </div>
+            <div>
+              <h3 className="text-base font-black text-slate-900 tracking-tight">
+                {monthNames[month]} {year}
+              </h3>
+              <span className="text-[11px] font-bold text-slate-500">
+                Today: {todayStr}
+              </span>
+            </div>
           </div>
-          <div className="flex gap-2">
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleGoToday}
+              className="px-3 py-1.5 rounded-xl text-xs font-black bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition-colors cursor-pointer"
+            >
+              Today
+            </button>
             <button
               onClick={handlePrevMonth}
-              className="p-2 rounded-xl transition-all cursor-pointer shadow-xs"
-              style={{ backgroundColor: '#ffffff', color: '#0f172a', border: '1px solid #cbd5e1' }}
+              title="Previous Month"
+              className="p-2 rounded-xl transition-all cursor-pointer shadow-xs bg-white text-slate-800 border border-slate-300 hover:bg-slate-50"
             >
-              <ChevronLeft className="h-4 w-4" style={{ color: '#0f172a' }} />
+              <ChevronLeft className="h-4 w-4" />
             </button>
             <button
               onClick={handleNextMonth}
-              className="p-2 rounded-xl transition-all cursor-pointer shadow-xs"
-              style={{ backgroundColor: '#ffffff', color: '#0f172a', border: '1px solid #cbd5e1' }}
+              title="Next Month"
+              className="p-2 rounded-xl transition-all cursor-pointer shadow-xs bg-white text-slate-800 border border-slate-300 hover:bg-slate-50"
             >
-              <ChevronRight className="h-4 w-4" style={{ color: '#0f172a' }} />
+              <ChevronRight className="h-4 w-4" />
             </button>
           </div>
         </div>
 
         {/* Days of week */}
-        <div className="grid grid-cols-7 text-center text-xs font-black uppercase tracking-wider pb-3 border-b" style={{ color: '#000000', borderColor: '#cbd5e1' }}>
+        <div className="grid grid-cols-7 text-center text-xs font-black uppercase tracking-wider pb-3 border-b border-slate-200 text-slate-700">
           <span>Sun</span>
           <span>Mon</span>
           <span>Tue</span>
@@ -144,7 +168,7 @@ export default function CalendarView() {
         {/* Calendar days grid */}
         <div className="grid grid-cols-7 flex-1 gap-1.5 mt-3">
           {daysArray.map((cell, idx) => {
-            const isToday = cell.dateStr === new Date().toISOString().split('T')[0];
+            const isToday = cell.dateStr === todayStr;
             const isSelected = cell.dateStr === selectedDateStr;
             
             // Get day reports scoped by current user role
@@ -166,28 +190,36 @@ export default function CalendarView() {
               cellBorder = '2px solid #4f46e5';
               textColor = '#312e81';
             } else if (isToday) {
-              cellBg = '#f0f9ff';
-              cellBorder = '2px solid #0284c7';
-              textColor = '#0369a1';
+              cellBg = '#f0fdf4';
+              cellBorder = '2px solid #16a34a';
+              textColor = '#166534';
             }
 
             return (
               <div
                 key={idx}
                 onClick={() => handleDayClick(cell.dateStr)}
-                className="p-2 rounded-xl flex flex-col justify-between cursor-pointer transition-all shadow-xs"
+                className={`p-2 rounded-2xl flex flex-col justify-between cursor-pointer transition-all shadow-xs hover:border-indigo-400 ${
+                  isToday ? 'ring-2 ring-emerald-400 ring-offset-1' : ''
+                }`}
                 style={{ backgroundColor: cellBg, border: cellBorder }}
               >
                 <div className="flex justify-between items-center">
                   <span 
-                    className="text-xs font-black h-5 w-5 flex items-center justify-center rounded-full"
+                    className={`text-xs font-black h-5 w-5 flex items-center justify-center rounded-full ${
+                      isToday ? 'bg-emerald-600 text-white shadow-xs' : ''
+                    }`}
                     style={{ 
-                      backgroundColor: isToday ? '#4f46e5' : 'transparent', 
                       color: isToday ? '#ffffff' : textColor 
                     }}
                   >
                     {cell.day}
                   </span>
+                  {isToday && (
+                    <span className="text-[9px] font-black text-emerald-700 uppercase tracking-tighter">
+                      Today
+                    </span>
+                  )}
                 </div>
 
                 {/* Submissions markers dots */}
@@ -195,12 +227,12 @@ export default function CalendarView() {
                   {dayReps.slice(0, 3).map((rep) => (
                     <span
                       key={rep.id}
-                      title={`${rep.employeeName}: ${rep.projectName}`}
+                      title={`${rep.employeeName}: ${rep.projectName} (${rep.status})`}
                       className={`h-2 w-2 rounded-full ${statusColors[rep.status]} shadow-xs`}
                     />
                   ))}
                   {dayReps.length > 3 && (
-                    <span className="text-[8px] font-black leading-none" style={{ color: '#000000' }}>+{dayReps.length - 3}</span>
+                    <span className="text-[8px] font-black leading-none text-slate-700">+{dayReps.length - 3}</span>
                   )}
                 </div>
               </div>
@@ -210,32 +242,38 @@ export default function CalendarView() {
       </div>
 
       {/* Day Details Pane */}
-      <div className="p-6 rounded-2xl border shadow-sm flex flex-col h-[560px] text-left" style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1' }}>
-        <h3 className="text-sm font-extrabold border-b pb-3 mb-4" style={{ color: '#000000', borderColor: '#cbd5e1' }}>
-          Reports for {selectedDateStr || 'Select a day'}
-        </h3>
+      <div className="p-6 rounded-3xl border shadow-sm flex flex-col h-[580px] text-left bg-white" style={{ borderColor: '#cbd5e1' }}>
+        <div className="border-b pb-3 mb-4 border-slate-200">
+          <h3 className="text-sm font-black text-slate-900">
+            {selectedDateStr ? `Submissions for ${selectedDateStr}` : 'Select a Day'}
+          </h3>
+          {selectedDateStr === todayStr && (
+            <span className="text-[11px] font-bold text-emerald-600">
+              (Today's Submissions)
+            </span>
+          )}
+        </div>
 
         <div className="flex-1 overflow-y-auto space-y-3">
           {selectedDateStr === '' ? (
-            <div className="h-full flex flex-col justify-center items-center text-center text-xs font-bold" style={{ color: '#475569' }}>
+            <div className="h-full flex flex-col justify-center items-center text-center text-xs font-bold text-slate-500">
               <CalIcon className="h-8 w-8 text-indigo-600 mb-2.5" />
               Click any highlighted day on the calendar grid to review submitted progress reports.
             </div>
           ) : selectedDayReports.length === 0 ? (
-            <div className="h-full flex flex-col justify-center items-center text-center text-xs font-bold" style={{ color: '#475569' }}>
-              No reports submitted on this date.
+            <div className="h-full flex flex-col justify-center items-center text-center text-xs font-bold text-slate-500">
+              No reports submitted on this date ({selectedDateStr}).
             </div>
           ) : (
             selectedDayReports.map((rep) => (
               <div
                 key={rep.id}
-                className="p-3.5 rounded-xl border flex flex-col gap-2 shadow-xs"
-                style={{ backgroundColor: '#f8fafc', borderColor: '#cbd5e1' }}
+                className="p-3.5 rounded-2xl border flex flex-col gap-2 shadow-xs bg-slate-50 border-slate-200"
               >
                 <div className="flex justify-between items-start">
                   <div className="text-xs">
-                    <span className="font-extrabold block" style={{ color: '#000000' }}>{rep.employeeName}</span>
-                    <span className="text-[11px] font-bold" style={{ color: '#475569' }}>{rep.projectName}</span>
+                    <span className="font-extrabold block text-slate-900">{rep.employeeName}</span>
+                    <span className="text-[11px] font-bold text-slate-600">{rep.projectName}</span>
                   </div>
                   <button
                     onClick={() => setInspectReport(rep)}
@@ -245,7 +283,7 @@ export default function CalendarView() {
                   </button>
                 </div>
                 
-                <div className="flex justify-between text-[11px] font-extrabold border-t pt-2" style={{ color: '#1e293b', borderColor: '#e2e8f0' }}>
+                <div className="flex justify-between text-[11px] font-extrabold border-t pt-2 border-slate-200 text-slate-800">
                   <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5 text-indigo-600" /> {rep.hoursWorked} hrs</span>
                   <span className={`px-2 py-0.5 rounded-md border text-[10px] ${workStatusColors[rep.workStatus]}`}>{rep.workStatus}</span>
                 </div>
@@ -263,7 +301,7 @@ export default function CalendarView() {
           currentUser={currentUser}
           onClose={() => setInspectReport(null)}
           onActionSuccess={() => {
-            loadData();
+            invalidateStore?.();
             handleDayClick(selectedDateStr);
           }}
         />

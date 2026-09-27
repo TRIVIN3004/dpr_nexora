@@ -69,8 +69,8 @@ export default function WelcomeLoader() {
           />
           
           {/* Logo center image */}
-          <div className="p-3.5 rounded-full bg-slate-900/90 border border-slate-800 shadow-inner relative z-10 h-16 w-16 flex items-center justify-center">
-            <img src="/logo.png" alt="Nexora Logo" className="h-9 w-9 object-contain" />
+          <div className="p-3 rounded-2xl bg-black border border-slate-800 shadow-inner relative z-10 h-18 w-18 flex items-center justify-center">
+            <img src="/logo.png" alt="GoNexora Logo" className="h-12 w-12 object-contain" />
           </div>
         </div>
 
@@ -82,7 +82,7 @@ export default function WelcomeLoader() {
             animate="animate"
             className="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-slate-300 tracking-widest font-sans drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] mr-[-0.45em]"
           >
-            NEXORA
+            GONEXORA TECHS
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 8 }}
@@ -90,7 +90,7 @@ export default function WelcomeLoader() {
             transition={{ delay: 0.4, duration: 0.8 }}
             className="text-[10px] uppercase font-bold tracking-widest text-slate-400 font-sans"
           >
-            Daily Progress Report Portal
+            Building Tomorrow, Today • DPR Portal
           </motion.p>
         </div>
 

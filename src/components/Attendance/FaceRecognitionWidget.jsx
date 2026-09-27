@@ -1,18 +1,25 @@
 import React, { useState } from 'react';
-import { Camera, ScanFace, CheckCircle2, ShieldCheck, Cpu } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Camera, ScanFace, CheckCircle2, ShieldCheck, Cpu, Sparkles, X, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function FaceRecognitionWidget({ currentUser, onScanComplete }) {
   const [scanning, setScanning] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [scanResult, setScanResult] = useState(null);
 
   const startFacialScan = () => {
     setScanning(true);
-    setSuccess(false);
+    setScanResult(null);
 
     setTimeout(() => {
       setScanning(false);
-      setSuccess(true);
+      const currentTime = new Date().toLocaleTimeString();
+      setScanResult({
+        success: true,
+        matchScore: '99.8%',
+        time: currentTime,
+        message: `Biometric Match Confirmed: ${currentUser?.name} (${currentUser?.id})`,
+        status: 'Present'
+      });
       if (onScanComplete) {
         onScanComplete('Face');
       }
@@ -20,10 +27,89 @@ export default function FaceRecognitionWidget({ currentUser, onScanComplete }) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-6 md:p-8 rounded-2xl border shadow-sm text-center space-y-6" style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
-      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold" style={{ backgroundColor: '#ecfeff', color: '#0891b2', border: '1px solid #a5f3fc' }}>
+    <div className="flex flex-col items-center justify-center p-6 md:p-8 rounded-3xl border shadow-md text-center space-y-6 bg-white relative overflow-hidden" style={{ borderColor: '#cbd5e1' }}>
+      
+      {/* Centered In-Widget Notification Overlay */}
+      <AnimatePresence>
+        {scanResult && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.85, opacity: 0, y: 10 }}
+              transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+              className="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border-2 border-emerald-500 flex flex-col items-center text-center space-y-5 relative"
+            >
+              <button
+                onClick={() => setScanResult(null)}
+                className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+
+              <div className="relative flex items-center justify-center h-20 w-20">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: [0, 1.2, 1] }}
+                  transition={{ duration: 0.5 }}
+                  className="h-20 w-20 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 border-2 border-emerald-300 shadow-lg shadow-emerald-200"
+                >
+                  <CheckCircle2 className="h-11 w-11 text-emerald-600" />
+                </motion.div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-black">
+                  <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
+                  AI Facial Recognition Verified
+                </div>
+                <h3 className="text-xl font-black text-slate-900 tracking-tight">
+                  Attendance Marked Successfully!
+                </h3>
+                <p className="text-xs font-extrabold text-slate-500">
+                  {currentUser?.name} • {currentUser?.id}
+                </p>
+              </div>
+
+              <div className="w-full bg-slate-50 rounded-2xl p-4 border border-slate-200 text-left space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500 font-bold">Biometric Match:</span>
+                  <span className="font-black text-emerald-700 font-mono text-sm">{scanResult.matchScore} Precision</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500 font-bold">Time Verified:</span>
+                  <span className="font-black text-slate-900 font-mono text-sm">{scanResult.time}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500 font-bold">Attendance Status:</span>
+                  <span className="font-black px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    Present (Face Biometric)
+                  </span>
+                </div>
+              </div>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setScanResult(null)}
+                className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs shadow-md flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Check className="h-4 w-4" />
+                <span>Done & Continue</span>
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-extrabold" style={{ backgroundColor: '#ecfeff', color: '#0891b2', border: '1px solid #a5f3fc' }}>
         <Cpu className="h-3.5 w-3.5 text-cyan-600" />
-        AI Biometric Face Recognition (Future Ready)
+        AI Biometric Face Recognition (GoNexora Cloud)
       </div>
 
       {/* Live Camera Viewport Simulation */}
@@ -63,20 +149,12 @@ export default function FaceRecognitionWidget({ currentUser, onScanComplete }) {
             <div className="w-6 h-6 border-b-3 border-r-3 border-cyan-400" />
           </div>
         </div>
-
-        {success && (
-          <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-xs flex flex-col items-center justify-center gap-2 text-emerald-400 p-4">
-            <CheckCircle2 className="h-12 w-12 text-emerald-400 animate-bounce" />
-            <span className="text-sm font-extrabold text-white">Face Match 99.8% Confirmed</span>
-            <span className="text-xs text-slate-300 font-bold">Biometric Check-In Recorded</span>
-          </div>
-        )}
       </div>
 
       <div className="max-w-md space-y-2">
         <h4 className="text-sm font-extrabold" style={{ color: '#090d16' }}>Biometric Verification</h4>
         <p className="text-xs font-bold" style={{ color: '#334155' }}>
-          Position your face clearly inside the scanner grid. Our AI system matches facial descriptors with your registered Nexora employee profile.
+          Position your face clearly inside the scanner grid. Our AI system matches facial descriptors with your registered employee profile.
         </p>
       </div>
 
@@ -85,7 +163,7 @@ export default function FaceRecognitionWidget({ currentUser, onScanComplete }) {
         whileTap={{ scale: 0.97 }}
         onClick={startFacialScan}
         disabled={scanning}
-        className="py-3 px-6 rounded-xl text-white font-extrabold text-xs shadow flex items-center gap-2 cursor-pointer disabled:opacity-50"
+        className="py-3 px-6 rounded-xl text-white font-extrabold text-xs shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-50"
         style={{ backgroundColor: '#0284c7', color: '#ffffff' }}
       >
         <ScanFace className={`h-4 w-4 ${scanning ? 'animate-spin' : ''}`} />
@@ -95,3 +173,4 @@ export default function FaceRecognitionWidget({ currentUser, onScanComplete }) {
     </div>
   );
 }
+

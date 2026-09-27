@@ -120,11 +120,15 @@ export default function Attendance() {
     terminationPercentage: 50
   });
 
-  const [toast, setToast] = useState('');
+  const [toast, setToast] = useState(null);
 
-  const showToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(''), 3500);
+  const showToast = (msg, type = 'success') => {
+    if (typeof msg === 'string') {
+      setToast({ message: msg, type, title: type === 'error' ? 'Error' : 'Notification' });
+    } else {
+      setToast(msg);
+    }
+    setTimeout(() => setToast(null), 3500);
   };
 
   const { users: dbUsers, projects: dbProjects, attendance: dbAttendance, invalidateStore } = useDatabaseStore();
@@ -219,21 +223,39 @@ export default function Attendance() {
   const handleUserCheckIn = async (remarks = '', method = 'Self') => {
     const res = await markCheckIn(currentUser, method, remarks);
     if (res.success) {
-      showToast('Daily Check-In recorded successfully!');
+      showToast({
+        type: 'success',
+        title: 'Attendance Marked Successfully!',
+        message: `Daily Check-In recorded for ${currentUser?.name} (${method})`
+      });
       loadData();
     } else {
-      showToast(res.error || 'Failed to check in.');
+      showToast({
+        type: 'error',
+        title: 'Check-In Error',
+        message: res.error || 'Failed to check in.'
+      });
     }
+    return res;
   };
 
   const handleUserCheckOut = async () => {
     const res = await markCheckOut(currentUser);
     if (res.success) {
-      showToast('Daily Check-Out logged successfully!');
+      showToast({
+        type: 'success',
+        title: 'Check-Out Logged Successfully!',
+        message: `Daily Check-Out session logged for ${currentUser?.name}`
+      });
       loadData();
     } else {
-      showToast(res.error || 'Failed to check out.');
+      showToast({
+        type: 'error',
+        title: 'Check-Out Error',
+        message: res.error || 'Failed to check out.'
+      });
     }
+    return res;
   };
 
   const handleAdminSaveAttendance = async (attendanceData) => {
@@ -1001,72 +1023,135 @@ export default function Attendance() {
       )}
 
       {/* ATTENDANCE CALENDAR TAB */}
-      {activeTab === 'calendar' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 rounded-2xl border shadow-sm" style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1' }}>
-            <h3 className="text-base font-extrabold" style={{ color: '#000000' }}>
-              Interactive Attendance Calendar - {calendarDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
-            </h3>
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={() => setCalendarDate(new Date(calendarDate.setMonth(calendarDate.getMonth() - 1)))}
-                className="p-2 rounded-xl transition-colors cursor-pointer shadow-xs"
-                style={{ backgroundColor: '#ffffff', color: '#0f172a', border: '1px solid #cbd5e1' }}
-              >
-                <ChevronLeft className="h-4 w-4" style={{ color: '#0f172a' }} />
-              </button>
-              <button 
-                onClick={() => setCalendarDate(new Date(calendarDate.setMonth(calendarDate.getMonth() + 1)))}
-                className="p-2 rounded-xl transition-colors cursor-pointer shadow-xs"
-                style={{ backgroundColor: '#ffffff', color: '#0f172a', border: '1px solid #cbd5e1' }}
-              >
-                <ChevronRight className="h-4 w-4" style={{ color: '#0f172a' }} />
-              </button>
+      {/* ATTENDANCE CALENDAR TAB */}
+      {activeTab === 'calendar' && (() => {
+        const calYear = calendarDate.getFullYear();
+        const calMonth = calendarDate.getMonth();
+        const calFirstDayIndex = new Date(calYear, calMonth, 1).getDay();
+        const calTotalDays = new Date(calYear, calMonth + 1, 0).getDate();
+        const calPrevMonthTotalDays = new Date(calYear, calMonth, 0).getDate();
+
+        const formatYMD = (y, m, d) => `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+
+        const calDays = [];
+        // Previous month padding
+        for (let i = calFirstDayIndex - 1; i >= 0; i--) {
+          const pDay = calPrevMonthTotalDays - i;
+          const pDate = new Date(calYear, calMonth - 1, pDay);
+          calDays.push({
+            day: pDay,
+            isCurrentMonth: false,
+            dateKey: formatYMD(pDate.getFullYear(), pDate.getMonth(), pDate.getDate())
+          });
+        }
+        // Current month days
+        for (let i = 1; i <= calTotalDays; i++) {
+          calDays.push({
+            day: i,
+            isCurrentMonth: true,
+            dateKey: formatYMD(calYear, calMonth, i)
+          });
+        }
+        // Next month padding to fill complete grid
+        const calTargetTotal = calDays.length > 35 ? 42 : 35;
+        const calRemaining = calTargetTotal - calDays.length;
+        for (let i = 1; i <= calRemaining; i++) {
+          const nDate = new Date(calYear, calMonth + 1, i);
+          calDays.push({
+            day: i,
+            isCurrentMonth: false,
+            dateKey: formatYMD(nDate.getFullYear(), nDate.getMonth(), nDate.getDate())
+          });
+        }
+
+        return (
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between p-4 rounded-2xl border shadow-sm bg-white gap-3" style={{ borderColor: '#cbd5e1' }}>
+              <div>
+                <h3 className="text-base font-black text-slate-900">
+                  Interactive Attendance Calendar - {calendarDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                </h3>
+                <span className="text-[11px] font-bold text-slate-500">
+                  Employee: {currentUser?.name} ({currentUser?.id}) • Today: {todayStr}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCalendarDate(new Date())}
+                  className="px-3 py-1.5 rounded-xl text-xs font-black bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition-colors cursor-pointer"
+                >
+                  Today
+                </button>
+                <button 
+                  onClick={() => setCalendarDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
+                  className="p-2 rounded-xl transition-colors cursor-pointer shadow-xs bg-white text-slate-800 border border-slate-300 hover:bg-slate-50"
+                  title="Previous Month"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button 
+                  onClick={() => setCalendarDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
+                  className="p-2 rounded-xl transition-colors cursor-pointer shadow-xs bg-white text-slate-800 border border-slate-300 hover:bg-slate-50"
+                  title="Next Month"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-7 gap-2 text-center text-xs font-black text-slate-700">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                <div key={day} className="p-2 rounded-xl border bg-white border-slate-200">{day}</div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-7 gap-2">
+              {calDays.map((cell, i) => {
+                const isToday = cell.dateKey === todayStr;
+                const rec = records.find(r => r.employeeId === currentUser?.id && r.date === cell.dateKey);
+
+                let cellStyle = { backgroundColor: '#ffffff', color: '#000000', borderColor: '#e2e8f0', border: '1px solid #e2e8f0' };
+                if (!cell.isCurrentMonth) {
+                  cellStyle = { backgroundColor: '#f8fafc', color: '#94a3b8', borderColor: '#f1f5f9', border: '1px solid #f1f5f9' };
+                } else if (rec?.status === 'Present') {
+                  cellStyle = { backgroundColor: '#ecfdf5', color: '#064e3b', borderColor: '#a7f3d0', border: '1px solid #a7f3d0' };
+                } else if (rec?.status === 'Late') {
+                  cellStyle = { backgroundColor: '#fffbeb', color: '#92400e', borderColor: '#fde68a', border: '1px solid #fde68a' };
+                } else if (rec?.status === 'Absent') {
+                  cellStyle = { backgroundColor: '#fef2f2', color: '#9f1239', borderColor: '#fecaca', border: '1px solid #fecaca' };
+                }
+
+                return (
+                  <div 
+                    key={i}
+                    className={`h-24 p-2.5 rounded-2xl flex flex-col justify-between transition-all shadow-xs ${
+                      isToday ? 'ring-2 ring-emerald-500 ring-offset-1' : ''
+                    }`}
+                    style={cellStyle}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black" style={{ color: cellStyle.color }}>{cell.day}</span>
+                      {isToday && (
+                        <span className="text-[9px] font-black text-emerald-700 uppercase tracking-tight">
+                          Today
+                        </span>
+                      )}
+                    </div>
+                    {rec ? (
+                      <div className="text-[10px] font-extrabold truncate">
+                        <span style={{ color: cellStyle.color }}>{rec.status}</span>
+                        <span className="block font-mono text-[9px]" style={{ color: cellStyle.color }}>{rec.checkInTime}</span>
+                      </div>
+                    ) : cell.isCurrentMonth ? (
+                      <span className="text-[9px] font-bold text-slate-400">--</span>
+                    ) : null}
+                  </div>
+                );
+              })}
             </div>
           </div>
-
-          <div className="grid grid-cols-7 gap-2 text-center text-xs font-black">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-              <div key={day} className="p-2 rounded-xl border" style={{ backgroundColor: '#ffffff', color: '#000000', borderColor: '#cbd5e1' }}>{day}</div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-7 gap-2">
-            {Array.from({ length: 31 }).map((_, i) => {
-              const dayNum = i + 1;
-              const dateKey = `2026-08-${String(dayNum).padStart(2, '0')}`;
-              const rec = records.find(r => r.employeeId === currentUser?.id && r.date === dateKey);
-
-              let cellStyle = { backgroundColor: '#ffffff', color: '#000000', borderColor: '#e2e8f0', border: '1px solid #e2e8f0' };
-              if (rec?.status === 'Present') {
-                cellStyle = { backgroundColor: '#ecfdf5', color: '#064e3b', borderColor: '#a7f3d0', border: '1px solid #a7f3d0' };
-              } else if (rec?.status === 'Late') {
-                cellStyle = { backgroundColor: '#fffbeb', color: '#92400e', borderColor: '#fde68a', border: '1px solid #fde68a' };
-              } else if (rec?.status === 'Absent') {
-                cellStyle = { backgroundColor: '#fef2f2', color: '#9f1239', borderColor: '#fecaca', border: '1px solid #fecaca' };
-              }
-
-              return (
-                <div 
-                  key={dayNum}
-                  className="h-24 p-2.5 rounded-2xl flex flex-col justify-between transition-all shadow-xs"
-                  style={cellStyle}
-                >
-                  <span className="text-xs font-black" style={{ color: cellStyle.color }}>{dayNum}</span>
-                  {rec ? (
-                    <div className="text-[10px] font-extrabold truncate">
-                      <span style={{ color: cellStyle.color }}>{rec.status}</span>
-                      <span className="block font-mono text-[9px]" style={{ color: cellStyle.color }}>{rec.checkInTime}</span>
-                    </div>
-                  ) : (
-                    <span className="text-[9px] font-bold" style={{ color: '#94a3b8' }}>--</span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* REPORTS & HISTORY TAB */}
       {activeTab === 'history' && (
@@ -1358,6 +1443,52 @@ export default function Attendance() {
         targetUser={targetReactivateUser}
         onReactivate={handleReactivateUser}
       />
+
+      {/* Centered Global Attendance Notification Modal */}
+      <AnimatePresence>
+        {toast && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.85, opacity: 0, y: 15 }}
+              transition={{ type: 'spring', damping: 22, stiffness: 320 }}
+              className={`bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl border-2 flex flex-col items-center text-center space-y-4 relative ${
+                toast.type === 'error' ? 'border-rose-400' : 'border-emerald-500'
+              }`}
+            >
+              <button
+                onClick={() => setToast(null)}
+                className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <XCircle className="h-4 w-4" />
+              </button>
+
+              <div className={`h-16 w-16 rounded-full flex items-center justify-center ${
+                toast.type === 'error' ? 'bg-rose-100 text-rose-600 border border-rose-300' : 'bg-emerald-100 text-emerald-600 border border-emerald-300 shadow-md shadow-emerald-100'
+              }`}>
+                {toast.type === 'error' ? (
+                  <AlertTriangle className="h-8 w-8 text-rose-600" />
+                ) : (
+                  <CheckCircle2 className="h-9 w-9 text-emerald-600" />
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <h3 className="text-lg font-black text-slate-900">{toast.title || 'Notification'}</h3>
+                <p className="text-xs font-bold text-slate-600 leading-relaxed">{toast.message}</p>
+              </div>
+
+              <button
+                onClick={() => setToast(null)}
+                className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs shadow-sm cursor-pointer"
+              >
+                Done
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

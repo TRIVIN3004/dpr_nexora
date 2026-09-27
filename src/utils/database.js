@@ -37,6 +37,17 @@ export const setCurrentUser = (user) => {
   }
 };
 
+// Date formatting helpers that guarantee accurate local timezone date strings (YYYY-MM-DD)
+export const formatLocalDate = (date = new Date()) => {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+export const getTodayString = () => formatLocalDate(new Date());
+
 export const initDatabase = () => {
   // No-op for Supabase since tables are initialized on server-side.
 };
@@ -226,7 +237,7 @@ export const getReportDetails = async (reportId) => {
 export const submitDailyReport = async (reportData) => {
   try {
     const newReportId = `REP-${Math.floor(1000 + Math.random() * 9000)}`;
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getTodayString();
     const newReport = {
       id: newReportId,
       date: todayStr,
@@ -293,7 +304,7 @@ export const updateDailyReport = async (reportId, reportData) => {
 
 export const reviewReportStatus = async (reportId, status, feedback, adminName) => {
   try {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getTodayString();
     const updatedFields = {
       status,
       feedback,

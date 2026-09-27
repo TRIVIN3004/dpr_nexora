@@ -91,14 +91,14 @@ export default function Login({ onLoginSuccess }) {
         <div className="flex flex-col items-center text-center mb-8">
           <img 
             src="/logo.png" 
-            alt="Nexora Logo" 
-            className="h-14 w-14 rounded-2xl object-cover border border-slate-800 shadow-glow-purple mb-4 bg-slate-950" 
+            alt="GoNexora Logo" 
+            className="h-16 w-16 rounded-2xl object-contain border border-slate-800 shadow-glow-purple mb-4 bg-black p-1" 
           />
           <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight">
-            Nexora DPR Portal
+            GoNexora Techs
           </h1>
-          <p className="text-xs text-slate-500 mt-1.5 font-medium tracking-wide">
-            {isForgotMode ? "Reset your password securely" : "Sign in to manage your daily progress report"}
+          <p className="text-xs text-slate-400 mt-1.5 font-medium tracking-wide">
+            {isForgotMode ? "Reset your password securely" : "Building Tomorrow, Today • DPR Portal"}
           </p>
         </div>
 
