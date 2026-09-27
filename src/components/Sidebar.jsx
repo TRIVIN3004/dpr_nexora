@@ -50,15 +50,21 @@ export default function Sidebar({ currentTab, onTabChange, isCollapsed, setIsCol
   const filteredItems = navItems.filter(item => item.roles.includes(user?.role));
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-slate-950/90 backdrop-blur-xl border-r border-darkBg-border/40 select-none">
+    <div className="flex flex-col h-full sidebar-grey-mesh border-r border-slate-800/60 select-none relative overflow-hidden">
       
+      {/* Grey Ambient Atmospheric Background Effects */}
+      <div className="absolute inset-0 bg-dots-grey opacity-20 pointer-events-none" />
+      <div className="absolute top-0 left-0 w-full h-40 bg-gradient-to-b from-slate-700/15 via-slate-800/5 to-transparent pointer-events-none" />
+      <div className="absolute top-1/3 -left-12 w-44 h-44 rounded-full bg-slate-600/10 blur-2xl pointer-events-none" />
+      <div className="absolute -bottom-10 right-0 w-36 h-36 rounded-full bg-slate-700/10 blur-3xl pointer-events-none" />
+
       {/* Brand Logo Header */}
-      <div className="flex h-16 items-center justify-between px-6 border-b border-darkBg-border/30">
+      <div className="relative z-10 flex h-16 items-center justify-between px-6 border-b border-slate-800/60 bg-slate-950/40 backdrop-blur-md">
         <div className="flex items-center gap-3">
           <img 
             src="/logo.png" 
             alt="GoNexora Logo" 
-            className="h-10 w-10 rounded-xl object-contain border border-slate-800 shadow-glow-purple bg-black p-0.5" 
+            className="h-10 w-10 rounded-full object-cover border border-indigo-500/50 shadow-md bg-black p-0.5" 
           />
           {!isCollapsed && (
             <motion.div
@@ -67,7 +73,7 @@ export default function Sidebar({ currentTab, onTabChange, isCollapsed, setIsCol
               exit={{ opacity: 0, x: -10 }}
               className="flex flex-col"
             >
-              <span className="text-sm font-bold bg-gradient-to-r from-slate-50 via-slate-100 to-slate-200 bg-clip-text text-transparent">
+              <span className="text-sm font-bold bg-gradient-to-r from-slate-100 via-slate-200 to-slate-300 bg-clip-text text-transparent">
                 GoNexora Techs
               </span>
               <span className="text-[9px] text-slate-400 font-medium tracking-widest uppercase">
@@ -135,7 +141,7 @@ export default function Sidebar({ currentTab, onTabChange, isCollapsed, setIsCol
       </nav>
 
       {/* Sidebar Footer Account Details */}
-      <div className="p-4 border-t border-darkBg-border/20 bg-slate-950/20">
+      <div className="p-4 border-t border-slate-800/60 bg-slate-950/40 relative z-10">
         <div className="flex items-center gap-3">
           <img 
             src={user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150"} 

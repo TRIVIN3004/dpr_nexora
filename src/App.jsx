@@ -225,18 +225,20 @@ export default function App() {
               onUserChanged={handleUserSessionSwapped}
             />
 
-            {/* Content viewport area matching sidebar background with animated ambient glows */}
-            <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-950/90 backdrop-blur-xl relative flex flex-col justify-between">
+            {/* Content viewport area with rich grey mesh background and animated ambient effects */}
+            <main className="flex-1 overflow-y-auto p-4 md:p-6 portal-grey-mesh relative flex flex-col justify-between">
               
-              {/* Zero-Egress GPU Animated Ambient Layer */}
+              {/* Zero-Egress GPU Animated Grey Ambient Layer */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-                {/* Floating ambient glowing gradient orbs */}
-                <div className="absolute -top-24 -left-24 w-[450px] h-[450px] rounded-full bg-indigo-600/10 blur-[120px] animate-float-1" />
-                <div className="absolute top-1/2 -right-20 w-[450px] h-[450px] rounded-full bg-cyan-600/10 blur-[130px] animate-float-2" />
-                <div className="absolute -bottom-20 left-1/3 w-[450px] h-[450px] rounded-full bg-purple-600/10 blur-[120px] animate-float-3" />
+                {/* Floating ambient glowing grey gradient orbs */}
+                <div className="absolute -top-20 -left-20 w-[500px] h-[500px] rounded-full bg-slate-600/15 blur-[140px] animate-float-1" />
+                <div className="absolute top-1/3 -right-20 w-[480px] h-[480px] rounded-full bg-zinc-600/12 blur-[140px] animate-float-2" />
+                <div className="absolute -bottom-20 left-1/4 w-[520px] h-[520px] rounded-full bg-slate-700/20 blur-[130px] animate-float-3" />
+                <div className="absolute top-2/3 right-1/4 w-[350px] h-[350px] rounded-full bg-indigo-950/25 blur-[120px] animate-float-1" />
                 
-                {/* Subtle Modern Matrix Grid */}
-                <div className="absolute inset-0 bg-grid-slate-pattern opacity-30" />
+                {/* Subtle Modern Grey Matrix Grid & Dot Layer */}
+                <div className="absolute inset-0 bg-grid-slate-pattern opacity-35" />
+                <div className="absolute inset-0 bg-dots-grey opacity-20" />
               </div>
 
               {/* Animated Page Transitions Content */}

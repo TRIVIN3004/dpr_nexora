@@ -44,7 +44,7 @@ export default function Header({ onSearchChange, searchValue, pageTitle, onLogou
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between px-6 bg-slate-950/90 backdrop-blur-xl border-b border-darkBg-border/40">
+    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between px-6 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/60 shadow-sm">
       
       {/* Search Bar / Title */}
       <div className="flex items-center gap-4 flex-1">
