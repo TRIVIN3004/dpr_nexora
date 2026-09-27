@@ -44,17 +44,17 @@ export default function Header({ onSearchChange, searchValue, pageTitle, onLogou
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between px-6 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/60 shadow-sm">
+    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between px-6 bg-slate-950/70 backdrop-blur-xl border-b border-white/10 shadow-sm">
       
       {/* Search Bar / Title */}
       <div className="flex items-center gap-4 flex-1">
-        <h2 className="text-xl font-bold text-slate-100 hidden md:block select-none font-sans tracking-wide">
+        <h2 className="text-xl font-black text-white hidden md:block select-none font-sans tracking-wide">
           {pageTitle}
         </h2>
         
-        {/* Global Search */}
+        {/* Global Search with Frosted Glass */}
         <div className="relative w-full max-w-xs md:max-w-md ml-0 md:ml-4">
-          <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+          <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-300">
             <Search className="h-4.5 w-4.5" />
           </span>
           <input
@@ -62,7 +62,7 @@ export default function Header({ onSearchChange, searchValue, pageTitle, onLogou
             placeholder="Search employees, projects, or reports..."
             value={searchValue || ''}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 text-sm rounded-xl bg-slate-950/40 border border-slate-800 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-nexora-purple/50 focus:ring-1 focus:ring-nexora-purple/20 transition-all duration-300"
+            className="w-full pl-10 pr-4 py-2 text-sm rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-400 focus:outline-none focus:bg-white/10 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 transition-all duration-200"
           />
         </div>
       </div>
@@ -71,16 +71,16 @@ export default function Header({ onSearchChange, searchValue, pageTitle, onLogou
       <div className="flex items-center gap-4">
         
         {/* Quick Testing Role Switcher in Header */}
-        <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-400">
-          <Activity className="h-3 w-3 animate-pulse" />
-          <span>Testing Mode:</span>
+        <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-white">
+          <Activity className="h-3 w-3 text-cyan-400 animate-pulse" />
+          <span className="text-slate-300">Testing Mode:</span>
           <select 
             value={user?.email || ''} 
             onChange={(e) => handleSwitchRole(e.target.value)}
-            className="bg-transparent text-slate-200 border-none font-semibold focus:outline-none cursor-pointer"
+            className="bg-transparent text-white font-bold border-none focus:outline-none cursor-pointer"
           >
             {dbUsers.map(u => (
-              <option key={u.id} value={u.email} className="bg-slate-900 text-slate-200">
+              <option key={u.id} value={u.email} className="bg-slate-900 text-white">
                 {u.role === 'admin' ? `Admin (${u.name})` : `${u.name} (Member)`}
               </option>
             ))}
@@ -91,11 +91,11 @@ export default function Header({ onSearchChange, searchValue, pageTitle, onLogou
         <div className="relative">
           <button 
             onClick={() => setShowNotifDropdown(!showNotifDropdown)}
-            className="relative p-2 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-slate-800/40 focus:outline-none transition-all duration-300"
+            className="relative p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white focus:outline-none transition-all duration-200 cursor-pointer"
           >
-            <Bell className="h-5 w-5" />
+            <Bell className="h-4.5 w-4.5 text-white" />
             {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5 rounded-full bg-nexora-purple animate-pulse" />
+              <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,1)] animate-pulse" />
             )}
           </button>
 
@@ -108,22 +108,22 @@ export default function Header({ onSearchChange, searchValue, pageTitle, onLogou
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute right-0 mt-2.5 w-80 z-20 glass-panel rounded-2xl overflow-hidden shadow-glass border border-slate-800"
+                  className="absolute right-0 mt-2.5 w-80 z-20 glass-panel rounded-2xl overflow-hidden shadow-2xl border border-white/15"
                 >
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 bg-slate-950/40">
-                    <span className="font-semibold text-sm text-slate-200">Notifications ({unreadCount})</span>
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-slate-950/60">
+                    <span className="font-bold text-sm text-white">Notifications ({unreadCount})</span>
                     {unreadCount > 0 && (
                       <button 
                         onClick={handleMarkAllRead} 
-                        className="text-xs text-nexora-blue hover:text-nexora-purple font-medium cursor-pointer transition-colors"
+                        className="text-xs text-cyan-400 hover:text-cyan-300 font-semibold cursor-pointer transition-colors"
                       >
                         Mark all read
                       </button>
                     )}
                   </div>
-                  <div className="max-h-64 overflow-y-auto divide-y divide-slate-800/40">
+                  <div className="max-h-64 overflow-y-auto divide-y divide-white/10">
                     {notifications.length === 0 ? (
-                      <div className="px-4 py-8 text-center text-xs text-slate-500">
+                      <div className="px-4 py-8 text-center text-xs text-slate-400">
                         No notifications found.
                       </div>
                     ) : (
@@ -132,17 +132,17 @@ export default function Header({ onSearchChange, searchValue, pageTitle, onLogou
                           key={notif.id} 
                           onClick={() => handleNotificationClick(notif.id)}
                           className={`px-4 py-3 cursor-pointer text-left transition-all ${
-                            notif.read ? 'bg-transparent text-slate-400 hover:bg-slate-800/20' : 'bg-nexora-purple/5 text-slate-200 hover:bg-nexora-purple/10'
+                            notif.read ? 'bg-transparent text-slate-300 hover:bg-white/5' : 'bg-indigo-500/10 text-white hover:bg-indigo-500/15'
                           }`}
                         >
                           <div className="flex items-start justify-between gap-2">
-                            <span className="text-xs font-semibold">{notif.title}</span>
-                            {!notif.read && <span className="h-1.5 w-1.5 mt-1.5 rounded-full bg-nexora-purple" />}
+                            <span className="text-xs font-bold text-white">{notif.title}</span>
+                            {!notif.read && <span className="h-1.5 w-1.5 mt-1.5 rounded-full bg-cyan-400" />}
                           </div>
-                          <p className="text-[11px] leading-relaxed mt-1 text-slate-300">
+                          <p className="text-[11px] leading-relaxed mt-1 text-slate-200">
                             {notif.message}
                           </p>
-                          <span className="text-[9px] text-slate-500 mt-2 block">
+                          <span className="text-[9px] text-slate-400 mt-2 block">
                             {new Date(notif.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}{' '}
                             {new Date(notif.date).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                           </span>
@@ -160,18 +160,18 @@ export default function Header({ onSearchChange, searchValue, pageTitle, onLogou
         <div className="relative">
           <button 
             onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-            className="flex items-center gap-2.5 p-1 rounded-full md:pr-3 hover:bg-slate-800/30 transition-all duration-300"
+            className="flex items-center gap-2.5 p-1.5 rounded-full md:pr-3 bg-white/5 hover:bg-white/10 border border-white/10 transition-all duration-200 cursor-pointer"
           >
             <img 
               src={user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150"} 
               alt={user?.name} 
-              className="h-8 w-8 rounded-full object-cover border border-slate-700 bg-slate-800"
+              className="h-8 w-8 rounded-full object-cover border-2 border-indigo-400/50 bg-slate-800"
             />
             <div className="hidden md:flex flex-col text-left">
-              <span className="text-xs font-semibold text-slate-200">{user?.name}</span>
-              <span className="text-[10px] text-slate-500 capitalize">{user?.role}</span>
+              <span className="text-xs font-bold text-white tracking-wide">{user?.name}</span>
+              <span className="text-[10px] text-cyan-300 font-semibold capitalize">{user?.role}</span>
             </div>
-            <ChevronDown className="h-3.5 w-3.5 text-slate-500 hidden md:block" />
+            <ChevronDown className="h-3.5 w-3.5 text-slate-300 hidden md:block" />
           </button>
 
           <AnimatePresence>
@@ -183,38 +183,24 @@ export default function Header({ onSearchChange, searchValue, pageTitle, onLogou
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute right-0 mt-2 w-48 z-20 glass-panel rounded-2xl overflow-hidden shadow-glass border border-slate-800"
+                  className="absolute right-0 mt-2 w-52 z-20 glass-panel rounded-2xl overflow-hidden shadow-2xl border border-white/15"
                 >
-                  <div className="p-3.5 border-b border-slate-800 bg-slate-950/20">
-                    <p className="text-xs font-bold text-slate-200 truncate">{user?.name}</p>
-                    <p className="text-[10px] text-slate-500 truncate mt-0.5">{user?.email}</p>
+                  <div className="p-3.5 border-b border-white/10 bg-slate-950/60">
+                    <p className="text-xs font-bold text-white truncate">{user?.name}</p>
+                    <p className="text-[10px] text-slate-400 truncate mt-0.5">{user?.email}</p>
                   </div>
                   
-                  <div className="p-1">
-                    <div className="lg:hidden flex flex-col p-2 gap-1 border-b border-slate-800/40">
-                      <span className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider">Switch Profile:</span>
-                      {dbUsers.slice(0, 6).map(u => (
-                        <button 
-                          key={u.id}
-                          onClick={() => handleSwitchRole(u.email)}
-                          className={`text-xs text-left p-1.5 rounded-lg flex items-center justify-between ${user?.email === u.email ? 'text-nexora-purple' : 'text-slate-400'}`}
-                        >
-                          {u.name} ({u.role === 'admin' ? 'Admin' : 'Member'})
-                          {user?.email === u.email && <Check className="h-3 w-3" />}
-                        </button>
-                      ))}
-                    </div>
-
+                  <div className="p-1.5 space-y-1">
                     <button 
                       onClick={() => { setShowProfileDropdown(false); window.location.hash = '#settings'; }} 
-                      className="w-full text-left px-3.5 py-2.5 text-xs text-slate-300 hover:text-white hover:bg-slate-800/40 rounded-xl transition-all duration-200 flex items-center gap-2"
+                      className="w-full text-left px-3.5 py-2.5 text-xs text-white hover:bg-white/10 rounded-xl transition-all duration-200 flex items-center gap-2 font-semibold cursor-pointer"
                     >
-                      <User className="h-3.5 w-3.5" />
+                      <User className="h-3.5 w-3.5 text-cyan-400" />
                       Profile Settings
                     </button>
                     <button 
                       onClick={() => { setShowProfileDropdown(false); onLogout(); }} 
-                      className="w-full text-left px-3.5 py-2.5 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-xl transition-all duration-200 flex items-center gap-2"
+                      className="w-full text-left px-3.5 py-2.5 text-xs text-rose-300 hover:text-rose-200 hover:bg-rose-500/15 rounded-xl transition-all duration-200 flex items-center gap-2 font-semibold cursor-pointer"
                     >
                       <LogOut className="h-3.5 w-3.5" />
                       Sign Out
