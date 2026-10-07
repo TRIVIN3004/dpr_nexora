@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { LogIn, LogOut, Clock, MapPin, CheckCircle2, ShieldCheck, Sparkles, Loader2, X, Check, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -130,159 +131,162 @@ export default function CheckInWidget({ currentUser, todayRecord, settings, onCh
   return (
     <div className="rounded-3xl border border-slate-200 dark:border-white/15 p-6 md:p-8 shadow-xl relative overflow-hidden bg-white dark:bg-white/[0.07] backdrop-blur-2xl text-left">
       
-      {/* Centered Global Screen Loading & Notification Overlay */}
-      <AnimatePresence>
-        {actionState.status !== 'idle' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md overflow-y-auto"
-          >
-            {actionState.status === 'loading' && (
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col items-center text-center space-y-4 max-h-[90vh] overflow-y-auto"
-              >
-                <div className="relative flex items-center justify-center h-20 w-20">
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ repeat: Infinity, duration: 1.2, ease: 'linear' }}
-                    className="absolute inset-0 rounded-full border-3 border-indigo-600 border-t-transparent shadow-md"
-                  />
-                  <div className="h-14 w-14 rounded-full bg-indigo-50 dark:bg-indigo-950 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-                    <Clock className="h-7 w-7 animate-pulse" />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white">
-                    {actionState.actionType === 'checkin' ? 'Marking Attendance...' : 'Logging Check-Out...'}
-                  </h3>
-                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                    {actionState.message}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-[11px] font-extrabold">
-                  <span className="h-2 w-2 rounded-full bg-indigo-600 animate-ping" />
-                  GoNexora Attendance Cloud Sync
-                </div>
-              </motion.div>
-            )}
-
-            {actionState.status === 'success' && (
-              <motion.div
-                initial={{ scale: 0.85, opacity: 0, y: 10 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.85, opacity: 0, y: 10 }}
-                transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-                className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border-2 border-emerald-500 flex flex-col items-center text-center space-y-5 relative max-h-[90vh] overflow-y-auto my-auto"
-              >
-                <button
-                  onClick={closeNotification}
-                  className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+      {/* Centered Global Screen Loading & Notification Overlay via Portal */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {actionState.status !== 'idle' && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto"
+            >
+              {actionState.status === 'loading' && (
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col items-center text-center space-y-4 max-h-[90vh] overflow-y-auto my-auto"
                 >
-                  <X className="h-4 w-4" />
-                </button>
-
-                {/* Animated Green Checkmark Orb */}
-                <div className="relative flex items-center justify-center h-20 w-20">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: [0, 1.2, 1] }}
-                    transition={{ duration: 0.5 }}
-                    className="h-20 w-20 rounded-full bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-emerald-600 border-2 border-emerald-300 dark:border-emerald-700 shadow-lg shadow-emerald-200 dark:shadow-emerald-950"
-                  >
-                    <CheckCircle2 className="h-11 w-11 text-emerald-600 dark:text-emerald-400" />
-                  </motion.div>
-                </div>
-
-                <div className="space-y-1">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-[11px] font-black">
-                    <Sparkles className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                    Verified & Recorded
-                  </div>
-                  <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
-                    {actionState.message}
-                  </h3>
-                  <p className="text-xs font-extrabold text-slate-500 dark:text-slate-400">
-                    {currentUser?.name} • {currentUser?.id}
-                  </p>
-                </div>
-
-                {/* Detailed Summary Card */}
-                <div className="w-full bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 text-left space-y-2.5 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-500 dark:text-slate-400 font-bold">Timestamp:</span>
-                    <span className="font-black text-slate-900 dark:text-white font-mono text-sm">{actionState.timestamp}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-500 dark:text-slate-400 font-bold">Attendance Status:</span>
-                    <span className="font-black px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40">
-                      {actionState.statusBadge}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-500 dark:text-slate-400 font-bold">Location:</span>
-                    <span className="font-black text-slate-800 dark:text-slate-200">Nexora HQ (Verified GPS)</span>
-                  </div>
-                  {actionState.remarksNote && (
-                    <div className="flex items-start justify-between pt-1 border-t border-slate-200 dark:border-slate-800">
-                      <span className="text-slate-500 dark:text-slate-400 font-bold">Remarks:</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200 italic max-w-[200px] text-right truncate">{actionState.remarksNote}</span>
+                  <div className="relative flex items-center justify-center h-20 w-20">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 1.2, ease: 'linear' }}
+                      className="absolute inset-0 rounded-full border-3 border-indigo-600 border-t-transparent shadow-md"
+                    />
+                    <div className="h-14 w-14 rounded-full bg-indigo-50 dark:bg-indigo-950 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                      <Clock className="h-7 w-7 animate-pulse" />
                     </div>
-                  )}
-                </div>
+                  </div>
 
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={closeNotification}
-                  className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                  <div className="space-y-1.5">
+                    <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                      {actionState.actionType === 'checkin' ? 'Marking Attendance...' : 'Logging Check-Out...'}
+                    </h3>
+                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                      {actionState.message}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-[11px] font-extrabold">
+                    <span className="h-2 w-2 rounded-full bg-indigo-600 animate-ping" />
+                    GoNexora Attendance Cloud Sync
+                  </div>
+                </motion.div>
+              )}
+
+              {actionState.status === 'success' && (
+                <motion.div
+                  initial={{ scale: 0.85, opacity: 0, y: 10 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.85, opacity: 0, y: 10 }}
+                  transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+                  className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border-2 border-emerald-500 flex flex-col items-center text-center space-y-5 relative max-h-[90vh] overflow-y-auto my-auto"
                 >
-                  <Check className="h-4 w-4" />
-                  <span>Done & Continue</span>
-                </motion.button>
-              </motion.div>
-            )}
+                  <button
+                    onClick={closeNotification}
+                    className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
 
-            {actionState.status === 'error' && (
-              <motion.div
-                initial={{ scale: 0.85, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.85, opacity: 0 }}
-                className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl border-2 border-rose-400 flex flex-col items-center text-center space-y-4 relative max-h-[90vh] overflow-y-auto my-auto"
-              >
-                <button
-                  onClick={closeNotification}
-                  className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  {/* Animated Green Checkmark Orb */}
+                  <div className="relative flex items-center justify-center h-20 w-20">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: [0, 1.2, 1] }}
+                      transition={{ duration: 0.5 }}
+                      className="h-20 w-20 rounded-full bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-emerald-600 border-2 border-emerald-300 dark:border-emerald-700 shadow-lg shadow-emerald-200 dark:shadow-emerald-950"
+                    >
+                      <CheckCircle2 className="h-11 w-11 text-emerald-600 dark:text-emerald-400" />
+                    </motion.div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-[11px] font-black">
+                      <Sparkles className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                      Verified & Recorded
+                    </div>
+                    <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                      {actionState.message}
+                    </h3>
+                    <p className="text-xs font-extrabold text-slate-500 dark:text-slate-400">
+                      {currentUser?.name} • {currentUser?.id}
+                    </p>
+                  </div>
+
+                  {/* Detailed Summary Card */}
+                  <div className="w-full bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 text-left space-y-2.5 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-500 dark:text-slate-400 font-bold">Timestamp:</span>
+                      <span className="font-black text-slate-900 dark:text-white font-mono text-sm">{actionState.timestamp}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-500 dark:text-slate-400 font-bold">Attendance Status:</span>
+                      <span className="font-black px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40">
+                        {actionState.statusBadge}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-500 dark:text-slate-400 font-bold">Location:</span>
+                      <span className="font-black text-slate-800 dark:text-slate-200">Nexora HQ (Verified GPS)</span>
+                    </div>
+                    {actionState.remarksNote && (
+                      <div className="flex items-start justify-between pt-1 border-t border-slate-200 dark:border-slate-800">
+                        <span className="text-slate-500 dark:text-slate-400 font-bold">Remarks:</span>
+                        <span className="font-bold text-slate-800 dark:text-slate-200 italic max-w-[200px] text-right truncate">{actionState.remarksNote}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={closeNotification}
+                    className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Check className="h-4 w-4" />
+                    <span>Done & Continue</span>
+                  </motion.button>
+                </motion.div>
+              )}
+
+              {actionState.status === 'error' && (
+                <motion.div
+                  initial={{ scale: 0.85, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.85, opacity: 0 }}
+                  className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl border-2 border-rose-400 flex flex-col items-center text-center space-y-4 relative max-h-[90vh] overflow-y-auto my-auto"
                 >
-                  <X className="h-4 w-4" />
-                </button>
+                  <button
+                    onClick={closeNotification}
+                    className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
 
-                <div className="h-16 w-16 rounded-full bg-rose-100 dark:bg-rose-950 flex items-center justify-center text-rose-600 border border-rose-300 dark:border-rose-700">
-                  <AlertCircle className="h-8 w-8 text-rose-600 dark:text-rose-400" />
-                </div>
+                  <div className="h-16 w-16 rounded-full bg-rose-100 dark:bg-rose-950 flex items-center justify-center text-rose-600 border border-rose-300 dark:border-rose-700">
+                    <AlertCircle className="h-8 w-8 text-rose-600 dark:text-rose-400" />
+                  </div>
 
-                <div className="space-y-1">
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white">Attendance Error</h3>
-                  <p className="text-xs font-bold text-rose-600 dark:text-rose-400">{actionState.message}</p>
-                </div>
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-black text-slate-900 dark:text-white">Attendance Error</h3>
+                    <p className="text-xs font-bold text-rose-600 dark:text-rose-400">{actionState.message}</p>
+                  </div>
 
-                <button
-                  onClick={closeNotification}
-                  className="w-full py-2.5 rounded-xl bg-slate-900 text-white font-black text-xs hover:bg-slate-800 cursor-pointer"
-                >
-                  Dismiss
-                </button>
-              </motion.div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+                  <button
+                    onClick={closeNotification}
+                    className="w-full py-2.5 rounded-xl bg-slate-900 text-white font-black text-xs hover:bg-slate-800 cursor-pointer"
+                  >
+                    Dismiss
+                  </button>
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
         

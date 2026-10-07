@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { QrCode, Scan, CheckCircle2, ShieldAlert, Sparkles, RefreshCw, Loader2, X, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -28,15 +29,16 @@ export default function QRCodeAttendance({ currentUser, onScanComplete }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 rounded-3xl border border-slate-200 dark:border-white/15 shadow-xl bg-white dark:bg-white/[0.07] backdrop-blur-2xl relative overflow-hidden text-left">
       
-      {/* Centered Global Screen Notification Overlay */}
-      <AnimatePresence>
-        {scanResult && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md overflow-y-auto"
-          >
+      {/* Centered Global Screen Notification Overlay via Portal */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {scanResult && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto"
+            >
             <motion.div
               initial={{ scale: 0.85, opacity: 0, y: 10 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -104,7 +106,9 @@ export default function QRCodeAttendance({ currentUser, onScanComplete }) {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body
+    )}
 
       {/* Left: Employee QR Badge Generator */}
       <div className="flex flex-col items-center justify-center p-6 rounded-2xl border border-slate-200 dark:border-white/10 text-center space-y-4 bg-slate-50 dark:bg-slate-900/40">

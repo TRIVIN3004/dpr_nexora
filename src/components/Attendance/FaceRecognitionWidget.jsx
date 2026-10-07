@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Camera, ScanFace, CheckCircle2, ShieldCheck, Cpu, Sparkles, X, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -29,15 +30,16 @@ export default function FaceRecognitionWidget({ currentUser, onScanComplete }) {
   return (
     <div className="flex flex-col items-center justify-center p-6 md:p-8 rounded-3xl border border-slate-200 dark:border-white/15 shadow-xl text-center space-y-6 bg-white dark:bg-white/[0.07] backdrop-blur-2xl relative overflow-hidden">
       
-      {/* Centered Global Screen Notification Overlay */}
-      <AnimatePresence>
-        {scanResult && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md overflow-y-auto"
-          >
+      {/* Centered Global Screen Notification Overlay via Portal */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {scanResult && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto"
+            >
             <motion.div
               initial={{ scale: 0.85, opacity: 0, y: 10 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -105,7 +107,9 @@ export default function FaceRecognitionWidget({ currentUser, onScanComplete }) {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body
+    )}
 
       <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-cyan-50 dark:bg-cyan-950/70 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/60">
         <Cpu className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />

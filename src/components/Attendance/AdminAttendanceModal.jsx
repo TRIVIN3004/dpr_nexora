@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Calendar, Clock, User, FileText, History, ShieldAlert } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -61,7 +62,7 @@ export default function AdminAttendanceModal({ isOpen, onClose, users = [], init
     onClose();
   };
 
-  return (
+  const modalContent = (
     <AnimatePresence>
       <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 md:p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
         <motion.div
@@ -204,4 +205,6 @@ export default function AdminAttendanceModal({ isOpen, onClose, users = [], init
       </div>
     </AnimatePresence>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 }

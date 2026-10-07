@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Users, 
   Clock, 
@@ -1584,51 +1585,54 @@ export default function Attendance() {
         onReview={handleReviewLeaveApplication}
       />
 
-      {/* Centered Global Attendance Notification Modal */}
-      <AnimatePresence>
-        {toast && (
-          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md overflow-y-auto">
-            <motion.div
-              initial={{ scale: 0.85, opacity: 0, y: 15 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.85, opacity: 0, y: 15 }}
-              transition={{ type: 'spring', damping: 22, stiffness: 320 }}
-              className={`bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl border-2 flex flex-col items-center text-center space-y-4 relative my-auto ${
-                toast.type === 'error' ? 'border-rose-400' : 'border-emerald-500'
-              }`}
-            >
-              <button
-                onClick={() => setToast(null)}
-                className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+      {/* Centered Global Attendance Notification Modal via Portal */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {toast && (
+            <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md overflow-y-auto">
+              <motion.div
+                initial={{ scale: 0.85, opacity: 0, y: 15 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.85, opacity: 0, y: 15 }}
+                transition={{ type: 'spring', damping: 22, stiffness: 320 }}
+                className={`bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl border-2 flex flex-col items-center text-center space-y-4 relative my-auto ${
+                  toast.type === 'error' ? 'border-rose-400' : 'border-emerald-500'
+                }`}
               >
-                <XCircle className="h-4 w-4" />
-              </button>
+                <button
+                  onClick={() => setToast(null)}
+                  className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  <XCircle className="h-4 w-4" />
+                </button>
 
-              <div className={`h-16 w-16 rounded-full flex items-center justify-center ${
-                toast.type === 'error' ? 'bg-rose-100 text-rose-600 border border-rose-300' : 'bg-emerald-100 text-emerald-600 border border-emerald-300 shadow-md shadow-emerald-100'
-              }`}>
-                {toast.type === 'error' ? (
-                  <AlertTriangle className="h-8 w-8 text-rose-600" />
-                ) : (
-                  <CheckCircle2 className="h-9 w-9 text-emerald-600" />
-                )}
-              </div>
+                <div className={`h-16 w-16 rounded-full flex items-center justify-center ${
+                  toast.type === 'error' ? 'bg-rose-100 text-rose-600 border border-rose-300' : 'bg-emerald-100 text-emerald-600 border border-emerald-300 shadow-md shadow-emerald-100'
+                }`}>
+                  {toast.type === 'error' ? (
+                    <AlertTriangle className="h-8 w-8 text-rose-600" />
+                  ) : (
+                    <CheckCircle2 className="h-9 w-9 text-emerald-600" />
+                  )}
+                </div>
 
-              <div className="space-y-1">
-                <h3 className="text-lg font-black text-slate-900 dark:text-white">{toast.title || 'Notification'}</h3>
-                <p className="text-xs font-bold text-slate-600 dark:text-slate-300 leading-relaxed">{toast.message}</p>
-              </div>
+                <div className="space-y-1">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white">{toast.title || 'Notification'}</h3>
+                  <p className="text-xs font-bold text-slate-600 dark:text-slate-300 leading-relaxed">{toast.message}</p>
+                </div>
 
-              <button
-                onClick={() => setToast(null)}
-                className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs shadow-sm cursor-pointer"
-              >
-                Done
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+                <button
+                  onClick={() => setToast(null)}
+                  className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs shadow-sm cursor-pointer"
+                >
+                  Done
+                </button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
     </div>
   );
