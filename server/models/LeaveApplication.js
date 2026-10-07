@@ -12,6 +12,7 @@ const leaveApplicationSchema = new mongoose.Schema({
     enum: [
       'Casual Leave', 
       'Sick / Medical Leave', 
+      'Semester / Exam Leave',
       'Earned / Annual Leave', 
       'Maternity / Paternity Leave', 
       'Emergency / Unpaid Leave', 

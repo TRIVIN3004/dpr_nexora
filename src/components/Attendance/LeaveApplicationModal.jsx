@@ -14,10 +14,11 @@ import { calculateLeaveDays, getTodayString } from '../../utils/attendanceDataba
 const LEAVE_TYPES = [
   { id: 'Casual Leave', label: 'Casual Leave', desc: 'Personal errands, short family commitments', color: 'blue' },
   { id: 'Sick / Medical Leave', label: 'Sick / Medical Leave', desc: 'Illness, medical appointments, recovery', color: 'rose' },
+  { id: 'Semester / Exam Leave', label: 'Semester / Exam Leave', desc: 'College semester exams, internals, study leave', color: 'indigo' },
   { id: 'Earned / Annual Leave', label: 'Earned / Annual Leave', desc: 'Planned vacation, personal rest time', color: 'amber' },
-  { id: 'Emergency / Unpaid Leave', label: 'Emergency / Unpaid Leave', desc: 'Unforeseen emergencies or extra leaves', color: 'purple' },
   { id: 'Half-Day Leave', label: 'Half-Day Leave (Morning / Afternoon)', desc: 'Half-day absence (4 hours)', color: 'teal' },
-  { id: 'Maternity / Paternity Leave', label: 'Maternity / Paternity Leave', desc: 'Parental care & family bonding', color: 'indigo' }
+  { id: 'Emergency / Unpaid Leave', label: 'Emergency / Unpaid Leave', desc: 'Unforeseen emergencies or extra leaves', color: 'purple' },
+  { id: 'Maternity / Paternity Leave', label: 'Maternity / Paternity Leave', desc: 'Parental care & family bonding', color: 'sky' }
 ];
 
 export default function LeaveApplicationModal({

@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS public.leave_applications (
   "employeeName" TEXT NOT NULL,
   department TEXT,
   role TEXT DEFAULT 'member',
-  "leaveType" TEXT NOT NULL, -- 'Casual Leave', 'Sick / Medical Leave', 'Earned / Annual Leave', 'Maternity / Paternity Leave', 'Emergency / Unpaid Leave', 'Half-Day Leave'
+  "leaveType" TEXT NOT NULL, -- 'Casual Leave', 'Sick / Medical Leave', 'Semester / Exam Leave', 'Earned / Annual Leave', 'Maternity / Paternity Leave', 'Emergency / Unpaid Leave', 'Half-Day Leave'
   "startDate" TEXT NOT NULL, -- YYYY-MM-DD
   "endDate" TEXT NOT NULL, -- YYYY-MM-DD
   "totalDays" NUMERIC(4,1) NOT NULL DEFAULT 1,
