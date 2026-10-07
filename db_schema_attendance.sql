@@ -72,12 +72,36 @@ CREATE TABLE IF NOT EXISTS public.attendance_reports (
   "generatedBy" TEXT NOT NULL
 );
 
+-- 6. Create LEAVE_APPLICATIONS table
+CREATE TABLE IF NOT EXISTS public.leave_applications (
+  id TEXT PRIMARY KEY,
+  "employeeId" TEXT NOT NULL,
+  "employeeName" TEXT NOT NULL,
+  department TEXT,
+  role TEXT DEFAULT 'member',
+  "leaveType" TEXT NOT NULL, -- 'Casual Leave', 'Sick / Medical Leave', 'Earned / Annual Leave', 'Maternity / Paternity Leave', 'Emergency / Unpaid Leave', 'Half-Day Leave'
+  "startDate" TEXT NOT NULL, -- YYYY-MM-DD
+  "endDate" TEXT NOT NULL, -- YYYY-MM-DD
+  "totalDays" NUMERIC(4,1) NOT NULL DEFAULT 1,
+  reason TEXT NOT NULL,
+  "emergencyContact" TEXT DEFAULT '',
+  "handoverTo" TEXT DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'Pending', -- 'Pending', 'Approved', 'Rejected', 'Cancelled'
+  "adminRemarks" TEXT DEFAULT '',
+  "appliedAt" TEXT NOT NULL,
+  "reviewedBy" TEXT,
+  "reviewedAt" TEXT,
+  "createdAt" TIMESTAMPTZ DEFAULT NOW(),
+  "updatedAt" TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Enable RLS for all new tables
 ALTER TABLE public.attendance ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.attendance_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.attendance_warnings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.termination_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.attendance_reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.leave_applications ENABLE ROW LEVEL SECURITY;
 
 -- Permissive Client-Side Access Policies
 DO $$ 
@@ -97,9 +121,13 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Enable all operations for attendance_reports') THEN
     CREATE POLICY "Enable all operations for attendance_reports" ON public.attendance_reports FOR ALL TO public USING (true) WITH CHECK (true);
   END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Enable all operations for leave_applications') THEN
+    CREATE POLICY "Enable all operations for leave_applications" ON public.leave_applications FOR ALL TO public USING (true) WITH CHECK (true);
+  END IF;
 END $$;
 
 -- Insert default settings row if missing
 INSERT INTO public.attendance_settings (id, "officeStartTime", "officeEndTime", "lateEntryTime", "workingDays", "minimumAttendancePct", "warningPercentage", "terminationPercentage")
 VALUES ('GLOBAL_CONFIG', '09:00', '17:00', '09:15', ARRAY['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], 75, 50, 50)
 ON CONFLICT (id) DO NOTHING;
+

@@ -24,7 +24,9 @@ import {
   Sparkles,
   ShieldAlert,
   Settings as SettingsIcon,
-  LayoutDashboard
+  LayoutDashboard,
+  CalendarRange,
+  CalendarDays
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import jsPDF from 'jspdf';
@@ -37,6 +39,9 @@ import QRCodeAttendance from '../components/Attendance/QRCodeAttendance';
 import FaceRecognitionWidget from '../components/Attendance/FaceRecognitionWidget';
 import AdminAttendanceModal from '../components/Attendance/AdminAttendanceModal';
 import ReactivateUserModal from '../components/Attendance/ReactivateUserModal';
+import LeaveApplicationModal from '../components/Attendance/LeaveApplicationModal';
+import AdminLeaveReviewModal from '../components/Attendance/AdminLeaveReviewModal';
+import LeaveManagementView from '../components/Attendance/LeaveManagementView';
 
 import { getDatabase, getCurrentUser } from '../utils/database';
 import { useDatabaseStore } from '../context/DatabaseContext';
@@ -51,7 +56,11 @@ import {
   calculateEmployeeStats, 
   evaluateCompanyAttendancePolicy, 
   reactivateEmployeeAccount,
-  getTodayString
+  getTodayString,
+  getLeaveApplications,
+  applyForLeave,
+  updateLeaveApplicationStatus,
+  cancelLeaveApplication
 } from '../utils/attendanceDatabase';
 
 // Chart.js imports
@@ -102,6 +111,12 @@ export default function Attendance() {
   const [showReactivateModal, setShowReactivateModal] = useState(false);
   const [targetReactivateUser, setTargetReactivateUser] = useState(null);
 
+  // Leave Applications State
+  const [leaveApplications, setLeaveApplications] = useState([]);
+  const [showApplyLeaveModal, setShowApplyLeaveModal] = useState(false);
+  const [showReviewLeaveModal, setShowReviewLeaveModal] = useState(false);
+  const [selectedLeaveApp, setSelectedLeaveApp] = useState(null);
+
   // Filters for History / Reports
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDepartment, setFilterDepartment] = useState('All');
@@ -145,9 +160,10 @@ export default function Attendance() {
     setLoading(false);
 
     try {
-      const [attRecords, attSettings] = await Promise.all([
+      const [attRecords, attSettings, leaveApps] = await Promise.all([
         getAttendanceRecords(50),
-        getAttendanceSettings()
+        getAttendanceSettings(),
+        getLeaveApplications()
       ]);
 
       if (attRecords && attRecords.length > 0) {
@@ -159,6 +175,10 @@ export default function Attendance() {
       if (attSettings) {
         setSettings(attSettings);
         setSettingsForm(attSettings);
+      }
+
+      if (leaveApps) {
+        setLeaveApplications(leaveApps);
       }
     } catch (err) {
       console.warn("Attendance load note:", err);
@@ -175,6 +195,10 @@ export default function Attendance() {
   const userTodayRecord = records.find(r => r.employeeId === currentUser?.id && r.date === todayStr);
 
   const staffUsers = useMemo(() => users.filter(u => u.role !== 'admin'), [users]);
+
+  const pendingLeavesCount = useMemo(() => {
+    return leaveApplications.filter(l => l.status === 'Pending').length;
+  }, [leaveApplications]);
 
   const employeeStatsMap = useMemo(() => {
     const map = {};
@@ -255,6 +279,53 @@ export default function Attendance() {
       loadData();
     } else {
       showToast(`Failed to reactivate account.`);
+    }
+  };
+
+  const handleApplyForLeave = async (leaveData) => {
+    const res = await applyForLeave(leaveData);
+    if (res.success) {
+      showToast('Leave application submitted successfully for review!');
+      loadData();
+    } else {
+      showToast(res.error || 'Failed to submit leave application.', 'error');
+    }
+    return res;
+  };
+
+  const handleReviewLeaveApplication = async (appOrId, quickStatus = null, customRemarks = '') => {
+    if (quickStatus && typeof appOrId === 'object') {
+      const res = await updateLeaveApplicationStatus(appOrId.id, quickStatus, customRemarks, currentUser);
+      if (res.success) {
+        showToast(`Leave application marked as ${quickStatus}!`);
+        loadData();
+      } else {
+        showToast('Failed to update leave application.', 'error');
+      }
+      return;
+    }
+
+    if (typeof appOrId === 'object') {
+      setSelectedLeaveApp(appOrId);
+      setShowReviewLeaveModal(true);
+    } else if (typeof appOrId === 'string' && quickStatus) {
+      const res = await updateLeaveApplicationStatus(appOrId, quickStatus, customRemarks, currentUser);
+      if (res.success) {
+        showToast(`Leave application marked as ${quickStatus}!`);
+        loadData();
+      } else {
+        showToast('Failed to update leave application.', 'error');
+      }
+    }
+  };
+
+  const handleCancelLeaveApplication = async (applicationId) => {
+    const res = await cancelLeaveApplication(applicationId, currentUser?.id);
+    if (res.success) {
+      showToast('Leave application cancelled.');
+      loadData();
+    } else {
+      showToast('Failed to cancel leave application.', 'error');
     }
   };
 
@@ -482,23 +553,33 @@ export default function Attendance() {
               Attendance Management
             </h1>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-300">
-              Workforce monitoring, automated policy checks, and attendance analytics
+              Workforce monitoring, automated policy checks, leave applications, and attendance analytics
             </p>
           </div>
         </div>
 
-        {isAdmin && (
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
-            onClick={() => {
-              setSelectedRecord(null);
-              setShowAdminModal(true);
-            }}
-            className="py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md flex items-center gap-2 cursor-pointer transition-all active:scale-[0.98]"
+            onClick={() => setShowApplyLeaveModal(true)}
+            className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white text-xs font-black shadow-md shadow-indigo-600/30 flex items-center gap-2 cursor-pointer transition-all active:scale-[0.98]"
           >
-            <Plus className="h-4 w-4 text-white" />
-            <span>Mark Manual Attendance</span>
+            <CalendarRange className="h-4 w-4 text-white" />
+            <span>Apply for Leave</span>
           </button>
-        )}
+
+          {isAdmin && (
+            <button
+              onClick={() => {
+                setSelectedRecord(null);
+                setShowAdminModal(true);
+              }}
+              className="py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white/10 dark:hover:bg-white/20 text-white text-xs font-bold shadow-md flex items-center gap-2 cursor-pointer transition-all active:scale-[0.98] border border-slate-700 dark:border-white/10"
+            >
+              <Plus className="h-4 w-4 text-white" />
+              <span>Mark Manual Attendance</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Tab Controls */}
@@ -507,6 +588,12 @@ export default function Attendance() {
           { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
           { id: 'checkin', label: 'Mark Attendance', icon: Clock },
           { id: 'todays', label: "Today's Attendance", icon: CheckCircle2 },
+          { 
+            id: 'leaves', 
+            label: `Leave Applications${isAdmin && pendingLeavesCount > 0 ? ` (${pendingLeavesCount})` : ''}`, 
+            icon: CalendarRange,
+            hasBadge: isAdmin && pendingLeavesCount > 0
+          },
           { id: 'calendar', label: 'Attendance Calendar', icon: CalendarCheck },
           { id: 'history', label: 'Reports & History', icon: FileText },
           { id: 'warnings', label: `Warnings & Deactivations (${warningsList.length + terminatedList.length})`, icon: ShieldAlert },
@@ -518,7 +605,7 @@ export default function Attendance() {
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer whitespace-nowrap ${
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer whitespace-nowrap relative ${
                 isActive
                   ? 'bg-indigo-600 dark:bg-gradient-to-r dark:from-indigo-600 dark:to-cyan-600 text-white shadow-md border border-indigo-500/50'
                   : 'text-slate-700 dark:text-white/90 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 border border-transparent hover:border-slate-200 dark:hover:border-white/10'
@@ -526,6 +613,9 @@ export default function Attendance() {
             >
               <Icon className="h-4 w-4" />
               <span>{t.label}</span>
+              {t.hasBadge && (
+                <span className="h-2 w-2 rounded-full bg-amber-400 animate-ping absolute top-2 right-2" />
+              )}
             </button>
           );
         })}
@@ -641,6 +731,30 @@ export default function Attendance() {
                     <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block">Total Working Days</span>
                     <span className="text-base font-extrabold text-slate-900 dark:text-white font-mono">{myStats.totalWorkingDays}</span>
                   </div>
+                </div>
+
+                {/* Quick Leave Application Action Banner */}
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-50 via-purple-50 to-white dark:from-indigo-950/40 dark:via-purple-950/20 dark:to-slate-900 border border-indigo-200 dark:border-indigo-800/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-indigo-600 text-white shadow-md">
+                      <CalendarRange className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black text-slate-900 dark:text-white">
+                        Planning Time Off?
+                      </h4>
+                      <p className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                        Submit a leave application with Start & End dates for quick administrative approval.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowApplyLeaveModal(true)}
+                    className="py-2 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold shadow-sm flex items-center gap-2 cursor-pointer transition-all active:scale-[0.98]"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Apply for Leave</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -1005,6 +1119,19 @@ export default function Attendance() {
         </div>
       )}
 
+      {/* LEAVE APPLICATIONS TAB */}
+      {activeTab === 'leaves' && (
+        <LeaveManagementView 
+          currentUser={currentUser}
+          users={users}
+          leaveApplications={leaveApplications}
+          onOpenApplyModal={() => setShowApplyLeaveModal(true)}
+          onReviewApplication={handleReviewLeaveApplication}
+          onCancelApplication={handleCancelLeaveApplication}
+          showToast={showToast}
+        />
+      )}
+
       {/* ATTENDANCE CALENDAR TAB */}
       {activeTab === 'calendar' && (() => {
         const calYear = calendarDate.getFullYear();
@@ -1104,9 +1231,11 @@ export default function Attendance() {
                             ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30'
                             : rec?.status === 'Late'
                               ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30'
-                              : rec?.status === 'Absent'
-                                ? 'bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'
-                                : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10'
+                              : rec?.status === 'Leave' || rec?.status === 'Half Day'
+                                ? 'bg-purple-50 dark:bg-purple-500/10 border-purple-200 dark:border-purple-500/30'
+                                : rec?.status === 'Absent'
+                                  ? 'bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'
+                                  : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10'
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -1127,10 +1256,20 @@ export default function Attendance() {
                     </div>
                     {rec ? (
                       <div className="text-[10px] font-extrabold truncate">
-                        <span className={rec.status === 'Present' ? 'text-emerald-700 dark:text-emerald-300' : rec.status === 'Late' ? 'text-amber-700 dark:text-amber-300' : 'text-rose-700 dark:text-rose-300'}>
+                        <span className={
+                          rec.status === 'Present' 
+                            ? 'text-emerald-700 dark:text-emerald-300' 
+                            : rec.status === 'Late' 
+                              ? 'text-amber-700 dark:text-amber-300' 
+                              : rec.status === 'Leave' || rec.status === 'Half Day'
+                                ? 'text-purple-700 dark:text-purple-300 font-black'
+                                : 'text-rose-700 dark:text-rose-300'
+                        }>
                           {rec.status}
                         </span>
-                        <span className="block font-mono text-[9px] text-slate-500 dark:text-slate-400">{rec.checkInTime}</span>
+                        <span className="block font-mono text-[9px] text-slate-500 dark:text-slate-400">
+                          {rec.status === 'Leave' ? 'Approved Leave' : (rec.checkInTime || '--:--')}
+                        </span>
                       </div>
                     ) : cell.isCurrentMonth ? (
                       <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">--</span>
@@ -1423,6 +1562,26 @@ export default function Attendance() {
         onClose={() => setShowReactivateModal(false)}
         targetUser={targetReactivateUser}
         onReactivate={handleReactivateUser}
+      />
+
+      {/* Leave Application Modal */}
+      <LeaveApplicationModal 
+        isOpen={showApplyLeaveModal}
+        onClose={() => setShowApplyLeaveModal(false)}
+        currentUser={currentUser}
+        users={users}
+        onSubmit={handleApplyForLeave}
+      />
+
+      {/* Admin Leave Review Modal */}
+      <AdminLeaveReviewModal 
+        isOpen={showReviewLeaveModal}
+        onClose={() => {
+          setShowReviewLeaveModal(false);
+          setSelectedLeaveApp(null);
+        }}
+        application={selectedLeaveApp}
+        onReview={handleReviewLeaveApplication}
       />
 
       {/* Centered Global Attendance Notification Modal */}

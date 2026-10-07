@@ -2,6 +2,7 @@ import { supabase } from './database';
 
 // Global In-Memory Fallback Cache for local preview reliability
 let localAttendanceCache = null;
+let localLeaveApplicationsCache = null;
 let localSettingsCache = {
   id: 'GLOBAL_CONFIG',
   officeStartTime: '09:00',
@@ -535,3 +536,345 @@ export const reactivateEmployeeAccount = async (employeeId, adminName) => {
     return { success: false, error: err.message };
   }
 };
+
+// 10. Calculate Leave Days helper
+export const calculateLeaveDays = (startDate, endDate, leaveType = 'Casual Leave') => {
+  if (!startDate || !endDate) return 1;
+  if (leaveType === 'Half-Day Leave') return 0.5;
+
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  if (end < start) return 0;
+
+  const diffTime = Math.abs(end - start);
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  return diffDays;
+};
+
+// 11. Seed dynamic sample leave applications if Supabase table is fresh
+export const seedSampleLeaveApplications = () => {
+  const today = new Date();
+  const sample = [
+    {
+      id: 'LV-SAMPLE-001',
+      employeeId: 'EMP-006',
+      employeeName: 'Pavithraa',
+      department: 'Quality Assurance',
+      role: 'member',
+      leaveType: 'Sick / Medical Leave',
+      startDate: formatLocalDate(new Date(today.getTime() + 86400000 * 3)),
+      endDate: formatLocalDate(new Date(today.getTime() + 86400000 * 4)),
+      totalDays: 2,
+      reason: 'Scheduled medical health checkup and recovery period.',
+      emergencyContact: '+91 98765 43210',
+      handoverTo: 'Siva',
+      status: 'Approved',
+      adminRemarks: 'Approved. Please coordinate with QA lead before leave.',
+      appliedAt: new Date(today.getTime() - 86400000 * 2).toISOString(),
+      reviewedBy: 'Admin',
+      reviewedAt: new Date(today.getTime() - 86400000 * 1).toISOString()
+    },
+    {
+      id: 'LV-SAMPLE-002',
+      employeeId: 'EMP-017',
+      employeeName: 'Logesh',
+      department: 'Engineering',
+      role: 'member',
+      leaveType: 'Casual Leave',
+      startDate: formatLocalDate(new Date(today.getTime() + 86400000 * 6)),
+      endDate: formatLocalDate(new Date(today.getTime() + 86400000 * 8)),
+      totalDays: 3,
+      reason: 'Attending family wedding ceremony out of town.',
+      emergencyContact: '+91 98451 23456',
+      handoverTo: 'Gowrishankar',
+      status: 'Pending',
+      adminRemarks: '',
+      appliedAt: new Date(today.getTime() - 86400000 * 1).toISOString(),
+      reviewedBy: null,
+      reviewedAt: null
+    },
+    {
+      id: 'LV-SAMPLE-003',
+      employeeId: 'EMP-003',
+      employeeName: 'Siva',
+      department: 'Engineering',
+      role: 'member',
+      leaveType: 'Earned / Annual Leave',
+      startDate: formatLocalDate(new Date(today.getTime() + 86400000 * 12)),
+      endDate: formatLocalDate(new Date(today.getTime() + 86400000 * 16)),
+      totalDays: 5,
+      reason: 'Annual family vacation trip to hill station.',
+      emergencyContact: '+91 91234 56780',
+      handoverTo: 'Logesh',
+      status: 'Pending',
+      adminRemarks: '',
+      appliedAt: new Date().toISOString(),
+      reviewedBy: null,
+      reviewedAt: null
+    }
+  ];
+  return sample;
+};
+
+// 12. Get Leave Applications
+export const getLeaveApplications = async (employeeId = null) => {
+  if (!localLeaveApplicationsCache) {
+    try {
+      const saved = localStorage.getItem('nexora_leave_applications_cache');
+      if (saved) localLeaveApplicationsCache = JSON.parse(saved);
+    } catch (e) {}
+  }
+
+  // Fetch Supabase in background
+  const fetchSupabase = async () => {
+    try {
+      let query = supabase
+        .from('leave_applications')
+        .select('*')
+        .order('appliedAt', { ascending: false });
+
+      if (employeeId) {
+        query = query.eq('employeeId', employeeId);
+      }
+
+      const { data, error } = await query;
+      if (!error && data && data.length > 0) {
+        if (!employeeId) {
+          localLeaveApplicationsCache = data;
+          try {
+            localStorage.setItem('nexora_leave_applications_cache', JSON.stringify(data));
+          } catch (e) {}
+        }
+      }
+    } catch (err) {}
+  };
+
+  fetchSupabase();
+
+  if (localLeaveApplicationsCache && localLeaveApplicationsCache.length > 0) {
+    return employeeId 
+      ? localLeaveApplicationsCache.filter(l => l.employeeId === employeeId)
+      : localLeaveApplicationsCache;
+  }
+
+  // Fallback to initial seed if empty
+  if (!localLeaveApplicationsCache) {
+    localLeaveApplicationsCache = seedSampleLeaveApplications();
+    try {
+      localStorage.setItem('nexora_leave_applications_cache', JSON.stringify(localLeaveApplicationsCache));
+    } catch (e) {}
+  }
+
+  return employeeId 
+    ? localLeaveApplicationsCache.filter(l => l.employeeId === employeeId)
+    : localLeaveApplicationsCache;
+};
+
+// 13. Submit Leave Application (Staff / Employee)
+export const applyForLeave = async (applicationData) => {
+  try {
+    const totalDays = calculateLeaveDays(
+      applicationData.startDate, 
+      applicationData.endDate, 
+      applicationData.leaveType
+    );
+
+    const applicationId = `LV-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`;
+    const newApplication = {
+      id: applicationId,
+      employeeId: applicationData.employeeId,
+      employeeName: applicationData.employeeName,
+      department: applicationData.department || 'Engineering',
+      role: applicationData.role || 'member',
+      leaveType: applicationData.leaveType || 'Casual Leave',
+      startDate: applicationData.startDate,
+      endDate: applicationData.endDate,
+      totalDays: totalDays,
+      reason: applicationData.reason,
+      emergencyContact: applicationData.emergencyContact || '',
+      handoverTo: applicationData.handoverTo || '',
+      status: 'Pending',
+      adminRemarks: '',
+      appliedAt: new Date().toISOString(),
+      reviewedBy: null,
+      reviewedAt: null
+    };
+
+    // Insert into Supabase
+    const { data, error } = await supabase
+      .from('leave_applications')
+      .upsert(newApplication)
+      .select()
+      .single();
+
+    // Cache update
+    if (!localLeaveApplicationsCache) localLeaveApplicationsCache = [];
+    localLeaveApplicationsCache.unshift(newApplication);
+    try {
+      localStorage.setItem('nexora_leave_applications_cache', JSON.stringify(localLeaveApplicationsCache));
+    } catch (e) {}
+
+    // Send notification to Admin
+    try {
+      await supabase.from('notifications').insert({
+        id: `NOT-LV-${applicationId}`,
+        userId: 'admin',
+        type: 'leave_request',
+        title: 'New Leave Application Received',
+        message: `${newApplication.employeeName} (${newApplication.employeeId}) applied for ${newApplication.leaveType} from ${newApplication.startDate} to ${newApplication.endDate} (${newApplication.totalDays} day${newApplication.totalDays > 1 ? 's' : ''}).`,
+        date: new Date().toISOString(),
+        read: false
+      });
+    } catch (e) {}
+
+    window.dispatchEvent(new Event('database_updated'));
+    return { success: true, application: data || newApplication };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+};
+
+// 14. Update Leave Application Status (Admin Action: Approve / Reject)
+export const updateLeaveApplicationStatus = async (applicationId, status, adminRemarks = '', adminUser = { name: 'Admin' }) => {
+  try {
+    const adminName = adminUser.name || 'Admin';
+    const nowIso = new Date().toISOString();
+
+    let targetApp = null;
+    if (localLeaveApplicationsCache) {
+      targetApp = localLeaveApplicationsCache.find(l => l.id === applicationId);
+    }
+
+    const updatePayload = {
+      status,
+      adminRemarks,
+      reviewedBy: adminName,
+      reviewedAt: nowIso
+    };
+
+    const { data, error } = await supabase
+      .from('leave_applications')
+      .update(updatePayload)
+      .eq('id', applicationId)
+      .select()
+      .single();
+
+    if (localLeaveApplicationsCache) {
+      const idx = localLeaveApplicationsCache.findIndex(l => l.id === applicationId);
+      if (idx >= 0) {
+        localLeaveApplicationsCache[idx] = {
+          ...localLeaveApplicationsCache[idx],
+          ...updatePayload
+        };
+        targetApp = localLeaveApplicationsCache[idx];
+        try {
+          localStorage.setItem('nexora_leave_applications_cache', JSON.stringify(localLeaveApplicationsCache));
+        } catch (e) {}
+      }
+    }
+
+    // CRITICAL AUTOMATION: If Approved, automatically sync into attendance table for each day in range!
+    if (status === 'Approved' && targetApp) {
+      const start = new Date(targetApp.startDate);
+      const end = new Date(targetApp.endDate);
+      const current = new Date(start);
+
+      while (current <= end) {
+        const dateStr = formatLocalDate(current);
+        const recordId = `ATT-${dateStr}-${targetApp.employeeId}`;
+
+        const leaveAttendanceRecord = {
+          id: recordId,
+          employeeId: targetApp.employeeId,
+          employeeName: targetApp.employeeName,
+          department: targetApp.department || 'Engineering',
+          project: 'Nexora ERP',
+          role: targetApp.role || 'member',
+          date: dateStr,
+          checkInTime: '',
+          checkOutTime: '',
+          status: targetApp.leaveType === 'Half-Day Leave' ? 'Half Day' : 'Leave',
+          remarks: `Approved Leave: ${targetApp.leaveType}${targetApp.reason ? ` - ${targetApp.reason}` : ''}`,
+          markedBy: 'Leave Application',
+          editHistory: [{
+            updatedBy: adminName,
+            updatedAt: nowIso,
+            previousStatus: 'None',
+            newStatus: targetApp.leaveType === 'Half-Day Leave' ? 'Half Day' : 'Leave',
+            reason: `Approved Leave Application (${targetApp.leaveType})`
+          }]
+        };
+
+        // Upsert into Supabase attendance table
+        try {
+          await supabase.from('attendance').upsert(leaveAttendanceRecord);
+        } catch (e) {}
+
+        // Update local attendance cache
+        if (localAttendanceCache) {
+          const aIdx = localAttendanceCache.findIndex(r => r.id === recordId);
+          if (aIdx >= 0) localAttendanceCache[aIdx] = leaveAttendanceRecord;
+          else localAttendanceCache.unshift(leaveAttendanceRecord);
+          try {
+            localStorage.setItem('nexora_attendance_cache', JSON.stringify(localAttendanceCache));
+          } catch (e) {}
+        }
+
+        // Advance to next day
+        current.setDate(current.getDate() + 1);
+      }
+    }
+
+    // Send Notification to Employee
+    if (targetApp) {
+      try {
+        await supabase.from('notifications').insert({
+          id: `NOT-LV-REV-${Date.now()}`,
+          userId: targetApp.employeeId,
+          type: status === 'Approved' ? 'leave_approval' : 'leave_rejection',
+          title: `Leave Application ${status}`,
+          message: status === 'Approved' 
+            ? `Your ${targetApp.leaveType} from ${targetApp.startDate} to ${targetApp.endDate} (${targetApp.totalDays} day${targetApp.totalDays > 1 ? 's' : ''}) has been approved by ${adminName}.`
+            : `Your ${targetApp.leaveType} from ${targetApp.startDate} to ${targetApp.endDate} was rejected by ${adminName}.${adminRemarks ? ` Reason: ${adminRemarks}` : ''}`,
+          date: nowIso,
+          read: false
+        });
+      } catch (e) {}
+    }
+
+    window.dispatchEvent(new Event('database_updated'));
+    return { success: true, application: data || targetApp };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+};
+
+// 15. Cancel Leave Application (Employee Action)
+export const cancelLeaveApplication = async (applicationId, employeeId) => {
+  try {
+    const { data, error } = await supabase
+      .from('leave_applications')
+      .update({ status: 'Cancelled' })
+      .eq('id', applicationId)
+      .eq('employeeId', employeeId)
+      .select()
+      .single();
+
+    if (localLeaveApplicationsCache) {
+      const idx = localLeaveApplicationsCache.findIndex(l => l.id === applicationId);
+      if (idx >= 0) {
+        localLeaveApplicationsCache[idx].status = 'Cancelled';
+        try {
+          localStorage.setItem('nexora_leave_applications_cache', JSON.stringify(localLeaveApplicationsCache));
+        } catch (e) {}
+      }
+    }
+
+    window.dispatchEvent(new Event('database_updated'));
+    return { success: true, application: data };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+};
+
