@@ -63,15 +63,15 @@ export default function AdminAttendanceModal({ isOpen, onClose, users = [], init
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 md:p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="w-full max-w-xl border border-slate-200 dark:border-white/20 rounded-2xl shadow-2xl overflow-hidden bg-white dark:bg-[#0f172a] text-slate-900 dark:text-white"
+          className="w-full max-w-xl max-h-[90vh] flex flex-col border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl overflow-hidden bg-white dark:bg-[#0f172a] text-slate-900 dark:text-white my-auto"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-950/80">
+          <div className="flex-shrink-0 flex items-center justify-between px-6 py-4.5 border-b border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-950/80">
             <div className="flex items-center gap-2 font-black text-base text-slate-900 dark:text-white">
               <ShieldAlert className="h-5 w-5 text-indigo-600 dark:text-[#818cf8]" />
               <span>{initialRecord ? 'Edit Attendance Record' : 'Mark Manual Attendance'}</span>
@@ -84,103 +84,105 @@ export default function AdminAttendanceModal({ isOpen, onClose, users = [], init
             </button>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-4 text-left">
+          {/* Form Container */}
+          <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 overflow-hidden">
             
-            {/* Employee Selection */}
-            <div>
-              <label className="block text-xs font-black mb-1.5 text-slate-700 dark:text-slate-200">
-                Select Employee
-              </label>
-              <select
-                value={employeeId}
-                onChange={(e) => setEmployeeId(e.target.value)}
-                disabled={!!initialRecord}
-                className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-black disabled:opacity-60"
-              >
-                {users.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} ({u.id}) - {u.department || 'Engineering'}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Date & Status Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex-1 p-5 sm:p-6 space-y-4 text-left overflow-y-auto overscroll-contain">
+              {/* Employee Selection */}
               <div>
                 <label className="block text-xs font-black mb-1.5 text-slate-700 dark:text-slate-200">
-                  Date
-                </label>
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-black"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-black mb-1.5 text-slate-700 dark:text-slate-200">
-                  Attendance Status
+                  Select Employee
                 </label>
                 <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-black"
+                  value={employeeId}
+                  onChange={(e) => setEmployeeId(e.target.value)}
+                  disabled={!!initialRecord}
+                  className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-black disabled:opacity-60"
                 >
-                  <option value="Present">Present</option>
-                  <option value="Absent">Absent</option>
-                  <option value="Half Day">Half Day</option>
-                  <option value="Leave">Leave</option>
+                  {users.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name} ({u.id}) - {u.department || 'Engineering'}
+                    </option>
+                  ))}
                 </select>
               </div>
-            </div>
 
-            {/* Timings */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-black mb-1.5 text-slate-700 dark:text-slate-200">
-                  Check-In Time
-                </label>
-                <input
-                  type="time"
-                  value={checkInTime}
-                  onChange={(e) => setCheckInTime(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-mono font-bold"
-                />
+              {/* Date & Status Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-black mb-1.5 text-slate-700 dark:text-slate-200">
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-black"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-black mb-1.5 text-slate-700 dark:text-slate-200">
+                    Attendance Status
+                  </label>
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-black"
+                  >
+                    <option value="Present">Present</option>
+                    <option value="Absent">Absent</option>
+                    <option value="Half Day">Half Day</option>
+                    <option value="Leave">Leave</option>
+                  </select>
+                </div>
               </div>
 
+              {/* Timings */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-black mb-1.5 text-slate-700 dark:text-slate-200">
+                    Check-In Time
+                  </label>
+                  <input
+                    type="time"
+                    value={checkInTime}
+                    onChange={(e) => setCheckInTime(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-mono font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-black mb-1.5 text-slate-700 dark:text-slate-200">
+                    Check-Out Time
+                  </label>
+                  <input
+                    type="time"
+                    value={checkOutTime}
+                    onChange={(e) => setCheckOutTime(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-mono font-bold"
+                  />
+                </div>
+              </div>
+
+              {/* Remarks */}
               <div>
                 <label className="block text-xs font-black mb-1.5 text-slate-700 dark:text-slate-200">
-                  Check-Out Time
+                  Remarks / Reason
                 </label>
                 <input
-                  type="time"
-                  value={checkOutTime}
-                  onChange={(e) => setCheckOutTime(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-mono font-bold"
+                  type="text"
+                  value={remarks}
+                  onChange={(e) => setRemarks(e.target.value)}
+                  placeholder="e.g. Approved leave, Client on-site, Manual correction"
+                  className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-bold"
                 />
               </div>
-            </div>
-
-            {/* Remarks */}
-            <div>
-              <label className="block text-xs font-black mb-1.5 text-slate-700 dark:text-slate-200">
-                Remarks / Reason
-              </label>
-              <input
-                type="text"
-                value={remarks}
-                onChange={(e) => setRemarks(e.target.value)}
-                placeholder="e.g. Approved leave, Client on-site, Manual correction"
-                className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-bold"
-              />
             </div>
 
             {/* Action buttons */}
-            <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-white/10">
+            <div className="flex-shrink-0 px-6 py-4 bg-slate-50/90 dark:bg-slate-900/90 border-t border-slate-100 dark:border-white/10 flex items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={onClose}

@@ -16,12 +16,12 @@ export default function ReactivateUserModal({ isOpen, onClose, targetUser, onRea
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="w-full max-w-md border border-slate-200 dark:border-white/20 rounded-2xl shadow-xl overflow-hidden p-6 space-y-5 text-center bg-white dark:bg-[#0f172a] text-slate-900 dark:text-white"
+          className="w-full max-w-md max-h-[90vh] flex flex-col border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl overflow-hidden p-6 space-y-5 text-center bg-white dark:bg-[#0f172a] text-slate-900 dark:text-white my-auto overflow-y-auto"
         >
           <div className="mx-auto w-14 h-14 rounded-2xl border border-emerald-300 dark:border-emerald-700/60 flex items-center justify-center bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-400 shadow-sm">
             <UserCheck className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />

@@ -1587,13 +1587,13 @@ export default function Attendance() {
       {/* Centered Global Attendance Notification Modal */}
       <AnimatePresence>
         {toast && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md overflow-y-auto">
             <motion.div
               initial={{ scale: 0.85, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.85, opacity: 0, y: 15 }}
               transition={{ type: 'spring', damping: 22, stiffness: 320 }}
-              className={`bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl border-2 flex flex-col items-center text-center space-y-4 relative ${
+              className={`bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl border-2 flex flex-col items-center text-center space-y-4 relative my-auto ${
                 toast.type === 'error' ? 'border-rose-400' : 'border-emerald-500'
               }`}
             >
