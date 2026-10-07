@@ -29,21 +29,21 @@ export default function FaceRecognitionWidget({ currentUser, onScanComplete }) {
   return (
     <div className="flex flex-col items-center justify-center p-6 md:p-8 rounded-3xl border border-slate-200 dark:border-white/15 shadow-xl text-center space-y-6 bg-white dark:bg-white/[0.07] backdrop-blur-2xl relative overflow-hidden">
       
-      {/* Centered In-Widget Notification Overlay */}
+      {/* Centered Global Screen Notification Overlay */}
       <AnimatePresence>
         {scanResult && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md"
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md overflow-y-auto"
           >
             <motion.div
               initial={{ scale: 0.85, opacity: 0, y: 10 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.85, opacity: 0, y: 10 }}
               transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-              className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border-2 border-emerald-500 flex flex-col items-center text-center space-y-5 relative"
+              className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border-2 border-emerald-500 flex flex-col items-center text-center space-y-5 relative max-h-[90vh] overflow-y-auto my-auto"
             >
               <button
                 onClick={() => setScanResult(null)}
