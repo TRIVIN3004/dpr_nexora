@@ -617,12 +617,34 @@ export const seedSampleLeaveApplications = () => {
   return sample;
 };
 
-// 12. Get Leave Applications
+// Helper to remove any duplicate leave applications
+export const deduplicateLeaveApplications = (apps = []) => {
+  if (!Array.isArray(apps)) return [];
+  const seenIds = new Set();
+  const seenKeys = new Set();
+  const unique = [];
+
+  for (const app of apps) {
+    if (!app || !app.id) continue;
+    // Composite key to catch identical submissions
+    const key = `${app.employeeId}_${app.startDate}_${app.endDate}_${app.leaveType}_${app.status}`;
+    if (!seenIds.has(app.id) && !seenKeys.has(key)) {
+      seenIds.add(app.id);
+      seenKeys.add(key);
+      unique.push(app);
+    }
+  }
+  return unique;
+};
+
+// 12. Get Leave Applications (With Automatic Deduplication)
 export const getLeaveApplications = async (employeeId = null) => {
   if (!localLeaveApplicationsCache) {
     try {
       const saved = localStorage.getItem('nexora_leave_applications_cache');
-      if (saved) localLeaveApplicationsCache = JSON.parse(saved);
+      if (saved) {
+        localLeaveApplicationsCache = deduplicateLeaveApplications(JSON.parse(saved));
+      }
     } catch (e) {}
   }
 
@@ -640,10 +662,11 @@ export const getLeaveApplications = async (employeeId = null) => {
 
       const { data, error } = await query;
       if (!error && data && data.length > 0) {
+        const cleaned = deduplicateLeaveApplications(data);
         if (!employeeId) {
-          localLeaveApplicationsCache = data;
+          localLeaveApplicationsCache = cleaned;
           try {
-            localStorage.setItem('nexora_leave_applications_cache', JSON.stringify(data));
+            localStorage.setItem('nexora_leave_applications_cache', JSON.stringify(cleaned));
           } catch (e) {}
         }
       }
@@ -653,14 +676,16 @@ export const getLeaveApplications = async (employeeId = null) => {
   fetchSupabase();
 
   if (localLeaveApplicationsCache && localLeaveApplicationsCache.length > 0) {
+    const deduplicated = deduplicateLeaveApplications(localLeaveApplicationsCache);
+    localLeaveApplicationsCache = deduplicated;
     return employeeId 
-      ? localLeaveApplicationsCache.filter(l => l.employeeId === employeeId)
-      : localLeaveApplicationsCache;
+      ? deduplicated.filter(l => l.employeeId === employeeId)
+      : deduplicated;
   }
 
   // Fallback to initial seed if empty
-  if (!localLeaveApplicationsCache) {
-    localLeaveApplicationsCache = seedSampleLeaveApplications();
+  if (!localLeaveApplicationsCache || localLeaveApplicationsCache.length === 0) {
+    localLeaveApplicationsCache = deduplicateLeaveApplications(seedSampleLeaveApplications());
     try {
       localStorage.setItem('nexora_leave_applications_cache', JSON.stringify(localLeaveApplicationsCache));
     } catch (e) {}
@@ -671,7 +696,7 @@ export const getLeaveApplications = async (employeeId = null) => {
     : localLeaveApplicationsCache;
 };
 
-// 13. Submit Leave Application (Staff / Employee)
+// 13. Submit Leave Application (Staff / Employee with Duplicate Prevention)
 export const applyForLeave = async (applicationData) => {
   try {
     const totalDays = calculateLeaveDays(
@@ -679,6 +704,20 @@ export const applyForLeave = async (applicationData) => {
       applicationData.endDate, 
       applicationData.leaveType
     );
+
+    // Prevent duplicate pending applications for the same employee and overlapping dates
+    if (localLeaveApplicationsCache && localLeaveApplicationsCache.length > 0) {
+      const isDuplicate = localLeaveApplicationsCache.some(
+        app => app.employeeId === applicationData.employeeId &&
+               app.startDate === applicationData.startDate &&
+               app.endDate === applicationData.endDate &&
+               app.status === 'Pending'
+      );
+
+      if (isDuplicate) {
+        return { success: false, error: 'A pending leave application already exists for this date range.' };
+      }
+    }
 
     const applicationId = `LV-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`;
     const newApplication = {
@@ -708,9 +747,9 @@ export const applyForLeave = async (applicationData) => {
       .select()
       .single();
 
-    // Cache update
+    // Cache update with deduplication
     if (!localLeaveApplicationsCache) localLeaveApplicationsCache = [];
-    localLeaveApplicationsCache.unshift(newApplication);
+    localLeaveApplicationsCache = deduplicateLeaveApplications([newApplication, ...localLeaveApplicationsCache]);
     try {
       localStorage.setItem('nexora_leave_applications_cache', JSON.stringify(localLeaveApplicationsCache));
     } catch (e) {}
