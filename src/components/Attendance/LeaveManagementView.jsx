@@ -14,8 +14,7 @@ import {
   X, 
   Briefcase
 } from 'lucide-react';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { exportLeaveApplicationsPDF } from '../../utils/pdfExportTemplates';
 import * as XLSX from 'xlsx';
 import AttendanceStatCard from './AttendanceStatCard';
 import { getTodayString } from '../../utils/attendanceDatabase';
@@ -136,35 +135,16 @@ export default function LeaveManagementView({
 
   // Export PDF
   const exportPDF = () => {
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text('Nexora Tech - Leave Applications Report', 14, 20);
-    doc.setFontSize(10);
-    doc.text(`Generated Date: ${new Date().toLocaleString()} | Total Records: ${filteredList.length}`, 14, 28);
-
-    const tableColumn = ["ID", "Employee", "Type", "Start Date", "End Date", "Days", "Status", "Reason"];
-    const tableRows = filteredList.map(l => [
-      l.id,
-      `${l.employeeName} (${l.employeeId})`,
-      l.leaveType,
-      l.startDate,
-      l.endDate,
-      `${l.totalDays}d`,
-      l.status,
-      l.reason || 'N/A'
-    ]);
-
-    doc.autoTable({
-      head: [tableColumn],
-      body: tableRows,
-      startY: 34,
-      theme: 'grid',
-      headStyles: { fillColor: [79, 70, 229] },
-      styles: { fontSize: 8 }
-    });
-
-    doc.save(`Leave_Applications_${todayStr}.pdf`);
-    showToast('Leave Report PDF downloaded!');
+    try {
+      exportLeaveApplicationsPDF({
+        applications: filteredList,
+        todayStr
+      });
+      showToast('Leave Report PDF downloaded successfully!');
+    } catch (err) {
+      console.error('Error generating Leaves PDF:', err);
+      showToast('Error generating PDF export');
+    }
   };
 
   // Export Excel

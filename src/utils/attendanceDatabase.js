@@ -405,6 +405,18 @@ export const calculateEmployeeStats = (employeeId, records = [], settings = loca
     else if (r.status === 'Half Day') halfDays++;
   });
 
+  // 7:00 PM Daily Cutoff Check:
+  // If current local time is at or after 19:00 (7 PM) on a working day (not Sunday),
+  // and employee has not logged check-in or approved leave, count as absent to reduce percentage
+  const now = new Date();
+  const isPast7PM = now.getHours() >= 19;
+  const isTodaySunday = new Date(todayStr + 'T00:00:00').getDay() === 0;
+  const hasTodayRecord = empRecords.some(r => r.date === todayStr);
+
+  if (isPast7PM && !isTodaySunday && !hasTodayRecord) {
+    absentDays++;
+  }
+
   const totalWorkingDays = Math.max(1, presentDays + lateDays + absentDays + halfDays);
   const effectivePresent = (presentDays + lateDays) + (halfDays * 0.5);
 
@@ -429,7 +441,7 @@ export const calculateEmployeeStats = (employeeId, records = [], settings = loca
   }
 
   return {
-    totalWorkingDays: empRecords.length,
+    totalWorkingDays: empRecords.length + (isPast7PM && !isTodaySunday && !hasTodayRecord ? 1 : 0),
     presentDays: presentDays + lateDays,
     lateDays,
     absentDays,
@@ -438,6 +450,116 @@ export const calculateEmployeeStats = (employeeId, records = [], settings = loca
     attendancePct,
     indicator
   };
+};
+
+// 7.5. Automated Evening Absenteeism Processor (7:00 PM Daily Cutoff)
+export const autoMarkEveningAbsences = async (users = [], existingRecords = []) => {
+  const now = new Date();
+  const currentHour = now.getHours();
+  const isPast7PM = currentHour >= 19; // 7:00 PM cutoff
+
+  const todayStr = getTodayString();
+  const isTodaySunday = new Date(todayStr + 'T00:00:00').getDay() === 0;
+
+  // Cutoff only applies at or after 7:00 PM and never on Sundays (Weekly Holiday)
+  if (!isPast7PM || isTodaySunday) {
+    return { processed: false, count: 0, newRecords: [] };
+  }
+
+  const staffUsers = users.filter(u => u.role !== 'admin' && u.status !== 'Terminated' && !u.isTerminated);
+  if (staffUsers.length === 0) {
+    return { processed: false, count: 0, newRecords: [] };
+  }
+
+  const recordsToUpsert = [];
+  const notificationsToInsert = [];
+
+  for (const staff of staffUsers) {
+    const rec = existingRecords.find(r => r.employeeId === staff.id && r.date === todayStr);
+
+    // If attendance is already marked (Present, Late, Leave, Half Day, Holiday), do not overwrite
+    if (rec) {
+      if (
+        rec.status === 'Present' ||
+        rec.status === 'Late' ||
+        rec.status === 'Leave' ||
+        rec.status === 'Half Day' ||
+        rec.status === 'Holiday'
+      ) {
+        continue;
+      }
+      // If already marked as Absent today, avoid redundant updates
+      if (rec.status === 'Absent') {
+        continue;
+      }
+    }
+
+    const absentRecord = {
+      id: `ATT-${todayStr}-${staff.id}`,
+      employeeId: staff.id,
+      employeeName: staff.name,
+      department: staff.department || 'Engineering',
+      project: (staff.assignedProjects && staff.assignedProjects[0]) || 'Nexora ERP',
+      role: staff.role || 'member',
+      date: todayStr,
+      checkInTime: '',
+      checkOutTime: '',
+      status: 'Absent',
+      remarks: 'Auto-Marked Absent: No check-in or leave recorded by 7:00 PM cutoff',
+      markedBy: 'System Auto-Cutoff (7:00 PM)',
+      editHistory: []
+    };
+
+    recordsToUpsert.push(absentRecord);
+
+    notificationsToInsert.push({
+      id: `NOT-ABS-${todayStr}-${staff.id}`,
+      userId: staff.id,
+      type: 'attendance_cutoff',
+      title: 'Marked Absent (7:00 PM Cutoff)',
+      message: `You were marked absent for ${todayStr} because no check-in or leave was logged before 7:00 PM. Your attendance percentage has been updated.`,
+      date: new Date().toISOString(),
+      read: false
+    });
+  }
+
+  if (recordsToUpsert.length === 0) {
+    return { processed: false, count: 0, newRecords: [] };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('attendance')
+      .upsert(recordsToUpsert)
+      .select();
+
+    if (error) {
+      console.warn('Auto-mark absent upsert note:', error.message);
+    }
+
+    try {
+      await supabase.from('notifications').insert(notificationsToInsert);
+    } catch (e) {
+      // ignore duplicate notification error
+    }
+
+    if (!localAttendanceCache) localAttendanceCache = [];
+    recordsToUpsert.forEach(rec => {
+      const idx = localAttendanceCache.findIndex(r => r.id === rec.id);
+      if (idx >= 0) localAttendanceCache[idx] = rec;
+      else localAttendanceCache.unshift(rec);
+    });
+
+    try {
+      localStorage.setItem('nexora_attendance_cache', JSON.stringify(localAttendanceCache));
+    } catch (e) {}
+
+    window.dispatchEvent(new Event('database_updated'));
+    return { processed: true, count: recordsToUpsert.length, newRecords: recordsToUpsert };
+  } catch (err) {
+    console.error('autoMarkEveningAbsences error:', err);
+    return { processed: false, count: 0, newRecords: [] };
+  }
 };
 
 // 8. Policy Evaluation Engine (Auto Warnings & Terminations)

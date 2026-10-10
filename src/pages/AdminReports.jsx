@@ -20,8 +20,7 @@ import {
 } from 'lucide-react';
 import ReportModal from '../components/ReportModal';
 import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { exportDPRRegistryPDF } from '../utils/pdfExportTemplates';
 
 import { useDatabaseStore } from '../context/DatabaseContext';
 
@@ -140,74 +139,17 @@ export default function AdminReports({ searchFilter }) {
 
   // Export to PDF using jsPDF Autotable
   const handleExportPDF = () => {
-    const doc = new jsPDF('l', 'mm', 'a4'); // landscape
-    
-    // Branding title
-    doc.setFillColor(3, 7, 18);
-    doc.rect(0, 0, 297, 210, 'F');
-    
-    doc.setFont("Helvetica", "bold");
-    doc.setTextColor(59, 130, 246);
-    doc.setFontSize(22);
-    doc.text("NEXORA TECHNOLOGIES", 15, 20);
-    
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(12);
-    doc.text("DAILY PROGRESS REPORT REGISTRY", 15, 28);
-    
-    doc.setFontSize(9);
-    doc.setTextColor(140, 150, 170);
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 15, 33);
-    doc.text(`Total Records Listed: ${filteredReports.length}`, 15, 38);
-
-    doc.setDrawColor(40, 50, 70);
-    doc.line(15, 42, 282, 42);
-
-    // Columns config
-    const tableHeaders = [["ID", "Date", "Employee", "Project", "Module", "Hours", "%", "Task", "Status"]];
-    const tableRows = filteredReports.map(r => [
-      r.id,
-      r.date,
-      r.employeeName,
-      r.projectName,
-      r.moduleName || "-",
-      `${r.hoursWorked} hrs`,
-      `${r.percentageCompleted}%`,
-      r.taskCompletedToday.slice(0, 45) + (r.taskCompletedToday.length > 45 ? "..." : ""),
-      r.status
-    ]);
-
-    doc.autoTable({
-      startY: 48,
-      head: tableHeaders,
-      body: tableRows,
-      theme: 'grid',
-      styles: {
-        fillColor: [15, 23, 42],
-        textColor: [220, 225, 235],
-        lineColor: [40, 50, 75],
-        fontSize: 8.5
-      },
-      headStyles: {
-        fillColor: [30, 41, 59],
-        textColor: [255, 255, 255],
-        fontStyle: 'bold'
-      },
-      columnStyles: {
-        0: { width: 18 },
-        1: { width: 22 },
-        2: { width: 35 },
-        3: { width: 35 },
-        4: { width: 30 },
-        5: { width: 18 },
-        6: { width: 12 },
-        7: { width: 85 },
-        8: { width: 20 }
-      }
-    });
-
-    doc.save(`Nexora_DPR_Registry_${new Date().toISOString().split('T')[0]}.pdf`);
-    triggerToast("PDF generated successfully!");
+    try {
+      const todayStr = new Date().toISOString().split('T')[0];
+      exportDPRRegistryPDF({
+        reports: filteredReports,
+        dateStr: todayStr
+      });
+      triggerToast("PDF generated successfully!");
+    } catch (err) {
+      console.error('Error exporting DPR Registry PDF:', err);
+      triggerToast("Error exporting PDF report");
+    }
   };
 
   const statusBadges = {

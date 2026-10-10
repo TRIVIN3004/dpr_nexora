@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Calendar, User, Briefcase, Clock, Percent, AlertCircle, FileText, CheckCircle2, XCircle, Edit, Download } from 'lucide-react';
 import { reviewReportStatus, getReportDetails } from '../utils/database';
 import { motion, AnimatePresence } from 'framer-motion';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { exportIndividualDPRPDF } from '../utils/pdfExportTemplates';
 
 export default function ReportModal({ report: initialReport, isOpen, onClose, currentUser, onActionSuccess }) {
   const [fullReport, setFullReport] = useState(initialReport);
@@ -66,79 +65,12 @@ export default function ReportModal({ report: initialReport, isOpen, onClose, cu
   };
 
   const handleSingleExportPDF = () => {
-    const doc = new jsPDF();
-    
-    // Branding
-    doc.setFillColor(3, 7, 18);
-    doc.rect(0, 0, 210, 297, 'F');
-    
-    doc.setTextColor(59, 130, 246);
-    doc.setFontSize(22);
-    doc.text("NEXORA TECHNOLOGIES", 15, 25);
-    
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(12);
-    doc.text("DAILY PROGRESS REPORT", 15, 33);
-    
-    doc.setDrawColor(40, 50, 70);
-    doc.line(15, 38, 195, 38);
-    
-    // Metadata block
-    doc.setFontSize(10);
-    doc.setTextColor(160, 170, 190);
-    doc.text(`Report ID: ${report.id}`, 15, 48);
-    doc.text(`Submission Date: ${report.date}`, 15, 54);
-    
-    doc.text(`Employee Name: ${report.employeeName}`, 120, 48);
-    doc.text(`Employee ID: ${report.employeeId}`, 120, 54);
-    
-    doc.line(15, 62, 195, 62);
-    
-    // Detailed Table info
-    const reportData = [
-      ["Project Name", report.projectName],
-      ["Module Name", report.moduleName],
-      ["Assigned Task", report.taskAssigned],
-      ["Task Completed Today", report.taskCompletedToday],
-      ["Hours Worked", `${report.hoursWorked} hrs`],
-      ["Completion Percentage", `${report.percentageCompleted}%`],
-      ["Work Status", report.workStatus],
-      ["Challenges Faced", report.challengesFaced || "None"],
-      ["Tomorrow's Plan", report.tomorrowPlan || "N/A"],
-      ["Status Summary", report.status],
-      ["Manager Feedback", report.feedback || "None"]
-    ];
-    
-    doc.autoTable({
-      startY: 70,
-      head: [["Field", "Details"]],
-      body: reportData,
-      theme: 'grid',
-      styles: {
-        fillColor: [15, 23, 42],
-        textColor: [220, 225, 235],
-        lineColor: [40, 50, 75],
-        fontSize: 10
-      },
-      headStyles: {
-        fillColor: [30, 41, 59],
-        textColor: [255, 255, 255]
-      },
-      columnStyles: {
-        0: { fontStyle: 'bold', width: 50 },
-        1: { width: 130 }
-      }
-    });
-
-    // Signature line
-    const finalY = doc.previousAutoTable.finalY + 30;
-    doc.line(15, finalY, 70, finalY);
-    doc.text("Employee Signature", 15, finalY + 5);
-    
-    doc.line(130, finalY, 185, finalY);
-    doc.text("Manager Signature", 130, finalY + 5);
-    
-    doc.save(`NexoraDPR_${report.employeeName.replace(/\s+/g, '_')}_${report.date}.pdf`);
+    if (!report) return;
+    try {
+      exportIndividualDPRPDF({ report });
+    } catch (err) {
+      console.error('Error generating Single DPR PDF:', err);
+    }
   };
 
   return (

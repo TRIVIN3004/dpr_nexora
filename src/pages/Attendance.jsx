@@ -30,8 +30,7 @@ import {
   CalendarDays
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { exportTodayAttendancePDF, exportAttendanceHistoryPDF } from '../utils/pdfExportTemplates';
 import * as XLSX from 'xlsx';
 
 import AttendanceStatCard from '../components/Attendance/AttendanceStatCard';
@@ -61,7 +60,8 @@ import {
   getLeaveApplications,
   applyForLeave,
   updateLeaveApplicationStatus,
-  cancelLeaveApplication
+  cancelLeaveApplication,
+  autoMarkEveningAbsences
 } from '../utils/attendanceDatabase';
 
 // Chart.js imports
@@ -181,6 +181,25 @@ export default function Attendance() {
       if (leaveApps) {
         setLeaveApplications(leaveApps);
       }
+
+      // Automated 7:00 PM cutoff evaluation
+      const currentUsers = (dbUsers && dbUsers.length > 0) ? dbUsers : users;
+      const currentRecords = (attRecords && attRecords.length > 0) ? attRecords : (dbAttendance || []);
+      if (currentUsers.length > 0) {
+        const cutoffRes = await autoMarkEveningAbsences(currentUsers, currentRecords);
+        if (cutoffRes.processed && cutoffRes.newRecords?.length > 0) {
+          setRecords(prev => {
+            const next = [...prev];
+            cutoffRes.newRecords.forEach(nr => {
+              const idx = next.findIndex(r => r.id === nr.id);
+              if (idx >= 0) next[idx] = nr;
+              else next.unshift(nr);
+            });
+            return next;
+          });
+          invalidateStore('attendance');
+        }
+      }
     } catch (err) {
       console.warn("Attendance load note:", err);
     }
@@ -188,6 +207,29 @@ export default function Attendance() {
 
   useEffect(() => {
     loadData();
+
+    // Background 1-minute ticker for 7:00 PM daily cutoff
+    const ticker = setInterval(() => {
+      const now = new Date();
+      if (now.getHours() >= 19 && now.getDay() !== 0) {
+        autoMarkEveningAbsences(users, records).then(res => {
+          if (res.processed && res.newRecords?.length > 0) {
+            setRecords(prev => {
+              const next = [...prev];
+              res.newRecords.forEach(nr => {
+                const idx = next.findIndex(r => r.id === nr.id);
+                if (idx >= 0) next[idx] = nr;
+                else next.unshift(nr);
+              });
+              return next;
+            });
+            invalidateStore('attendance');
+          }
+        });
+      }
+    }, 60000);
+
+    return () => clearInterval(ticker);
   }, [dbUsers, dbProjects, dbAttendance]);
 
   const isAdmin = currentUser?.role === 'admin';
@@ -210,6 +252,7 @@ export default function Attendance() {
   }, [users, records, settings]);
 
   const isTodaySunday = new Date(todayStr + 'T00:00:00').getDay() === 0;
+  const isPast7PM = new Date().getHours() >= 19;
   const todayRecords = records.filter(r => r.date === todayStr);
   const presentTodayCount = todayRecords.filter(r => r.status === 'Present' || r.status === 'Late').length;
   const lateTodayCount = todayRecords.filter(r => r.status === 'Late').length;
@@ -378,35 +421,18 @@ export default function Attendance() {
   };
 
   const exportPDF = () => {
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text('Nexora Tech - Attendance Management Report', 14, 20);
-    doc.setFontSize(10);
-    doc.text(`Generated Date: ${new Date().toLocaleString()} | Total Records: ${filteredHistory.length}`, 14, 28);
-
-    const tableColumn = ["Date", "Employee ID", "Name", "Department", "Project", "In Time", "Out Time", "Status"];
-    const tableRows = filteredHistory.map(r => [
-      r.date,
-      r.employeeId,
-      r.employeeName,
-      r.department || 'N/A',
-      r.project || 'N/A',
-      r.checkInTime || '--:--',
-      r.checkOutTime || '--:--',
-      r.status
-    ]);
-
-    doc.autoTable({
-      head: [tableColumn],
-      body: tableRows,
-      startY: 34,
-      theme: 'grid',
-      headStyles: { fillColor: [79, 70, 229] },
-      styles: { fontSize: 8 }
-    });
-
-    doc.save(`Attendance_Report_${getTodayString()}.pdf`);
-    showToast('PDF Export downloaded!');
+    try {
+      const filterSummary = `Dept: ${filterDept} | Project: ${filterProject} | Status: ${filterStatus}`;
+      exportAttendanceHistoryPDF({
+        records: filteredHistory,
+        todayStr: getTodayString(),
+        filterSummary
+      });
+      showToast('Attendance History PDF downloaded successfully!');
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      showToast('Error generating PDF export');
+    }
   };
 
   const exportExcel = () => {
@@ -434,15 +460,15 @@ export default function Attendance() {
   const getTodayCategoryData = (categoryType) => {
     return users.map(u => {
       const r = records.find(rec => rec.employeeId === u.id && rec.date === todayStr);
-      let calculatedStatus = isTodaySunday ? 'Sunday (Holiday)' : 'Absent';
+      let calculatedStatus = isTodaySunday ? 'Sunday (Holiday)' : (isPast7PM ? 'Absent' : 'Pending Check-In');
       if (r?.status === 'Present' || r?.status === 'Late') {
         calculatedStatus = 'Present';
       } else if (r?.status === 'Leave' || r?.status === 'Half Day') {
         calculatedStatus = 'Leave';
       } else if (r?.status === 'Absent') {
         calculatedStatus = isTodaySunday ? 'Sunday (Holiday)' : 'Absent';
-      } else {
-        calculatedStatus = isTodaySunday ? 'Sunday (Holiday)' : 'Not Marked (Absent)';
+      } else if (isPast7PM && !isTodaySunday) {
+        calculatedStatus = 'Absent';
       }
 
       return {
@@ -452,44 +478,27 @@ export default function Attendance() {
       };
     }).filter(item => {
       if (categoryType === 'present') return item.status === 'Present';
-      if (categoryType === 'absent') return !isTodaySunday && (item.status === 'Absent' || item.status === 'Not Marked (Absent)');
+      if (categoryType === 'absent') return !isTodaySunday && (item.status === 'Absent' || (isPast7PM && item.status.includes('Absent')));
       if (categoryType === 'leave') return item.status === 'Leave';
       return true;
     });
   };
 
   const exportTodayPDF = (categoryType) => {
-    const list = getTodayCategoryData(categoryType);
-    const doc = new jsPDF();
-    const categoryTitle = categoryType === 'present' ? 'Present Employees' : categoryType === 'absent' ? 'Absent Employees' : categoryType === 'leave' ? 'On-Leave Employees' : 'Complete Roster';
-    
-    doc.setFontSize(18);
-    doc.text(`Nexora Tech - Today's ${categoryTitle}`, 14, 20);
-    doc.setFontSize(10);
-    doc.text(`Date: ${todayStr} | Total Listed: ${list.length}`, 14, 28);
-
-    const tableColumn = ["Emp ID", "Name", "Department", "Assigned Project", "In Time", "Out Time", "Status"];
-    const tableRows = list.map(item => [
-      item.user.id,
-      item.user.name,
-      item.user.department || 'Engineering',
-      (item.user.assignedProjects && item.user.assignedProjects[0]) || 'Nexora ERP',
-      item.record?.checkInTime || '--:--',
-      item.record?.checkOutTime || '--:--',
-      item.status
-    ]);
-
-    doc.autoTable({
-      head: [tableColumn],
-      body: tableRows,
-      startY: 34,
-      theme: 'grid',
-      headStyles: { fillColor: categoryType === 'present' ? [5, 150, 105] : categoryType === 'absent' ? [225, 29, 72] : [79, 70, 229] },
-      styles: { fontSize: 8 }
-    });
-
-    doc.save(`Today_${categoryTitle}_${todayStr}.pdf`);
-    showToast(`Today's ${categoryTitle} PDF downloaded!`);
+    try {
+      const list = getTodayCategoryData(categoryType);
+      exportTodayAttendancePDF({
+        list,
+        categoryType,
+        todayStr,
+        staffTotal: staffUsers.length,
+        isSunday: isTodaySunday
+      });
+      showToast("Today's Attendance PDF generated successfully!");
+    } catch (err) {
+      console.error('Error generating Today Attendance PDF:', err);
+      showToast('Error generating PDF export');
+    }
   };
 
   const exportTodayExcel = (categoryType) => {
@@ -1135,17 +1144,27 @@ export default function Attendance() {
                           <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold border bg-purple-100 dark:bg-purple-500/20 text-purple-800 dark:text-purple-300 border-purple-300 dark:border-purple-500/40">
                             {r.status === 'Half Day' ? 'Half Day' : 'On Leave'}
                           </span>
+                        ) : r?.status === 'Absent' ? (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold border bg-rose-100 dark:bg-rose-500/20 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-500/40">
+                            Absent (7 PM Cutoff)
+                          </span>
                         ) : isTodaySunday ? (
                           <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold border bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-800">
                             Sunday (Holiday)
                           </span>
+                        ) : isPast7PM ? (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold border bg-rose-100 dark:bg-rose-500/20 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-500/40">
+                            Absent (7 PM Cutoff)
+                          </span>
                         ) : (
                           <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold border bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700">
-                            Not Marked
+                            Pending Check-In
                           </span>
                         )}
                       </td>
-                      <td className="p-3.5 font-medium truncate max-w-xs text-slate-600 dark:text-slate-400">{r?.remarks || 'N/A'}</td>
+                      <td className="p-3.5 font-medium truncate max-w-xs text-slate-600 dark:text-slate-400">
+                        {r?.remarks || (isPast7PM && !isTodaySunday ? 'Auto-Marked Absent (7:00 PM cutoff)' : 'N/A')}
+                      </td>
                       {isAdmin && (
                         <td className="p-3.5 text-right">
                           <button

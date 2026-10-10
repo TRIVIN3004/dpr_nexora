@@ -316,10 +316,15 @@ export default function CheckInWidget({ currentUser, todayRecord, settings, onCh
                 <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
                 <span>Weekly Holiday (Sunday)</span>
               </div>
+            ) : new Date().getHours() >= 19 ? (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-200 dark:border-rose-800/60 bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 font-extrabold">
+                <span className="h-2 w-2 rounded-full bg-rose-500" />
+                <span>7:00 PM Daily Cutoff Passed</span>
+              </div>
             ) : (
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 font-extrabold">
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span>Flexible Entry Allowed</span>
+                <span>Flexible Entry (Cutoff at 7:00 PM)</span>
               </div>
             )}
           </div>
@@ -331,7 +336,11 @@ export default function CheckInWidget({ currentUser, todayRecord, settings, onCh
             <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
               Today's Attendance Status
             </span>
-            {todayRecord ? (
+            {todayRecord?.status === 'Absent' ? (
+              <span className="text-xs font-black px-3 py-1 rounded-full border bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-800">
+                Marked Absent (7 PM Cutoff)
+              </span>
+            ) : todayRecord ? (
               <span className="text-xs font-black px-3 py-1 rounded-full border bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/40">
                 {todayRecord.status === 'Late' ? 'Present' : (todayRecord.status || 'Present')}
               </span>
@@ -339,9 +348,13 @@ export default function CheckInWidget({ currentUser, todayRecord, settings, onCh
               <span className="text-xs font-black px-3 py-1 rounded-full border bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-800">
                 Sunday (Holiday)
               </span>
+            ) : new Date().getHours() >= 19 ? (
+              <span className="text-xs font-black px-3 py-1 rounded-full border bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-800">
+                Marked Absent (7 PM Cutoff)
+              </span>
             ) : (
               <span className="text-xs font-bold px-3 py-1 rounded-full border bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700">
-                Not Marked
+                Not Marked (Pending)
               </span>
             )}
           </div>
