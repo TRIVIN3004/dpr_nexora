@@ -30,7 +30,7 @@ import {
   CalendarDays
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { exportTodayAttendancePDF, exportAttendanceHistoryPDF } from '../utils/pdfExportTemplates';
+import { exportTodayAttendancePDF, exportAttendanceHistoryPDF, exportWorkforceAttendancePercentagesPDF } from '../utils/pdfExportTemplates';
 import * as XLSX from 'xlsx';
 
 import AttendanceStatCard from '../components/Attendance/AttendanceStatCard';
@@ -573,6 +573,25 @@ export default function Attendance() {
     showToast("Workforce attendance percentages exported successfully!");
   };
 
+  const exportRankingsPDF = () => {
+    try {
+      exportWorkforceAttendancePercentagesPDF({
+        rankings: staffAttendanceRankings,
+        todayStr,
+        staffTotal: staffUsers.length,
+        appliedFilters: {
+          department: rateFilterDept,
+          search: rateSearchTerm,
+          sortBy: rateSortBy
+        }
+      });
+      showToast("Workforce Attendance % PDF report downloaded successfully!");
+    } catch (err) {
+      console.error("PDF generation error:", err);
+      showToast("Failed to generate Attendance % PDF export", "error");
+    }
+  };
+
   const monthlyChartData = {
     labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
     datasets: [
@@ -1009,10 +1028,20 @@ export default function Attendance() {
                   </span>
                   <button
                     type="button"
-                    onClick={exportRankingsExcel}
-                    className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                    onClick={exportRankingsPDF}
+                    className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-black flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                    title="Download Workforce Attendance Percentage Report as PDF"
                   >
-                    <Download className="h-3.5 w-3.5" />
+                    <FileText className="h-3.5 w-3.5" />
+                    <span>Export PDF</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={exportRankingsExcel}
+                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                    title="Download Workforce Attendance Percentage Report as Excel spreadsheet"
+                  >
+                    <FileSpreadsheet className="h-3.5 w-3.5" />
                     <span>Export Excel</span>
                   </button>
                 </div>

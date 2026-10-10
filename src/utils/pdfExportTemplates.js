@@ -701,3 +701,181 @@ export const exportIndividualDPRPDF = ({ report }) => {
   doc.save(`Nexora_DPR_${cleanName}_${report.date}.pdf`);
   return true;
 };
+
+/**
+ * TEMPLATE 5: Workforce Attendance Percentages & Compliance Audit Report
+ * Full individual breakdown of staff attendance rate, working days, absences, leaves, and policy standing.
+ */
+export const exportWorkforceAttendancePercentagesPDF = ({
+  rankings = [],
+  todayStr,
+  staffTotal,
+  appliedFilters = {}
+}) => {
+  const doc = new jsPDF('p', 'mm', 'a4');
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const themeColor = [79, 70, 229]; // indigo-600
+
+  // 1. Corporate Header
+  addCorporateHeader(doc, {
+    title: 'Workforce Attendance & Compliance Performance Report',
+    subtitle: `Cumulative attendance percentage audit, working days breakdown, and policy compliance standing as of ${todayStr}`,
+    documentRef: `ATT-PCT-${todayStr ? todayStr.replace(/-/g, '') : 'AUDIT'}`,
+    categoryColor: themeColor
+  });
+
+  // 2. Calculations for Summary Box
+  const totalEvaluated = rankings.length;
+  const compliantCount = rankings.filter(r => (r.stats.attendancePct ?? 100) >= 75).length;
+  const warningCount = rankings.filter(r => (r.stats.attendancePct ?? 100) < 75 && (r.stats.attendancePct ?? 100) >= 50).length;
+  const criticalCount = rankings.filter(r => (r.stats.attendancePct ?? 100) < 50).length;
+  
+  const avgPct = totalEvaluated > 0
+    ? Math.round(rankings.reduce((acc, curr) => acc + (curr.stats.attendancePct ?? 100), 0) / totalEvaluated)
+    : 100;
+
+  // 3. Summary KPI Box
+  const summaryBoxY = 40;
+  doc.setFillColor(248, 250, 252); // slate-50
+  doc.setDrawColor(226, 232, 240); // slate-200
+  doc.roundedRect(14, summaryBoxY, pageWidth - 28, 16, 2, 2, 'FD');
+
+  const colWidth = (pageWidth - 28) / 5;
+
+  // Headers
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7);
+  doc.setTextColor(71, 85, 105);
+  doc.text('EVALUATED STAFF', 18, summaryBoxY + 5.5);
+  doc.text('COMPLIANT (>=75%)', 18 + colWidth, summaryBoxY + 5.5);
+  doc.text('WARNING (50-74%)', 18 + colWidth * 2, summaryBoxY + 5.5);
+  doc.text('CRITICAL (<50%)', 18 + colWidth * 3, summaryBoxY + 5.5);
+  doc.text('AVG ATTENDANCE', 18 + colWidth * 4, summaryBoxY + 5.5);
+
+  // Values
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(15, 23, 42); // slate-900
+  doc.text(`${totalEvaluated} Members`, 18, summaryBoxY + 11.5);
+
+  doc.setTextColor(5, 150, 105); // emerald-600
+  doc.text(`${compliantCount} Staff`, 18 + colWidth, summaryBoxY + 11.5);
+
+  doc.setTextColor(217, 119, 6); // amber-600
+  doc.text(`${warningCount} Staff`, 18 + colWidth * 2, summaryBoxY + 11.5);
+
+  doc.setTextColor(225, 29, 72); // rose-600
+  doc.text(`${criticalCount} Staff`, 18 + colWidth * 3, summaryBoxY + 11.5);
+
+  doc.setTextColor(...themeColor);
+  doc.text(`${avgPct}% Rate`, 18 + colWidth * 4, summaryBoxY + 11.5);
+
+  // 4. Policy Legend Strip
+  const legendY = summaryBoxY + 19;
+  doc.setFillColor(241, 245, 249); // slate-100
+  doc.setDrawColor(226, 232, 240);
+  doc.roundedRect(14, legendY, pageWidth - 28, 7.5, 1.5, 1.5, 'FD');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(6.8);
+  doc.setTextColor(51, 65, 85);
+  const legendText = 'POLICY BENCHMARKS:  [>=90% Excellent Tier]   [75-89% Good Standing]   [50-74% Warning Notice]   [<50% Actionable / Login Revocation]';
+  doc.text(legendText, pageWidth / 2, legendY + 5, { align: 'center' });
+
+  // 5. Table Rows
+  const tableColumns = ["#", "Emp ID", "Employee Name", "Department", "Work Days", "Present", "Late", "Absent", "Leaves", "Rate %", "Policy Standing"];
+  const tableRows = rankings.map((item, idx) => {
+    const u = item.user;
+    const st = item.stats;
+    return [
+      (idx + 1).toString(),
+      u.id,
+      u.name,
+      u.department || 'General',
+      st.totalWorkingDays.toString(),
+      st.presentDays.toString(),
+      st.lateDays.toString(),
+      st.absentDays.toString(),
+      st.leaveDays.toString(),
+      `${st.attendancePct}%`,
+      st.indicator?.label || (st.attendancePct >= 75 ? 'Good Standing' : 'At Risk')
+    ];
+  });
+
+  runAutoTable(doc, {
+    startY: legendY + 10,
+    head: [tableColumns],
+    body: tableRows,
+    theme: 'striped',
+    headStyles: {
+      fillColor: themeColor,
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      fontSize: 7.5
+    },
+    styles: {
+      fontSize: 7.2,
+      cellPadding: 2.2,
+      lineColor: [226, 232, 240],
+      lineWidth: 0.1,
+      textColor: [30, 41, 59]
+    },
+    alternateRowStyles: {
+      fillColor: [248, 250, 252]
+    },
+    columnStyles: {
+      0: { cellWidth: 7, halign: 'center' },
+      1: { cellWidth: 16, fontStyle: 'bold' },
+      2: { cellWidth: 32, fontStyle: 'bold' },
+      3: { cellWidth: 24 },
+      4: { cellWidth: 15, halign: 'center' },
+      5: { cellWidth: 14, halign: 'center' },
+      6: { cellWidth: 12, halign: 'center' },
+      7: { cellWidth: 13, halign: 'center' },
+      8: { cellWidth: 13, halign: 'center' },
+      9: { cellWidth: 16, fontStyle: 'bold', halign: 'center' },
+      10: { cellWidth: 20, fontStyle: 'bold', halign: 'center' }
+    },
+    didParseCell: (data) => {
+      // Dynamic coloring for Rate % column (index 9)
+      if (data.section === 'body' && data.column.index === 9) {
+        const pctNum = parseInt(String(data.cell.raw || '100'), 10);
+        if (pctNum >= 90) {
+          data.cell.styles.textColor = [5, 150, 105]; // emerald-600
+        } else if (pctNum >= 75) {
+          data.cell.styles.textColor = [37, 99, 235]; // blue-600
+        } else if (pctNum >= 50) {
+          data.cell.styles.textColor = [217, 119, 6]; // amber-600
+        } else {
+          data.cell.styles.textColor = [225, 29, 72]; // rose-600
+        }
+      }
+      // Dynamic coloring for Policy Standing column (index 10)
+      if (data.section === 'body' && data.column.index === 10) {
+        const val = String(data.cell.raw || '');
+        if (val.includes('Warning') || val.includes('Risk')) {
+          data.cell.styles.textColor = [217, 119, 6]; // amber-600
+        } else if (val.includes('Critical') || val.includes('Terminated')) {
+          data.cell.styles.textColor = [225, 29, 72]; // rose-600
+        } else {
+          data.cell.styles.textColor = [5, 150, 105]; // emerald-600
+        }
+      }
+      // Dynamic coloring for Absent column (index 7)
+      if (data.section === 'body' && data.column.index === 7) {
+        const absVal = parseInt(String(data.cell.raw || '0'), 10);
+        if (absVal > 0) {
+          data.cell.styles.textColor = [225, 29, 72]; // rose-600
+          data.cell.styles.fontStyle = 'bold';
+        }
+      }
+    }
+  });
+
+  // 6. Corporate Multi-Page Footers
+  addMultiPageFooters(doc, { confidentialityNotice: 'Official Compliance Audit — Nexora Technologies Internal Operations' });
+
+  // 7. Save Document
+  doc.save(`Nexora_Workforce_Attendance_Percentages_${todayStr}.pdf`);
+  return true;
+};
