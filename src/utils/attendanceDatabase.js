@@ -335,8 +335,16 @@ export const adminUpdateAttendance = async (attendanceData, adminName) => {
       reason: attendanceData.remarks || 'Admin Manual Override'
     };
 
+    let finalRemarks = attendanceData.remarks;
+    if ((attendanceData.status === 'Present' || attendanceData.status === 'Late') && finalRemarks && finalRemarks.toLowerCase().includes('absent')) {
+      finalRemarks = 'Admin Verified Present';
+    } else if (attendanceData.status === 'Absent' && (!finalRemarks || finalRemarks.toLowerCase().includes('present'))) {
+      finalRemarks = 'Unexcused Absence';
+    }
+
     const recordToSave = {
       ...attendanceData,
+      remarks: finalRemarks,
       id: recordId,
       markedBy: 'Admin',
       editHistory: [...currentHistory, newHistoryItem]
@@ -441,7 +449,7 @@ export const calculateEmployeeStats = (employeeId, records = [], settings = loca
   }
 
   return {
-    totalWorkingDays: empRecords.length + (isPast7PM && !isTodaySunday && !hasTodayRecord ? 1 : 0),
+    totalWorkingDays,
     presentDays: presentDays + lateDays,
     lateDays,
     absentDays,

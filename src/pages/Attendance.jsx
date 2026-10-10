@@ -279,9 +279,10 @@ export default function Attendance() {
   const isTodaySunday = new Date(todayStr + 'T00:00:00').getDay() === 0;
   const isPast7PM = new Date().getHours() >= 19;
   const todayRecords = records.filter(r => r.date === todayStr);
-  const presentTodayCount = todayRecords.filter(r => r.status === 'Present' || r.status === 'Late').length;
-  const lateTodayCount = todayRecords.filter(r => r.status === 'Late').length;
-  const leaveTodayCount = todayRecords.filter(r => r.status === 'Leave' || r.status === 'Half Day').length;
+  const staffTodayRecords = todayRecords.filter(r => staffUsers.some(u => u.id === r.employeeId));
+  const presentTodayCount = staffTodayRecords.filter(r => r.status === 'Present' || r.status === 'Late').length;
+  const lateTodayCount = staffTodayRecords.filter(r => r.status === 'Late').length;
+  const leaveTodayCount = staffTodayRecords.filter(r => r.status === 'Leave' || r.status === 'Half Day').length;
   const absentTodayCount = isTodaySunday ? 0 : Math.max(0, staffUsers.length - presentTodayCount - leaveTodayCount);
 
   const totalUserPctSum = staffUsers.reduce((sum, u) => sum + (employeeStatsMap[u.id]?.attendancePct || 0), 0);
@@ -308,6 +309,8 @@ export default function Attendance() {
 
   const filteredHistory = useMemo(() => {
     return records.filter(r => {
+      // Exclude future leave dates from historical attendance log (dates > todayStr)
+      if (r.date > todayStr) return false;
       const matchSearch = r.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           r.employeeId.toLowerCase().includes(searchTerm.toLowerCase());
       const matchDept = filterDepartment === 'All' || r.department === filterDepartment;
@@ -315,7 +318,7 @@ export default function Attendance() {
       const matchStatus = filterStatus === 'All' || r.status === filterStatus;
       return matchSearch && matchDept && matchProj && matchStatus;
     });
-  }, [records, searchTerm, filterDepartment, filterProject, filterStatus]);
+  }, [records, searchTerm, filterDepartment, filterProject, filterStatus, todayStr]);
 
   const handleUserCheckIn = async (remarks = '', method = 'Self') => {
     const res = await markCheckIn(currentUser, method, remarks);
@@ -483,7 +486,7 @@ export default function Attendance() {
   };
 
   const getTodayCategoryData = (categoryType) => {
-    return users.map(u => {
+    return staffUsers.map(u => {
       const r = records.find(rec => rec.employeeId === u.id && rec.date === todayStr);
       let calculatedStatus = isTodaySunday ? 'Sunday (Holiday)' : (isPast7PM ? 'Absent' : 'Pending Check-In');
       if (r?.status === 'Present' || r?.status === 'Late') {
@@ -1545,7 +1548,11 @@ export default function Attendance() {
                         </span>
                       </td>
                       <td className="p-3.5 font-medium truncate max-w-xs text-slate-600 dark:text-slate-400">
-                        {r?.remarks || (isPast7PM && !isTodaySunday ? 'Auto-Marked Absent (7:00 PM cutoff)' : 'N/A')}
+                        {isPresent || isLate
+                          ? (r?.remarks && !r.remarks.toLowerCase().includes('absent') ? r.remarks : 'Checked in on time')
+                          : r?.status === 'Leave' || r?.status === 'Half Day'
+                          ? (r?.remarks || 'Approved Official Leave')
+                          : (r?.remarks || (isPast7PM && !isTodaySunday ? 'Auto-Marked Absent (7:00 PM cutoff)' : 'Pending Check-In'))}
                       </td>
                       {isAdmin && (
                         <td className="p-3.5 text-right">

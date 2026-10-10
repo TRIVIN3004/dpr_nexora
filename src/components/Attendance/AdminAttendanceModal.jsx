@@ -17,10 +17,15 @@ export default function AdminAttendanceModal({ isOpen, onClose, users = [], init
       if (initialRecord) {
         setEmployeeId(initialRecord.employeeId || '');
         setDate(initialRecord.date || new Date().toISOString().split('T')[0]);
-        setStatus(initialRecord.status === 'Late' ? 'Present' : (initialRecord.status || 'Present'));
-        setCheckInTime(initialRecord.checkInTime || '09:00');
-        setCheckOutTime(initialRecord.checkOutTime || '17:00');
-        setRemarks(initialRecord.remarks || '');
+        const initialStatus = initialRecord.status === 'Late' ? 'Present' : (initialRecord.status || 'Present');
+        setStatus(initialStatus);
+        setCheckInTime(initialRecord.checkInTime || (initialStatus === 'Present' || initialStatus === 'Half Day' ? '09:00' : ''));
+        setCheckOutTime(initialRecord.checkOutTime || (initialStatus === 'Present' || initialStatus === 'Half Day' ? '17:00' : ''));
+        let initRemarks = initialRecord.remarks || '';
+        if ((initialStatus === 'Present' || initialStatus === 'Half Day') && initRemarks.toLowerCase().includes('absent')) {
+          initRemarks = 'Admin Verified Present';
+        }
+        setRemarks(initRemarks);
       } else {
         setEmployeeId(prev => prev || (users[0]?.id || ''));
         setDate(new Date().toISOString().split('T')[0]);
@@ -39,9 +44,51 @@ export default function AdminAttendanceModal({ isOpen, onClose, users = [], init
 
   const selectedUser = users.find(u => u.id === employeeId) || {};
 
+  const handleStatusChange = (newStatus) => {
+    setStatus(newStatus);
+    if (newStatus === 'Present') {
+      if (!checkInTime) setCheckInTime('09:00');
+      if (!checkOutTime) setCheckOutTime('17:00');
+      if (!remarks || remarks.toLowerCase().includes('absent')) {
+        setRemarks('Admin Verified Present');
+      }
+    } else if (newStatus === 'Half Day') {
+      if (!checkInTime) setCheckInTime('09:00');
+      if (!checkOutTime) setCheckOutTime('13:00');
+      if (!remarks || remarks.toLowerCase().includes('absent')) {
+        setRemarks('Half Day Attendance');
+      }
+    } else if (newStatus === 'Absent') {
+      setCheckInTime('');
+      setCheckOutTime('');
+      if (!remarks || remarks.toLowerCase().includes('present')) {
+        setRemarks('Unexcused Absence');
+      }
+    } else if (newStatus === 'Leave') {
+      setCheckInTime('');
+      setCheckOutTime('');
+      if (!remarks || remarks.toLowerCase().includes('present') || remarks.toLowerCase().includes('absent')) {
+        setRemarks('Approved Official Leave');
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
+
+    const isPresentType = status === 'Present' || status === 'Half Day';
+    const finalCheckIn = isPresentType ? (checkInTime || '09:00') : '';
+    const finalCheckOut = isPresentType ? (checkOutTime || (status === 'Half Day' ? '13:00' : '17:00')) : '';
+
+    let finalRemarks = remarks;
+    if (isPresentType && (!finalRemarks || finalRemarks.toLowerCase().includes('absent'))) {
+      finalRemarks = 'Admin Verified Present';
+    } else if (status === 'Absent' && (!finalRemarks || finalRemarks.toLowerCase().includes('present'))) {
+      finalRemarks = 'Unexcused Absence';
+    } else if (status === 'Leave' && (!finalRemarks || finalRemarks.toLowerCase().includes('present') || finalRemarks.toLowerCase().includes('absent'))) {
+      finalRemarks = 'Approved Official Leave';
+    }
 
     const recordData = {
       id: initialRecord?.id || `ATT-${date}-${employeeId}`,
@@ -51,10 +98,10 @@ export default function AdminAttendanceModal({ isOpen, onClose, users = [], init
       project: (selectedUser.assignedProjects && selectedUser.assignedProjects[0]) || initialRecord?.project || 'Nexora ERP',
       role: selectedUser.role || 'member',
       date,
-      checkInTime,
-      checkOutTime,
+      checkInTime: finalCheckIn,
+      checkOutTime: finalCheckOut,
       status,
-      remarks: remarks || 'Admin Override'
+      remarks: finalRemarks || 'Admin Override'
     };
 
     await onSave(recordData);
@@ -129,7 +176,7 @@ export default function AdminAttendanceModal({ isOpen, onClose, users = [], init
                   </label>
                   <select
                     value={status}
-                    onChange={(e) => setStatus(e.target.value)}
+                    onChange={(e) => handleStatusChange(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-black"
                   >
                     <option value="Present">Present</option>
