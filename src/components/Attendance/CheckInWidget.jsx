@@ -311,10 +311,17 @@ export default function CheckInWidget({ currentUser, todayRecord, settings, onCh
               <MapPin className="h-3.5 w-3.5 text-indigo-600 dark:text-[#818cf8]" />
               <span>Location: <strong className="text-slate-900 dark:text-white font-black">Nexora HQ (Verified)</strong></span>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 font-extrabold">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>Flexible Entry Allowed</span>
-            </div>
+            {new Date().getDay() === 0 ? (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-200 dark:border-rose-800/60 bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 font-extrabold">
+                <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+                <span>Weekly Holiday (Sunday)</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 font-extrabold">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span>Flexible Entry Allowed</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -327,6 +334,10 @@ export default function CheckInWidget({ currentUser, todayRecord, settings, onCh
             {todayRecord ? (
               <span className="text-xs font-black px-3 py-1 rounded-full border bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/40">
                 {todayRecord.status === 'Late' ? 'Present' : (todayRecord.status || 'Present')}
+              </span>
+            ) : new Date().getDay() === 0 ? (
+              <span className="text-xs font-black px-3 py-1 rounded-full border bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-800">
+                Sunday (Holiday)
               </span>
             ) : (
               <span className="text-xs font-bold px-3 py-1 rounded-full border bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700">

@@ -209,11 +209,12 @@ export default function Attendance() {
     return map;
   }, [users, records, settings]);
 
+  const isTodaySunday = new Date(todayStr + 'T00:00:00').getDay() === 0;
   const todayRecords = records.filter(r => r.date === todayStr);
   const presentTodayCount = todayRecords.filter(r => r.status === 'Present' || r.status === 'Late').length;
   const lateTodayCount = todayRecords.filter(r => r.status === 'Late').length;
   const leaveTodayCount = todayRecords.filter(r => r.status === 'Leave' || r.status === 'Half Day').length;
-  const absentTodayCount = Math.max(0, staffUsers.length - presentTodayCount - leaveTodayCount);
+  const absentTodayCount = isTodaySunday ? 0 : Math.max(0, staffUsers.length - presentTodayCount - leaveTodayCount);
 
   const totalUserPctSum = staffUsers.reduce((sum, u) => sum + (employeeStatsMap[u.id]?.attendancePct || 0), 0);
   const avgAttendanceRate = staffUsers.length > 0 ? Math.round(totalUserPctSum / staffUsers.length) : 100;
@@ -433,15 +434,15 @@ export default function Attendance() {
   const getTodayCategoryData = (categoryType) => {
     return users.map(u => {
       const r = records.find(rec => rec.employeeId === u.id && rec.date === todayStr);
-      let calculatedStatus = 'Absent';
+      let calculatedStatus = isTodaySunday ? 'Sunday (Holiday)' : 'Absent';
       if (r?.status === 'Present' || r?.status === 'Late') {
         calculatedStatus = 'Present';
       } else if (r?.status === 'Leave' || r?.status === 'Half Day') {
         calculatedStatus = 'Leave';
       } else if (r?.status === 'Absent') {
-        calculatedStatus = 'Absent';
+        calculatedStatus = isTodaySunday ? 'Sunday (Holiday)' : 'Absent';
       } else {
-        calculatedStatus = 'Not Marked (Absent)';
+        calculatedStatus = isTodaySunday ? 'Sunday (Holiday)' : 'Not Marked (Absent)';
       }
 
       return {
@@ -451,7 +452,7 @@ export default function Attendance() {
       };
     }).filter(item => {
       if (categoryType === 'present') return item.status === 'Present';
-      if (categoryType === 'absent') return item.status === 'Absent' || item.status === 'Not Marked (Absent)';
+      if (categoryType === 'absent') return !isTodaySunday && (item.status === 'Absent' || item.status === 'Not Marked (Absent)');
       if (categoryType === 'leave') return item.status === 'Leave';
       return true;
     });
@@ -817,10 +818,10 @@ export default function Attendance() {
                   color="emerald"
                 />
                 <AttendanceStatCard 
-                  title="Absent Today"
-                  value={absentTodayCount}
-                  subtitle={`Out of ${staffUsers.length} active staff`}
-                  icon={XCircle}
+                  title={isTodaySunday ? "Weekly Holiday" : "Absent Today"}
+                  value={isTodaySunday ? "Sunday" : absentTodayCount}
+                  subtitle={isTodaySunday ? "All staff off (Weekly holiday)" : `Out of ${staffUsers.length} active staff`}
+                  icon={isTodaySunday ? CalendarDays : XCircle}
                   color="rose"
                 />
                 <AttendanceStatCard 
@@ -1023,7 +1024,9 @@ export default function Attendance() {
 
               {/* Absent Export */}
               <div className="flex items-center gap-1 bg-rose-50 dark:bg-rose-950/40 p-1.5 rounded-xl border border-rose-200 dark:border-rose-800/60">
-                <span className="text-[11px] font-extrabold text-rose-900 dark:text-rose-300 px-1.5">Absent ({absentTodayCount})</span>
+                <span className="text-[11px] font-extrabold text-rose-900 dark:text-rose-300 px-1.5">
+                  {isTodaySunday ? 'Sunday Holiday (0 Absent)' : `Absent (${absentTodayCount})`}
+                </span>
                 <button
                   onClick={() => exportTodayPDF('absent')}
                   title="Download Absent List PDF"
@@ -1127,6 +1130,14 @@ export default function Attendance() {
                         ) : isLate ? (
                           <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold border bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/40">
                             Present (Late)
+                          </span>
+                        ) : r?.status === 'Leave' || r?.status === 'Half Day' ? (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold border bg-purple-100 dark:bg-purple-500/20 text-purple-800 dark:text-purple-300 border-purple-300 dark:border-purple-500/40">
+                            {r.status === 'Half Day' ? 'Half Day' : 'On Leave'}
+                          </span>
+                        ) : isTodaySunday ? (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold border bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-800">
+                            Sunday (Holiday)
                           </span>
                         ) : (
                           <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold border bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700">
@@ -1248,7 +1259,16 @@ export default function Attendance() {
 
             <div className="grid grid-cols-7 gap-2 text-center text-xs font-black text-slate-700 dark:text-slate-200">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                <div key={day} className="p-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5">{day}</div>
+                <div 
+                  key={day} 
+                  className={`p-2 rounded-xl border ${
+                    day === 'Sun'
+                      ? 'border-rose-300 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 shadow-xs'
+                      : 'border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5'
+                  }`}
+                >
+                  {day} {day === 'Sun' && <span className="block text-[9px] font-extrabold text-rose-500 tracking-tight">Holiday</span>}
+                </div>
               ))}
             </div>
 
@@ -1256,6 +1276,7 @@ export default function Attendance() {
               {calDays.map((cell, i) => {
                 const isToday = cell.dateKey === todayStr;
                 const rec = records.find(r => r.employeeId === currentUser?.id && r.date === cell.dateKey);
+                const isSunday = new Date(cell.dateKey + 'T00:00:00').getDay() === 0;
 
                 return (
                   <div 
@@ -1273,16 +1294,20 @@ export default function Attendance() {
                                 ? 'bg-purple-50 dark:bg-purple-500/10 border-purple-200 dark:border-purple-500/30'
                                 : rec?.status === 'Absent'
                                   ? 'bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'
-                                  : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10'
+                                  : isSunday
+                                    ? 'bg-rose-50/70 dark:bg-rose-950/20 border-rose-200/70 dark:border-rose-900/40 text-rose-800 dark:text-rose-200'
+                                    : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className={`text-xs font-black ${
                         isToday 
                           ? 'text-emerald-700 dark:text-emerald-300' 
-                          : cell.isCurrentMonth 
-                            ? 'text-slate-900 dark:text-white' 
-                            : 'text-slate-400 dark:text-slate-500'
+                          : isSunday && cell.isCurrentMonth
+                            ? 'text-rose-600 dark:text-rose-400'
+                            : cell.isCurrentMonth 
+                              ? 'text-slate-900 dark:text-white' 
+                              : 'text-slate-400 dark:text-slate-500'
                       }`}>
                         {cell.day}
                       </span>
@@ -1303,10 +1328,19 @@ export default function Attendance() {
                                 ? 'text-purple-700 dark:text-purple-300 font-black'
                                 : 'text-rose-700 dark:text-rose-300'
                         }>
-                          {rec.status}
+                          {rec.status}{isSunday ? ' (Holiday)' : ''}
                         </span>
                         <span className="block font-mono text-[9px] text-slate-500 dark:text-slate-400">
                           {rec.status === 'Leave' ? 'Approved Leave' : (rec.checkInTime || '--:--')}
+                        </span>
+                      </div>
+                    ) : isSunday && cell.isCurrentMonth ? (
+                      <div className="text-[10px] font-extrabold truncate">
+                        <span className="text-rose-600 dark:text-rose-400 font-black flex items-center gap-1">
+                          Holiday
+                        </span>
+                        <span className="block font-mono text-[9px] text-rose-500/80 dark:text-rose-400/70">
+                          Sunday Off
                         </span>
                       </div>
                     ) : cell.isCurrentMonth ? (

@@ -394,9 +394,13 @@ export const calculateEmployeeStats = (employeeId, records = [], settings = loca
   let halfDays = 0;
 
   empRecords.forEach(r => {
+    const isSunday = new Date(r.date + 'T00:00:00').getDay() === 0;
     if (r.status === 'Present') presentDays++;
     else if (r.status === 'Late') lateDays++;
-    else if (r.status === 'Absent') absentDays++;
+    else if (r.status === 'Absent') {
+      // Sundays are weekly holidays; unworked Sundays must not count as absent
+      if (!isSunday) absentDays++;
+    }
     else if (r.status === 'Leave') leaveDays++;
     else if (r.status === 'Half Day') halfDays++;
   });
@@ -560,19 +564,26 @@ export const reactivateEmployeeAccount = async (employeeId, adminName) => {
   }
 };
 
-// 10. Calculate Leave Days helper
+// 10. Calculate Leave Days helper (Sundays automatically excluded as weekly holidays)
 export const calculateLeaveDays = (startDate, endDate, leaveType = 'Casual Leave') => {
   if (!startDate || !endDate) return 1;
   if (leaveType === 'Half-Day Leave') return 0.5;
 
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+  const start = new Date(startDate + 'T00:00:00');
+  const end = new Date(endDate + 'T00:00:00');
   
   if (end < start) return 0;
 
-  const diffTime = Math.abs(end - start);
-  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1;
-  return diffDays;
+  // Count business days excluding Sundays (Sunday = Weekly Holiday)
+  let count = 0;
+  const cur = new Date(start);
+  while (cur <= end) {
+    if (cur.getDay() !== 0) { // 0 = Sunday
+      count++;
+    }
+    cur.setDate(cur.getDate() + 1);
+  }
+  return count === 0 && start.getDay() === 0 ? 0 : Math.max(1, count);
 };
 
 // 11. Seed dynamic sample leave applications if Supabase table is fresh
@@ -834,6 +845,12 @@ export const updateLeaveApplicationStatus = async (applicationId, status, adminR
       const current = new Date(start);
 
       while (current <= end) {
+        // Skip Sundays as weekly holidays
+        if (current.getDay() === 0) {
+          current.setDate(current.getDate() + 1);
+          continue;
+        }
+
         const dateStr = formatLocalDate(current);
         const recordId = `ATT-${dateStr}-${targetApp.employeeId}`;
 

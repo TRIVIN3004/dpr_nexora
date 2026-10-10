@@ -156,7 +156,9 @@ export default function CalendarView() {
 
         {/* Days of week */}
         <div className="grid grid-cols-7 text-center text-xs font-black uppercase tracking-wider pb-3 border-b border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-200">
-          <span>Sun</span>
+          <span className="text-rose-600 dark:text-rose-400 font-extrabold">
+            Sun <span className="text-[9px] lowercase font-semibold text-rose-500/80">(off)</span>
+          </span>
           <span>Mon</span>
           <span>Tue</span>
           <span>Wed</span>
@@ -170,6 +172,7 @@ export default function CalendarView() {
           {daysArray.map((cell, idx) => {
             const isToday = cell.dateStr === todayStr;
             const isSelected = cell.dateStr === selectedDateStr;
+            const isSunday = new Date(cell.dateStr + 'T00:00:00').getDay() === 0;
             
             // Get day reports scoped by current user role
             const dayReps = reports.filter(r => {
@@ -186,9 +189,11 @@ export default function CalendarView() {
                     ? 'bg-indigo-50 dark:bg-indigo-600/40 border-2 border-indigo-500 dark:border-indigo-400 shadow-[0_0_12px_rgba(99,102,241,0.3)]'
                     : isToday
                       ? 'bg-emerald-50 dark:bg-emerald-500/20 border-2 border-emerald-500 dark:border-emerald-400'
-                      : cell.isCurrentMonth
-                        ? 'bg-slate-50/80 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/15 hover:border-slate-300 dark:hover:border-white/20'
-                        : 'bg-slate-100/40 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 opacity-40'
+                      : isSunday && cell.isCurrentMonth
+                        ? 'bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200/60 dark:border-rose-900/40 hover:bg-rose-100/60 dark:hover:bg-rose-950/40'
+                        : cell.isCurrentMonth
+                          ? 'bg-slate-50/80 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/15 hover:border-slate-300 dark:hover:border-white/20'
+                          : 'bg-slate-100/40 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 opacity-40'
                 }`}
               >
                 <div className="flex justify-between items-center">
@@ -196,18 +201,24 @@ export default function CalendarView() {
                     className={`text-xs font-black h-5 w-5 flex items-center justify-center rounded-full ${
                       isToday 
                         ? 'bg-emerald-600 text-white shadow-xs' 
-                        : cell.isCurrentMonth 
-                          ? 'text-slate-900 dark:text-white' 
-                          : 'text-slate-400 dark:text-slate-500'
+                        : isSunday && cell.isCurrentMonth
+                          ? 'text-rose-600 dark:text-rose-400'
+                          : cell.isCurrentMonth 
+                            ? 'text-slate-900 dark:text-white' 
+                            : 'text-slate-400 dark:text-slate-500'
                     }`}
                   >
                     {cell.day}
                   </span>
-                  {isToday && (
+                  {isToday ? (
                     <span className="text-[9px] font-black text-emerald-600 dark:text-emerald-300 uppercase tracking-tighter">
                       Today
                     </span>
-                  )}
+                  ) : isSunday && cell.isCurrentMonth ? (
+                    <span className="text-[8px] font-extrabold text-rose-500/90 dark:text-rose-400/80 uppercase tracking-tighter">
+                      Off
+                    </span>
+                  ) : null}
                 </div>
 
                 {/* Submissions markers dots */}

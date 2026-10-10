@@ -290,9 +290,16 @@ export default function LeaveApplicationModal({
                 }`}>
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
-                    <span className="text-xs font-bold">
-                      {isDateInvalid ? 'Invalid Date Range' : `Duration: ${startDate} to ${endDate}`}
-                    </span>
+                    <div>
+                      <span className="text-xs font-bold block">
+                        {isDateInvalid ? 'Invalid Date Range' : `Duration: ${startDate} to ${endDate}`}
+                      </span>
+                      {!isDateInvalid && (
+                        <span className="text-[10px] text-slate-500 dark:text-indigo-300/80 font-medium block">
+                          Sundays excluded (weekly holidays)
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <span className={`px-3 py-1 rounded-xl text-xs font-black font-mono shadow-xs ${
                     isDateInvalid
