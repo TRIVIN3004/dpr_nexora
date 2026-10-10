@@ -271,25 +271,34 @@ export function DatabaseProvider({ children }) {
 
     const promise = (async () => {
       try {
-        // Optimized query: excludes editHistory JSONB and applies limit (50 per page)
-        let query = supabase
-          .from('attendance')
-          .select('id, employeeId, employeeName, department, project, role, date, checkInTime, checkOutTime, status, remarks, markedBy')
-          .order('date', { ascending: false })
-          .limit(50);
+        const PAGE_SIZE = 1000;
+        let allRows = [];
+        let from = 0;
 
-        if (filters.startDate) query = query.gte('date', filters.startDate);
-        if (filters.endDate) query = query.lte('date', filters.endDate);
-        if (filters.employeeId) query = query.eq('employeeId', filters.employeeId);
+        while (true) {
+          let query = supabase
+            .from('attendance')
+            .select('id, employeeId, employeeName, department, project, role, date, checkInTime, checkOutTime, status, remarks, markedBy')
+            .order('date', { ascending: false })
+            .range(from, from + PAGE_SIZE - 1);
 
-        const { data, error } = await query;
+          if (filters.startDate) query = query.gte('date', filters.startDate);
+          if (filters.endDate) query = query.lte('date', filters.endDate);
+          if (filters.employeeId) query = query.eq('employeeId', filters.employeeId);
 
-        if (!error && data) {
-          setAttendance(data);
+          const { data, error } = await query;
+          if (error || !data || data.length === 0) break;
+          allRows.push(...data);
+          if (data.length < PAGE_SIZE) break;
+          from += PAGE_SIZE;
+        }
+
+        if (allRows.length > 0) {
+          setAttendance(allRows);
           cacheTimestamps.current[key] = Date.now();
-          try { localStorage.setItem('nexora_attendance_cache', JSON.stringify(data)); } catch(e){}
-          logRequest('ATTENDANCE_LIST', data.length, JSON.stringify(data).length);
-          return data;
+          try { localStorage.setItem('nexora_attendance_cache', JSON.stringify(allRows)); } catch(e){}
+          logRequest('ATTENDANCE_LIST', allRows.length, JSON.stringify(allRows).length);
+          return allRows;
         }
       } catch (err) {
         console.warn("fetchAttendance notice:", err);

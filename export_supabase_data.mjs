@@ -23,6 +23,7 @@ const TABLES = [
   { name: 'notifications',       select: '*',  orderBy: 'date' },
   { name: 'attendance',          select: '*',  orderBy: 'date' },
   { name: 'attendance_settings', select: '*',  orderBy: null  },
+  { name: 'leave_applications',  select: '*',  orderBy: 'appliedAt' },
   { name: 'termination_history', select: '*',  orderBy: null  },
 ];
 

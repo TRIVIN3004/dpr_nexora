@@ -162,7 +162,7 @@ export default function Attendance() {
 
     try {
       const [attRecords, attSettings, leaveApps] = await Promise.all([
-        getAttendanceRecords(50),
+        getAttendanceRecords(),
         getAttendanceSettings(),
         getLeaveApplications()
       ]);
@@ -212,7 +212,8 @@ export default function Attendance() {
   const todayRecords = records.filter(r => r.date === todayStr);
   const presentTodayCount = todayRecords.filter(r => r.status === 'Present' || r.status === 'Late').length;
   const lateTodayCount = todayRecords.filter(r => r.status === 'Late').length;
-  const absentTodayCount = Math.max(0, staffUsers.length - presentTodayCount);
+  const leaveTodayCount = todayRecords.filter(r => r.status === 'Leave' || r.status === 'Half Day').length;
+  const absentTodayCount = Math.max(0, staffUsers.length - presentTodayCount - leaveTodayCount);
 
   const totalUserPctSum = staffUsers.reduce((sum, u) => sum + (employeeStatsMap[u.id]?.attendancePct || 0), 0);
   const avgAttendanceRate = staffUsers.length > 0 ? Math.round(totalUserPctSum / staffUsers.length) : 100;
@@ -250,6 +251,18 @@ export default function Attendance() {
   const handleUserCheckIn = async (remarks = '', method = 'Self') => {
     const res = await markCheckIn(currentUser, method, remarks);
     if (res.success) {
+      if (res.record) {
+        setRecords(prev => {
+          const idx = prev.findIndex(r => r.id === res.record.id);
+          if (idx >= 0) {
+            const next = [...prev];
+            next[idx] = res.record;
+            return next;
+          }
+          return [res.record, ...prev];
+        });
+      }
+      invalidateStore('attendance');
       loadData();
     }
     return res;
@@ -258,6 +271,18 @@ export default function Attendance() {
   const handleUserCheckOut = async () => {
     const res = await markCheckOut(currentUser);
     if (res.success) {
+      if (res.record) {
+        setRecords(prev => {
+          const idx = prev.findIndex(r => r.id === res.record.id);
+          if (idx >= 0) {
+            const next = [...prev];
+            next[idx] = res.record;
+            return next;
+          }
+          return [res.record, ...prev];
+        });
+      }
+      invalidateStore('attendance');
       loadData();
     }
     return res;
@@ -267,6 +292,18 @@ export default function Attendance() {
     const res = await adminUpdateAttendance(attendanceData, currentUser?.name || 'Admin');
     if (res.success) {
       showToast('Attendance record saved successfully!');
+      if (res.record) {
+        setRecords(prev => {
+          const idx = prev.findIndex(r => r.id === res.record.id);
+          if (idx >= 0) {
+            const next = [...prev];
+            next[idx] = res.record;
+            return next;
+          }
+          return [res.record, ...prev];
+        });
+      }
+      invalidateStore('attendance');
       loadData();
     } else {
       showToast('Failed to save record.');

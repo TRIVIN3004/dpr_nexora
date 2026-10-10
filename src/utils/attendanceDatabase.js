@@ -16,6 +16,16 @@ let localSettingsCache = {
 let localWarningsCache = [];
 let localTerminationCache = [];
 
+// Clean legacy fake sample data from browser storage if present
+try {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    const savedLeaves = localStorage.getItem('nexora_leave_applications_cache');
+    if (savedLeaves && savedLeaves.includes('LV-SAMPLE')) {
+      localStorage.removeItem('nexora_leave_applications_cache');
+    }
+  }
+} catch (e) {}
+
 // Helper to format date YYYY-MM-DD
 export const formatLocalDate = (date = new Date()) => {
   const d = new Date(date);
@@ -146,9 +156,38 @@ export const updateAttendanceSettings = async (newSettings) => {
   }
 };
 
-// 3. Get Attendance Records (Instant Cache-First Pattern)
-export const getAttendanceRecords = async (limit = 50) => {
-  // Read from localStorage cache instantly
+// 3. Get Attendance Records (Paginated Fetch with Direct Supabase Sync)
+export const getAttendanceRecords = async () => {
+  try {
+    const PAGE_SIZE = 1000;
+    let allRows = [];
+    let from = 0;
+
+    while (true) {
+      const { data, error } = await supabase
+        .from('attendance')
+        .select('id, employeeId, employeeName, department, project, role, date, checkInTime, checkOutTime, status, remarks, markedBy')
+        .order('date', { ascending: false })
+        .range(from, from + PAGE_SIZE - 1);
+
+      if (error || !data || data.length === 0) break;
+      allRows.push(...data);
+      if (data.length < PAGE_SIZE) break;
+      from += PAGE_SIZE;
+    }
+
+    if (allRows.length > 0) {
+      localAttendanceCache = allRows;
+      try {
+        localStorage.setItem('nexora_attendance_cache', JSON.stringify(allRows));
+      } catch (e) {}
+      return allRows;
+    }
+  } catch (err) {
+    console.warn("Supabase attendance fetch note:", err);
+  }
+
+  // Fallback to cache if network/offline
   if (!localAttendanceCache) {
     try {
       const saved = localStorage.getItem('nexora_attendance_cache');
@@ -156,42 +195,7 @@ export const getAttendanceRecords = async (limit = 50) => {
     } catch (e) {}
   }
 
-  // Trigger Supabase fetch in background asynchronously
-  const fetchSupabase = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('attendance')
-        .select('id, employeeId, employeeName, department, project, role, date, checkInTime, checkOutTime, status, remarks, markedBy')
-        .order('date', { ascending: false })
-        .limit(limit);
-
-      if (!error && data && data.length > 0) {
-        localAttendanceCache = data;
-        try {
-          localStorage.setItem('nexora_attendance_cache', JSON.stringify(data));
-        } catch (e) {}
-      }
-    } catch (err) {}
-  };
-
-  // Run fetchSupabase non-blocking
-  fetchSupabase();
-
-  if (localAttendanceCache && localAttendanceCache.length > 0) {
-    return localAttendanceCache;
-  }
-
-  // Fallback to seed cache if empty
-  if (!localAttendanceCache) {
-    try {
-      const { data: users } = await supabase.from('users').select('id, name, department, role, assignedProjects');
-      localAttendanceCache = seedSampleAttendanceData(users || []);
-    } catch (e) {
-      localAttendanceCache = seedSampleAttendanceData([]);
-    }
-  }
-
-  return localAttendanceCache;
+  return localAttendanceCache || [];
 };
 
 // 4. Mark Check-In (Staff / Self / QR / Face)
@@ -239,17 +243,19 @@ export const markCheckIn = async (user, method = 'Self', remarks = '') => {
       .select()
       .single();
 
-    if (error) {
-      // Local cache update fallback
-      if (localAttendanceCache) {
-        const idx = localAttendanceCache.findIndex(r => r.id === recordId);
-        if (idx >= 0) localAttendanceCache[idx] = newRecord;
-        else localAttendanceCache.unshift(newRecord);
-      }
-    }
+    const savedRecord = (!error && data) ? data : newRecord;
+
+    if (!localAttendanceCache) localAttendanceCache = [];
+    const idx = localAttendanceCache.findIndex(r => r.id === recordId);
+    if (idx >= 0) localAttendanceCache[idx] = savedRecord;
+    else localAttendanceCache.unshift(savedRecord);
+
+    try {
+      localStorage.setItem('nexora_attendance_cache', JSON.stringify(localAttendanceCache));
+    } catch (e) {}
 
     window.dispatchEvent(new Event('database_updated'));
-    return { success: true, record: data || newRecord };
+    return { success: true, record: savedRecord };
   } catch (err) {
     return { success: false, error: err.message };
   }
@@ -290,13 +296,19 @@ export const markCheckOut = async (user) => {
       .select()
       .single();
 
-    if (error && localAttendanceCache) {
-      const idx = localAttendanceCache.findIndex(r => r.id === recordId);
-      if (idx >= 0) localAttendanceCache[idx] = updatedRecord;
-    }
+    const savedRecord = (!error && data) ? data : updatedRecord;
+
+    if (!localAttendanceCache) localAttendanceCache = [];
+    const idx = localAttendanceCache.findIndex(r => r.id === recordId);
+    if (idx >= 0) localAttendanceCache[idx] = savedRecord;
+    else localAttendanceCache.unshift(savedRecord);
+
+    try {
+      localStorage.setItem('nexora_attendance_cache', JSON.stringify(localAttendanceCache));
+    } catch (e) {}
 
     window.dispatchEvent(new Event('database_updated'));
-    return { success: true, record: data || updatedRecord };
+    return { success: true, record: savedRecord };
   } catch (err) {
     return { success: false, error: err.message };
   }
@@ -336,11 +348,16 @@ export const adminUpdateAttendance = async (attendanceData, adminName) => {
       .select()
       .single();
 
-    if (error && localAttendanceCache) {
-      const idx = localAttendanceCache.findIndex(r => r.id === recordId);
-      if (idx >= 0) localAttendanceCache[idx] = recordToSave;
-      else localAttendanceCache.unshift(recordToSave);
-    }
+    const savedRecord = (!error && data) ? data : recordToSave;
+
+    if (!localAttendanceCache) localAttendanceCache = [];
+    const idx = localAttendanceCache.findIndex(r => r.id === recordId);
+    if (idx >= 0) localAttendanceCache[idx] = savedRecord;
+    else localAttendanceCache.unshift(savedRecord);
+
+    try {
+      localStorage.setItem('nexora_attendance_cache', JSON.stringify(localAttendanceCache));
+    } catch (e) {}
 
     // Notify user of administrative edit
     try {
@@ -358,7 +375,7 @@ export const adminUpdateAttendance = async (attendanceData, adminName) => {
     }
 
     window.dispatchEvent(new Event('database_updated'));
-    return { success: true, record: data || recordToSave };
+    return { success: true, record: savedRecord };
   } catch (err) {
     return { success: false, error: err.message };
   }
@@ -366,8 +383,9 @@ export const adminUpdateAttendance = async (attendanceData, adminName) => {
 
 // 7. Compute Stats for a single Employee
 export const calculateEmployeeStats = (employeeId, records = [], settings = localSettingsCache) => {
-  const empRecords = records.filter(r => r.employeeId === employeeId);
-  const totalWorkingDays = Math.max(1, empRecords.length);
+  const todayStr = getTodayString();
+  // Filter only records up to today (ignore future leave dates for historical attendance stats)
+  const empRecords = records.filter(r => r.employeeId === employeeId && r.date <= todayStr);
 
   let presentDays = 0;
   let lateDays = 0;
@@ -376,15 +394,20 @@ export const calculateEmployeeStats = (employeeId, records = [], settings = loca
   let halfDays = 0;
 
   empRecords.forEach(r => {
-    if (r.status === 'Present' || r.status === 'Late') presentDays++;
+    if (r.status === 'Present') presentDays++;
+    else if (r.status === 'Late') lateDays++;
     else if (r.status === 'Absent') absentDays++;
     else if (r.status === 'Leave') leaveDays++;
     else if (r.status === 'Half Day') halfDays++;
   });
 
-  // Calculation formula: Present + (HalfDay * 0.5) out of total working days (No Late timing restrictions)
-  const effectivePresent = presentDays + (halfDays * 0.5);
-  const attendancePct = Math.min(100, Math.round((effectivePresent / totalWorkingDays) * 100));
+  const totalWorkingDays = Math.max(1, presentDays + lateDays + absentDays + halfDays);
+  const effectivePresent = (presentDays + lateDays) + (halfDays * 0.5);
+
+  // If no required working days yet or all days are approved leave, default to 100% compliant
+  const attendancePct = (presentDays + lateDays + absentDays + halfDays === 0)
+    ? 100
+    : Math.min(100, Math.round((effectivePresent / totalWorkingDays) * 100));
 
   // Determine Status Badge & Level
   let indicator = { label: 'Good', color: 'emerald', bg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' };
@@ -402,8 +425,8 @@ export const calculateEmployeeStats = (employeeId, records = [], settings = loca
   }
 
   return {
-    totalWorkingDays,
-    presentDays,
+    totalWorkingDays: empRecords.length,
+    presentDays: presentDays + lateDays,
     lateDays,
     absentDays,
     leaveDays,
@@ -637,63 +660,54 @@ export const deduplicateLeaveApplications = (apps = []) => {
   return unique;
 };
 
-// 12. Get Leave Applications (With Automatic Deduplication)
+// 12. Get Leave Applications (Direct Supabase Sync)
 export const getLeaveApplications = async (employeeId = null) => {
+  try {
+    let query = supabase
+      .from('leave_applications')
+      .select('*')
+      .order('appliedAt', { ascending: false });
+
+    if (employeeId) {
+      query = query.eq('employeeId', employeeId);
+    }
+
+    const { data, error } = await query;
+    if (!error && data) {
+      // Filter out any sample applications if previously cached
+      const cleaned = data.filter(d => !d.id?.startsWith('LV-SAMPLE'));
+      if (!employeeId) {
+        localLeaveApplicationsCache = cleaned;
+        try {
+          localStorage.setItem('nexora_leave_applications_cache', JSON.stringify(cleaned));
+        } catch (e) {}
+      }
+      return employeeId 
+        ? cleaned.filter(l => l.employeeId === employeeId)
+        : cleaned;
+    }
+  } catch (err) {
+    console.warn("getLeaveApplications fetch notice:", err);
+  }
+
+  // Fallback to cache if network/offline
   if (!localLeaveApplicationsCache) {
     try {
       const saved = localStorage.getItem('nexora_leave_applications_cache');
       if (saved) {
-        localLeaveApplicationsCache = deduplicateLeaveApplications(JSON.parse(saved));
+        localLeaveApplicationsCache = deduplicateLeaveApplications(JSON.parse(saved))
+          .filter(d => !d.id?.startsWith('LV-SAMPLE'));
       }
     } catch (e) {}
   }
-
-  // Fetch Supabase in background
-  const fetchSupabase = async () => {
-    try {
-      let query = supabase
-        .from('leave_applications')
-        .select('*')
-        .order('appliedAt', { ascending: false });
-
-      if (employeeId) {
-        query = query.eq('employeeId', employeeId);
-      }
-
-      const { data, error } = await query;
-      if (!error && data && data.length > 0) {
-        const cleaned = deduplicateLeaveApplications(data);
-        if (!employeeId) {
-          localLeaveApplicationsCache = cleaned;
-          try {
-            localStorage.setItem('nexora_leave_applications_cache', JSON.stringify(cleaned));
-          } catch (e) {}
-        }
-      }
-    } catch (err) {}
-  };
-
-  fetchSupabase();
 
   if (localLeaveApplicationsCache && localLeaveApplicationsCache.length > 0) {
-    const deduplicated = deduplicateLeaveApplications(localLeaveApplicationsCache);
-    localLeaveApplicationsCache = deduplicated;
     return employeeId 
-      ? deduplicated.filter(l => l.employeeId === employeeId)
-      : deduplicated;
+      ? localLeaveApplicationsCache.filter(l => l.employeeId === employeeId)
+      : localLeaveApplicationsCache;
   }
 
-  // Fallback to initial seed if empty
-  if (!localLeaveApplicationsCache || localLeaveApplicationsCache.length === 0) {
-    localLeaveApplicationsCache = deduplicateLeaveApplications(seedSampleLeaveApplications());
-    try {
-      localStorage.setItem('nexora_leave_applications_cache', JSON.stringify(localLeaveApplicationsCache));
-    } catch (e) {}
-  }
-
-  return employeeId 
-    ? localLeaveApplicationsCache.filter(l => l.employeeId === employeeId)
-    : localLeaveApplicationsCache;
+  return [];
 };
 
 // 13. Submit Leave Application (Staff / Employee with Duplicate Prevention)
@@ -863,6 +877,26 @@ export const updateLeaveApplicationStatus = async (applicationId, status, adminR
         // Advance to next day
         current.setDate(current.getDate() + 1);
       }
+    } else if (status === 'Rejected' && targetApp) {
+      // If rejected, clean up any previously synced attendance records in that date range
+      try {
+        await supabase
+          .from('attendance')
+          .delete()
+          .eq('employeeId', targetApp.employeeId)
+          .eq('markedBy', 'Leave Application')
+          .gte('date', targetApp.startDate)
+          .lte('date', targetApp.endDate);
+      } catch (e) {}
+
+      if (localAttendanceCache) {
+        localAttendanceCache = localAttendanceCache.filter(r => 
+          !(r.employeeId === targetApp.employeeId && r.markedBy === 'Leave Application' && r.date >= targetApp.startDate && r.date <= targetApp.endDate)
+        );
+        try {
+          localStorage.setItem('nexora_attendance_cache', JSON.stringify(localAttendanceCache));
+        } catch (e) {}
+      }
     }
 
     // Send Notification to Employee
@@ -892,6 +926,8 @@ export const updateLeaveApplicationStatus = async (applicationId, status, adminR
 // 15. Cancel Leave Application (Employee Action)
 export const cancelLeaveApplication = async (applicationId, employeeId) => {
   try {
+    const targetApp = localLeaveApplicationsCache?.find(l => l.id === applicationId);
+
     const { data, error } = await supabase
       .from('leave_applications')
       .update({ status: 'Cancelled' })
@@ -899,6 +935,30 @@ export const cancelLeaveApplication = async (applicationId, employeeId) => {
       .eq('employeeId', employeeId)
       .select()
       .single();
+
+    if (error) throw error;
+
+    // Clean up any synced attendance leave records
+    if (targetApp && targetApp.startDate && targetApp.endDate) {
+      try {
+        await supabase
+          .from('attendance')
+          .delete()
+          .eq('employeeId', employeeId)
+          .eq('markedBy', 'Leave Application')
+          .gte('date', targetApp.startDate)
+          .lte('date', targetApp.endDate);
+      } catch (e) {}
+
+      if (localAttendanceCache) {
+        localAttendanceCache = localAttendanceCache.filter(r => 
+          !(r.employeeId === employeeId && r.markedBy === 'Leave Application' && r.date >= targetApp.startDate && r.date <= targetApp.endDate)
+        );
+        try {
+          localStorage.setItem('nexora_attendance_cache', JSON.stringify(localAttendanceCache));
+        } catch (e) {}
+      }
+    }
 
     if (localLeaveApplicationsCache) {
       const idx = localLeaveApplicationsCache.findIndex(l => l.id === applicationId);
