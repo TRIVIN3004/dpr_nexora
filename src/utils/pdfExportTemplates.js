@@ -177,16 +177,16 @@ export const exportTodayAttendancePDF = ({ list = [], categoryType = 'all', toda
   doc.text(`${staffTotal || list.length} Staff`, 165, summaryBoxY + 12);
 
   // 3. Table Rows
-  const tableColumns = ["#", "Emp ID", "Employee Name", "Department", "Assigned Project", "Check-In", "Check-Out", "Status"];
+  const tableColumns = ["#", "Emp ID", "Employee Name", "Department", "Check-In", "Check-Out", "Status", "Attendance %"];
   const tableRows = list.map((item, index) => [
     (index + 1).toString(),
     item.user.id,
     item.user.name,
     item.user.department || 'Engineering',
-    (item.user.assignedProjects && item.user.assignedProjects[0]) || 'Nexora ERP',
     item.record?.checkInTime || '--:--',
     item.record?.checkOutTime || '--:--',
-    item.status || 'Not Marked'
+    item.status || 'Not Marked',
+    `${item.attendancePct !== undefined ? item.attendancePct : 100}%`
   ]);
 
   runAutoTable(doc, {
@@ -216,14 +216,14 @@ export const exportTodayAttendancePDF = ({ list = [], categoryType = 'all', toda
       1: { cellWidth: 18, fontStyle: 'bold' },
       2: { cellWidth: 36, fontStyle: 'bold' },
       3: { cellWidth: 26 },
-      4: { cellWidth: 30 },
+      4: { cellWidth: 18, halign: 'center' },
       5: { cellWidth: 18, halign: 'center' },
-      6: { cellWidth: 18, halign: 'center' },
-      7: { cellWidth: 24, fontStyle: 'bold' }
+      6: { cellWidth: 26, fontStyle: 'bold' },
+      7: { cellWidth: 24, fontStyle: 'bold', halign: 'center' }
     },
     didParseCell: (data) => {
       // Dynamic coloring for status column
-      if (data.section === 'body' && data.column.index === 7) {
+      if (data.section === 'body' && data.column.index === 6) {
         const val = String(data.cell.raw || '');
         if (val.includes('Present')) {
           data.cell.styles.textColor = [5, 150, 105]; // emerald-600
@@ -234,6 +234,14 @@ export const exportTodayAttendancePDF = ({ list = [], categoryType = 'all', toda
         } else if (val.includes('Leave')) {
           data.cell.styles.textColor = [124, 58, 237]; // purple-600
         }
+      }
+      // Dynamic coloring for Attendance % column
+      if (data.section === 'body' && data.column.index === 7) {
+        const pctNum = parseInt(String(data.cell.raw || '100'), 10);
+        if (pctNum >= 90) data.cell.styles.textColor = [5, 150, 105];
+        else if (pctNum >= 75) data.cell.styles.textColor = [37, 99, 235];
+        else if (pctNum >= 50) data.cell.styles.textColor = [217, 119, 6];
+        else data.cell.styles.textColor = [225, 29, 72];
       }
     }
   });

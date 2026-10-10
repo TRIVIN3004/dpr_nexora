@@ -124,6 +124,11 @@ export default function Attendance() {
   const [filterProject, setFilterProject] = useState('All');
   const [filterStatus, setFilterStatus] = useState('All');
 
+  // Filters for Workforce Attendance Rates Leaderboard (Admin)
+  const [rateSearchTerm, setRateSearchTerm] = useState('');
+  const [rateFilterDept, setRateFilterDept] = useState('All');
+  const [rateSortBy, setRateSortBy] = useState('lowest'); // 'lowest', 'highest', 'name'
+
   // Calendar State
   const [calendarDate, setCalendarDate] = useState(new Date());
 
@@ -250,6 +255,26 @@ export default function Attendance() {
     });
     return map;
   }, [users, records, settings]);
+
+  const staffAttendanceRankings = useMemo(() => {
+    return staffUsers.map(u => {
+      const stats = employeeStatsMap[u.id] || calculateEmployeeStats(u.id, records, settings);
+      return {
+        user: u,
+        stats
+      };
+    }).filter(item => {
+      const matchSearch = item.user.name.toLowerCase().includes(rateSearchTerm.toLowerCase()) ||
+                          item.user.id.toLowerCase().includes(rateSearchTerm.toLowerCase()) ||
+                          (item.user.email && item.user.email.toLowerCase().includes(rateSearchTerm.toLowerCase()));
+      const matchDept = rateFilterDept === 'All' || item.user.department === rateFilterDept;
+      return matchSearch && matchDept;
+    }).sort((a, b) => {
+      if (rateSortBy === 'lowest') return a.stats.attendancePct - b.stats.attendancePct;
+      if (rateSortBy === 'highest') return b.stats.attendancePct - a.stats.attendancePct;
+      return a.user.name.localeCompare(b.user.name);
+    });
+  }, [staffUsers, employeeStatsMap, records, settings, rateSearchTerm, rateFilterDept, rateSortBy]);
 
   const isTodaySunday = new Date(todayStr + 'T00:00:00').getDay() === 0;
   const isPast7PM = new Date().getHours() >= 19;
@@ -474,7 +499,8 @@ export default function Attendance() {
       return {
         user: u,
         record: r,
-        status: calculatedStatus
+        status: calculatedStatus,
+        attendancePct: employeeStatsMap[u.id]?.attendancePct ?? 100
       };
     }).filter(item => {
       if (categoryType === 'present') return item.status === 'Present';
@@ -514,6 +540,7 @@ export default function Attendance() {
       "Check-In Time": item.record?.checkInTime || '--:--',
       "Check-Out Time": item.record?.checkOutTime || '--:--',
       "Attendance Status": item.status,
+      "Attendance Rate (%)": `${item.attendancePct ?? 100}%`,
       "Remarks": item.record?.remarks || 'N/A'
     }));
 
@@ -522,6 +549,28 @@ export default function Attendance() {
     XLSX.utils.book_append_sheet(workbook, worksheet, `${categoryTitle}_Attendance`);
     XLSX.writeFile(workbook, `Today_${categoryTitle}_Attendance_${todayStr}.xlsx`);
     showToast(`Today's ${categoryTitle} Excel sheet downloaded!`);
+  };
+
+  const exportRankingsExcel = () => {
+    const exportData = staffAttendanceRankings.map(({ user: u, stats }) => ({
+      "Employee ID": u.id,
+      "Employee Name": u.name,
+      "Department": u.department || 'N/A',
+      "Role": u.role || 'Staff',
+      "Working Days": stats.totalWorkingDays,
+      "Present Days": stats.presentDays,
+      "Late Days": stats.lateDays,
+      "Absent Days": stats.absentDays,
+      "Leave Days": stats.leaveDays,
+      "Attendance Rate (%)": `${stats.attendancePct}%`,
+      "Policy Standing": stats.indicator?.label || (stats.attendancePct >= 75 ? 'Good Standing' : 'At Risk')
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Workforce_Percentages");
+    XLSX.writeFile(workbook, `Workforce_Attendance_Rates_${todayStr}.xlsx`);
+    showToast("Workforce attendance percentages exported successfully!");
   };
 
   const monthlyChartData = {
@@ -926,6 +975,285 @@ export default function Attendance() {
               </div>
             </div>
           </div>
+
+          {/* Workforce Attendance Percentages & Compliance Roster (Admin) */}
+          {isAdmin && (
+            <div className="p-6 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl space-y-5">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                      <BarChart3 className="h-5 w-5" />
+                    </span>
+                    <h4 className="text-base font-black text-slate-900 dark:text-white">
+                      Workforce Attendance Percentages & Compliance Roster
+                    </h4>
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                    Live cumulative attendance rates, working days breakdown, and policy tier standing for all staff members.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap text-xs font-bold">
+                  <span className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200">
+                    Staff: <strong className="font-black text-slate-900 dark:text-white">{staffUsers.length}</strong>
+                  </span>
+                  <span className="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300">
+                    Compliant (≥75%): <strong className="font-black">{staffUsers.filter(u => (employeeStatsMap[u.id]?.attendancePct ?? 100) >= 75).length}</strong>
+                  </span>
+                  <span className="px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-700 dark:text-amber-300">
+                    Warning (&lt;75%): <strong className="font-black">{staffUsers.filter(u => (employeeStatsMap[u.id]?.attendancePct ?? 100) < 75 && (employeeStatsMap[u.id]?.attendancePct ?? 100) >= 50).length}</strong>
+                  </span>
+                  <span className="px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-700 dark:text-rose-300">
+                    Critical (&lt;50%): <strong className="font-black">{staffUsers.filter(u => (employeeStatsMap[u.id]?.attendancePct ?? 100) < 50).length}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={exportRankingsExcel}
+                    className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    <span>Export Excel</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Filter & Search Bar */}
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-1">
+                <div className="sm:col-span-5 relative">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={rateSearchTerm}
+                    onChange={(e) => setRateSearchTerm(e.target.value)}
+                    placeholder="Search staff by name, ID or email..."
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/20 text-slate-900 dark:text-white text-xs font-semibold placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div className="sm:col-span-3">
+                  <select
+                    value={rateFilterDept}
+                    onChange={(e) => setRateFilterDept(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/20 text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                  >
+                    {departmentsList.map(dept => (
+                      <option key={dept} value={dept} className="text-slate-900 dark:text-slate-900">
+                        {dept === 'All' ? 'All Departments' : dept}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="sm:col-span-4 flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200 dark:border-white/10">
+                  <span className="text-[11px] font-black text-slate-600 dark:text-slate-400 px-2 shrink-0">
+                    Sort:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setRateSortBy('lowest')}
+                    className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-black transition-colors cursor-pointer ${
+                      rateSortBy === 'lowest'
+                        ? 'bg-rose-500 text-white shadow-xs'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10'
+                    }`}
+                    title="Show lowest percentage first (prioritize at-risk staff)"
+                  >
+                    Lowest %
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRateSortBy('highest')}
+                    className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-black transition-colors cursor-pointer ${
+                      rateSortBy === 'highest'
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10'
+                    }`}
+                    title="Show highest percentage first"
+                  >
+                    Highest %
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRateSortBy('name')}
+                    className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-black transition-colors cursor-pointer ${
+                      rateSortBy === 'name'
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10'
+                    }`}
+                    title="Sort alphabetically by name"
+                  >
+                    Name
+                  </button>
+                </div>
+              </div>
+
+              {/* Roster Table */}
+              <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-white/10">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-[11px] text-slate-600 dark:text-slate-400">
+                      <th className="p-3.5 font-extrabold uppercase">Staff Member</th>
+                      <th className="p-3.5 font-extrabold uppercase">Department / Role</th>
+                      <th className="p-3.5 font-extrabold uppercase text-center">Working Days</th>
+                      <th className="p-3.5 font-extrabold uppercase text-center">Present (Late)</th>
+                      <th className="p-3.5 font-extrabold uppercase text-center">Absent</th>
+                      <th className="p-3.5 font-extrabold uppercase text-center">Leaves</th>
+                      <th className="p-3.5 font-extrabold uppercase min-w-[190px]">Attendance Rate %</th>
+                      <th className="p-3.5 font-extrabold uppercase">Policy Status</th>
+                      <th className="p-3.5 font-extrabold uppercase text-right">Quick Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                    {staffAttendanceRankings.length === 0 ? (
+                      <tr>
+                        <td colSpan={9} className="p-8 text-center text-slate-600 dark:text-slate-400 font-semibold">
+                          No staff found matching the selected search or filters.
+                        </td>
+                      </tr>
+                    ) : (
+                      staffAttendanceRankings.map(({ user: u, stats }) => {
+                        const pct = stats.attendancePct ?? 100;
+                        const isWarning = pct < 75 && pct >= 50;
+                        const isCritical = pct < 50;
+                        const isGreat = pct >= 90;
+
+                        return (
+                          <tr key={u.id} className="hover:bg-slate-50/80 dark:hover:bg-white/[0.03] transition-colors">
+                            <td className="p-3.5">
+                              <div className="flex items-center gap-3">
+                                <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 text-white font-black flex items-center justify-center text-xs shadow-xs shrink-0">
+                                  {u.avatar ? (
+                                    <img src={u.avatar} alt={u.name} className="h-full w-full rounded-full object-cover" />
+                                  ) : (
+                                    u.name?.charAt(0) || 'U'
+                                  )}
+                                </div>
+                                <div className="min-w-0">
+                                  <span className="font-extrabold text-slate-900 dark:text-white block truncate">
+                                    {u.name}
+                                  </span>
+                                  <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 block truncate">
+                                    {u.id} {u.email ? `• ${u.email}` : ''}
+                                  </span>
+                                </div>
+                              </div>
+                            </td>
+
+                            <td className="p-3.5">
+                              <span className="font-bold text-slate-800 dark:text-slate-200 block">
+                                {u.department || 'General'}
+                              </span>
+                              <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">
+                                {u.role || 'Staff'}
+                              </span>
+                            </td>
+
+                            <td className="p-3.5 text-center font-bold text-slate-700 dark:text-slate-300">
+                              {stats.totalWorkingDays}
+                            </td>
+
+                            <td className="p-3.5 text-center">
+                              <span className="font-black text-emerald-600 dark:text-emerald-400">
+                                {stats.presentDays}
+                              </span>
+                              {stats.lateDays > 0 && (
+                                <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold ml-1">
+                                  ({stats.lateDays} late)
+                                </span>
+                              )}
+                            </td>
+
+                            <td className="p-3.5 text-center">
+                              <span className={`font-black ${stats.absentDays > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'}`}>
+                                {stats.absentDays}
+                              </span>
+                            </td>
+
+                            <td className="p-3.5 text-center font-bold text-blue-600 dark:text-blue-400">
+                              {stats.leaveDays}
+                            </td>
+
+                            <td className="p-3.5">
+                              <div className="space-y-1.5">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className={`font-black font-mono text-sm ${
+                                    isGreat ? 'text-emerald-600 dark:text-emerald-400' :
+                                    pct >= 75 ? 'text-blue-600 dark:text-blue-400' :
+                                    isWarning ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'
+                                  }`}>
+                                    {pct}%
+                                  </span>
+                                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                                    {stats.presentDays}/{stats.totalWorkingDays || 1} days
+                                  </span>
+                                </div>
+                                <div className="w-full bg-slate-200 dark:bg-white/10 rounded-full h-2 overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full transition-all duration-300 ${
+                                      isGreat ? 'bg-emerald-500' :
+                                      pct >= 75 ? 'bg-blue-500' :
+                                      isWarning ? 'bg-amber-500' : 'bg-rose-500'
+                                    }`}
+                                    style={{ width: `${Math.min(100, pct)}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </td>
+
+                            <td className="p-3.5">
+                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase border ${
+                                isGreat
+                                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
+                                  : pct >= 75
+                                  ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300'
+                                  : isWarning
+                                  ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300'
+                                  : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300'
+                              }`}>
+                                <span className={`h-1.5 w-1.5 rounded-full ${
+                                  isGreat ? 'bg-emerald-500' : pct >= 75 ? 'bg-blue-500' : isWarning ? 'bg-amber-500 animate-pulse' : 'bg-rose-500 animate-ping'
+                                }`} />
+                                {stats.indicator?.label || (pct >= 75 ? 'Good Standing' : 'At Risk')}
+                              </span>
+                            </td>
+
+                            <td className="p-3.5 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSearchTerm(u.name);
+                                    setActiveTab('history');
+                                  }}
+                                  className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 text-[11px] font-bold cursor-pointer transition-colors"
+                                  title="View employee attendance logs"
+                                >
+                                  Logs
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const todayRec = records.find(r => r.employeeId === u.id && r.date === todayStr);
+                                    setSelectedRecord(todayRec || { employeeId: u.id, employeeName: u.name, date: todayStr, status: 'Present' });
+                                    setShowAdminModal(true);
+                                  }}
+                                  className="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-black cursor-pointer shadow-xs transition-colors"
+                                  title="Edit or override attendance"
+                                >
+                                  Manage
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1104,6 +1432,7 @@ export default function Attendance() {
                   <th className="p-3.5 font-extrabold uppercase">Check-In</th>
                   <th className="p-3.5 font-extrabold uppercase">Check-Out</th>
                   <th className="p-3.5 font-extrabold uppercase">Status</th>
+                  <th className="p-3.5 font-extrabold uppercase min-w-[150px]">Attendance %</th>
                   <th className="p-3.5 font-extrabold uppercase">Remarks</th>
                   {isAdmin && <th className="p-3.5 text-right font-extrabold uppercase">Admin Action</th>}
                 </tr>
@@ -1161,6 +1490,30 @@ export default function Attendance() {
                             Pending Check-In
                           </span>
                         )}
+                      </td>
+                      <td className="p-3.5">
+                        <div className="flex items-center gap-2">
+                          <div className="w-16 bg-slate-200 dark:bg-white/10 rounded-full h-2 overflow-hidden shrink-0">
+                            <div 
+                              className={`h-full rounded-full transition-all duration-300 ${
+                                (employeeStatsMap[u.id]?.attendancePct || 0) >= 90 ? 'bg-emerald-500' :
+                                (employeeStatsMap[u.id]?.attendancePct || 0) >= 75 ? 'bg-blue-500' :
+                                (employeeStatsMap[u.id]?.attendancePct || 0) >= 50 ? 'bg-amber-500' : 'bg-rose-500'
+                              }`}
+                              style={{ width: `${Math.min(100, employeeStatsMap[u.id]?.attendancePct || 0)}%` }}
+                            />
+                          </div>
+                          <span className={`text-xs font-black font-mono ${
+                            (employeeStatsMap[u.id]?.attendancePct || 0) >= 90 ? 'text-emerald-700 dark:text-emerald-300' :
+                            (employeeStatsMap[u.id]?.attendancePct || 0) >= 75 ? 'text-blue-700 dark:text-blue-300' :
+                            (employeeStatsMap[u.id]?.attendancePct || 0) >= 50 ? 'text-amber-700 dark:text-amber-300' : 'text-rose-700 dark:text-rose-300'
+                          }`}>
+                            {employeeStatsMap[u.id]?.attendancePct ?? 100}%
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mt-0.5">
+                          {employeeStatsMap[u.id]?.indicator?.label || 'Good'}
+                        </span>
                       </td>
                       <td className="p-3.5 font-medium truncate max-w-xs text-slate-600 dark:text-slate-400">
                         {r?.remarks || (isPast7PM && !isTodaySunday ? 'Auto-Marked Absent (7:00 PM cutoff)' : 'N/A')}
@@ -1456,6 +1809,7 @@ export default function Attendance() {
                   <th className="p-3.5 font-extrabold uppercase">Check-In</th>
                   <th className="p-3.5 font-extrabold uppercase">Check-Out</th>
                   <th className="p-3.5 font-extrabold uppercase">Status</th>
+                  <th className="p-3.5 font-extrabold uppercase">Attendance %</th>
                   <th className="p-3.5 font-extrabold uppercase">Method</th>
                   <th className="p-3.5 font-extrabold uppercase">Remarks</th>
                 </tr>
@@ -1479,6 +1833,15 @@ export default function Attendance() {
                           {r.status}
                         </span>
                       )}
+                    </td>
+                    <td className="p-3.5">
+                      <span className={`font-mono font-black text-xs ${
+                        (employeeStatsMap[r.employeeId]?.attendancePct ?? 100) >= 90 ? 'text-emerald-600 dark:text-emerald-400' :
+                        (employeeStatsMap[r.employeeId]?.attendancePct ?? 100) >= 75 ? 'text-blue-600 dark:text-blue-400' :
+                        (employeeStatsMap[r.employeeId]?.attendancePct ?? 100) >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'
+                      }`}>
+                        {employeeStatsMap[r.employeeId]?.attendancePct ?? 100}%
+                      </span>
                     </td>
                     <td className="p-3.5 font-medium text-slate-600 dark:text-slate-400">{r.markedBy || 'Self'}</td>
                     <td className="p-3.5 font-medium truncate max-w-xs text-slate-600 dark:text-slate-400">{r.remarks || 'N/A'}</td>
