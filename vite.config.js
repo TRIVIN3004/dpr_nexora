@@ -77,6 +77,7 @@ function resendApiPlugin() {
         const resendResponse = await resend.emails.send({
           from,
           to: recipientList,
+          reply_to: 'contactnexoratechs@gmail.com',
           subject: subject || 'Nexora Portal Alert',
           html: html || `<p>${text || subject}</p>`,
           text: text || ''

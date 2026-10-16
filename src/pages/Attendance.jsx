@@ -173,13 +173,13 @@ export default function Attendance() {
 
   const handleTriggerDaily7pmEmails = async () => {
     setIsDispatchingDailyEmails(true);
-    showToast('Evaluating & dispatching 7:00 PM Present and Absent emails...');
+    showToast('Evaluating & dispatching 7:00 PM Absent notices...');
     try {
       const res = await fetch('/api/daily-attendance-cron?force=true', { method: 'POST' });
       const data = await res.json();
       if (data.success && data.results) {
         showToast(
-          `7:00 PM Emails Sent! (${data.results.presentSent} Present, ${data.results.absentSent} Absent)`,
+          `7:00 PM Absent Cutoff dispatched! (${data.results.absentSent} Absent notices sent)`,
           'success'
         );
       } else {
@@ -212,7 +212,7 @@ export default function Attendance() {
         showToast(
           res.simulated 
             ? `Simulated absence notice logged for ${targetUser.name} (${getPersonalEmail(targetUser)})`
-            : `Absence notice dispatched via Resend to ${getPersonalEmail(targetUser)}!`,
+            : `Absence notice dispatched to ${getPersonalEmail(targetUser)}!`,
           'success'
         );
       } else {
@@ -266,7 +266,7 @@ export default function Attendance() {
         showToast(
           res.simulated 
             ? `Simulated warning alert logged for ${targetUser.name} (${getPersonalEmail(targetUser)})`
-            : `Warning email dispatched via Resend to ${getPersonalEmail(targetUser)}!`,
+            : `Warning email dispatched to ${getPersonalEmail(targetUser)}!`,
           'success'
         );
       } else {
@@ -296,7 +296,7 @@ export default function Attendance() {
         showToast(
           res.simulated 
             ? `Simulated suspension notice logged for ${targetUser.name} (${getPersonalEmail(targetUser)})`
-            : `Critical notice dispatched via Resend to ${getPersonalEmail(targetUser)}!`,
+            : `Critical notice dispatched to ${getPersonalEmail(targetUser)}!`,
           'success'
         );
       } else {
@@ -546,6 +546,7 @@ export default function Attendance() {
   const handleUserCheckIn = async (remarks = '', method = 'Self') => {
     const res = await markCheckIn(currentUser, method, remarks);
     if (res.success) {
+      showToast('Checked in successfully! Attendance confirmation email dispatched to your inbox.', 'success');
       if (res.record) {
         setRecords(prev => {
           const idx = prev.findIndex(r => r.id === res.record.id);
@@ -559,6 +560,8 @@ export default function Attendance() {
       }
       invalidateStore('attendance');
       loadData();
+    } else {
+      showToast(res.error || 'Check-in failed.', 'error');
     }
     return res;
   };
@@ -1275,10 +1278,10 @@ export default function Attendance() {
                     onClick={handleTriggerDaily7pmEmails}
                     disabled={isDispatchingDailyEmails}
                     className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-black flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
-                    title="Dispatch 7:00 PM Present and Absent emails to all staff now"
+                    title="Dispatch 7:00 PM Absent cutoff notices to all unchecked staff now"
                   >
                     <Mail className="h-3.5 w-3.5" />
-                    <span>{isDispatchingDailyEmails ? 'Dispatching 7 PM...' : 'Dispatch 7:00 PM Emails'}</span>
+                    <span>{isDispatchingDailyEmails ? 'Dispatching 7 PM...' : 'Dispatch 7:00 PM Absent Cutoff'}</span>
                   </button>
                 </div>
               </div>

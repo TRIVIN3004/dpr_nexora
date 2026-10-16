@@ -1,4 +1,4 @@
-import { supabase } from './database';
+import { supabase } from './database.js';
 import { 
   getPersonalEmail, 
   sendEmailAlert, 
@@ -8,7 +8,7 @@ import {
   generateAttendanceTerminationEmail, 
   generateAccountReactivationEmail, 
   generateLeaveStatusEmail 
-} from './emailService';
+} from './emailService.js';
 
 // Global In-Memory Fallback Cache for local preview reliability
 let localAttendanceCache = null;
@@ -265,6 +265,22 @@ export const markCheckIn = async (user, method = 'Self', remarks = '') => {
     } catch (e) {}
 
     window.dispatchEvent(new Event('database_updated'));
+
+    // Instant dispatch of Present confirmation email to personal email
+    try {
+      const stats = calculateEmployeeStats(user.id, localAttendanceCache);
+      sendAttendancePresentEmailAlert(
+        user,
+        todayStr,
+        currentTimeStr,
+        '',
+        stats?.attendancePct ?? user.attendancePercentage ?? 95,
+        remarks || `Checked in via ${method}`
+      ).catch(dispatchErr => console.warn('Instant Present email dispatch exception:', dispatchErr));
+    } catch (e) {
+      console.warn('Could not trigger instant Present email alert:', e);
+    }
+
     return { success: true, record: savedRecord };
   } catch (err) {
     return { success: false, error: err.message };
@@ -392,7 +408,7 @@ export const adminUpdateAttendance = async (attendanceData, adminName) => {
       // ignore notification errors
     }
 
-    // If status is Absent, dispatch Absence Notice to personal email via Resend
+    // If status is Absent, dispatch Absence Notice to personal email
     if (attendanceData.status === 'Absent') {
       try {
         const targetStaff = {
@@ -405,6 +421,26 @@ export const adminUpdateAttendance = async (attendanceData, adminName) => {
           .catch(err => console.warn('Async absent alert error:', err));
       } catch (e) {
         console.warn('Could not dispatch absent email alert:', e);
+      }
+    } else if (attendanceData.status === 'Present' || attendanceData.status === 'Late') {
+      try {
+        const targetStaff = {
+          id: attendanceData.employeeId,
+          name: attendanceData.employeeName,
+          department: attendanceData.department,
+          email: attendanceData.employeeEmail
+        };
+        const stats = calculateEmployeeStats(attendanceData.employeeId, localAttendanceCache);
+        sendAttendancePresentEmailAlert(
+          targetStaff,
+          attendanceData.date,
+          attendanceData.checkInTime || 'Recorded by Admin',
+          attendanceData.checkOutTime || '',
+          stats?.attendancePct ?? 95,
+          finalRemarks || 'Verified Present'
+        ).catch(err => console.warn('Async present alert error:', err));
+      } catch (e) {
+        console.warn('Could not dispatch present email alert:', e);
       }
     }
 

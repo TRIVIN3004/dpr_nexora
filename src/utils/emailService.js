@@ -579,7 +579,7 @@ export const generateAttendanceAbsentEmail = ({
   );
 };
 
-// Template 1c: Attendance Present Confirmation Email (7:00 PM Daily)
+// Template 1c: Instant Attendance Present Confirmation Email (Dispatched Immediately Upon Check-In)
 export const generateAttendancePresentEmail = ({
   employeeName,
   employeeId,
@@ -597,13 +597,13 @@ export const generateAttendancePresentEmail = ({
     <!-- Top Alert Banner -->
     <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(6, 78, 59, 0.2) 100%); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 12px; padding: 18px 20px; margin-bottom: 24px;">
       <div style="font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: #34d399; margin-bottom: 6px;">
-        DAILY ATTENDANCE SUMMARY • 7:00 PM CONFIRMATION
+        INSTANT ATTENDANCE CONFIRMATION • VERIFIED PRESENT
       </div>
       <h2 style="margin: 0 0 6px 0; font-size: 19px; font-weight: 900; color: #ffffff;">
         Attendance Recorded: Present &check;
       </h2>
       <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #cbd5e1;">
-        Dear <strong>${employeeName}</strong>, your work attendance for <strong>${date}</strong> has been verified and recorded as <strong>Present</strong>.
+        Dear <strong>${employeeName}</strong>, your work attendance for <strong>${date}</strong> has been successfully verified and recorded as <strong>Present</strong>.
       </p>
     </div>
 
@@ -618,7 +618,7 @@ export const generateAttendancePresentEmail = ({
             PRESENT
           </div>
           <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">
-            ${remarks || 'Workday Completed'}
+            ${remarks || 'Check-in Recorded'}
           </div>
         </td>
         <td width="50%" style="border-left: 1px solid rgba(16, 185, 129, 0.2); padding-left: 20px;">
@@ -661,7 +661,7 @@ export const generateAttendancePresentEmail = ({
 
     <!-- Encouragement Callout -->
     <div style="background-color: #1e293b; border-left: 4px solid #10b981; padding: 14px 16px; border-radius: 4px 8px 8px 4px; margin-bottom: 24px; font-size: 12px; line-height: 1.6; color: #e2e8f0;">
-      <strong>Consistency Matters:</strong> Thank you for your hard work today! Regular check-ins maintain your good standing across company performance audits. Please make sure to submit your Daily Progress Report (DPR) before signing off for the evening.
+      <strong>Consistency Matters:</strong> Thank you for checking in today! Regular check-ins maintain your good standing across company performance audits. Please make sure to submit your Daily Progress Report (DPR) before signing off for the evening.
     </div>
 
     <!-- Portal Link Button -->
@@ -681,7 +681,7 @@ export const generateAttendancePresentEmail = ({
     'Attendance Present',
     { bg: 'rgba(16, 185, 129, 0.15)', text: '#34d399', border: 'rgba(16, 185, 129, 0.4)' },
     content,
-    'Daily attendance confirmation delivered directly to your personal mail ID.'
+    'Instant attendance confirmation delivered directly to your personal mail ID.'
   );
 };
 

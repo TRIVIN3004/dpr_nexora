@@ -208,60 +208,18 @@ export async function runDailyAttendanceJob(options = {}) {
     }
   }
 
-  // 4. Dispatch Present Emails
+  // 4. Present Emails are now dispatched INSTANTLY upon check-in
+  // The 7:00 PM cutoff exclusively evaluates and notifies ABSENT staff.
+  console.log(`\nℹ️ Present staff (${finalPresentList.length} members) verified.`);
+  console.log(`ℹ️ Present confirmation emails are dispatched instantly at check-in time.`);
+  console.log(`ℹ️ 7:00 PM automated cutoff will exclusively notify unchecked ABSENT staff.`);
+
   const results = {
-    presentSent: 0,
+    presentCount: finalPresentList.length,
     absentSent: 0,
     failed: 0,
     details: []
   };
-
-  console.log('\n📬 Dispatching "PRESENT" confirmation emails...');
-  for (let i = 0; i < finalPresentList.length; i++) {
-    const item = finalPresentList[i];
-    const html = generateAttendancePresentEmail({
-      employeeName: item.user.name,
-      employeeId: item.user.id,
-      department: item.user.department || 'General',
-      date: todayStr,
-      checkInTime: item.checkInTime,
-      checkOutTime: item.checkOutTime,
-      attendancePct: 95,
-      remarks: item.remarks
-    });
-
-    const subject = `✅ Attendance Verified: Present on ${todayStr} [${item.user.name}]`;
-
-    if (dryRun) {
-      console.log(`[DRY-RUN] Would send PRESENT to ${item.user.name} <${item.personalMail}>`);
-      results.presentSent++;
-      continue;
-    }
-
-    try {
-      const res = await resend.emails.send({
-        from: FROM_EMAIL,
-        to: [item.personalMail],
-        reply_to: 'contactnexoratechs@gmail.com',
-        subject,
-        html,
-        text: `Hello ${item.user.name}, your attendance for ${todayStr} has been recorded as PRESENT.`
-      });
-
-      if (res.error) {
-        console.error(`❌ PRESENT failed for ${item.user.name}:`, res.error.message);
-        results.failed++;
-      } else {
-        console.log(`✅ [PRESENT ${i + 1}/${finalPresentList.length}] Sent to ${item.user.name} <${item.personalMail}> (ID: ${res.data?.id})`);
-        results.presentSent++;
-      }
-    } catch (err) {
-      console.error(`❌ PRESENT error for ${item.user.name}:`, err.message);
-      results.failed++;
-    }
-
-    await sleep(550);
-  }
 
   // 5. Dispatch Absent Emails
   console.log('\n📬 Dispatching "ABSENT" warning/notice emails...');
@@ -310,10 +268,10 @@ export async function runDailyAttendanceJob(options = {}) {
   }
 
   console.log('========================================================');
-  console.log('🎉 7:00 PM DAILY DISPATCH COMPLETE!');
-  console.log(`Present Emails Sent: ${results.presentSent}`);
-  console.log(`Absent Emails Sent:  ${results.absentSent}`);
-  console.log(`Failed / Errors:     ${results.failed}`);
+  console.log('🎉 7:00 PM DAILY ABSENT CUTOFF DISPATCH COMPLETE!');
+  console.log(`Present Staff (Excluded from Absent): ${results.presentCount}`);
+  console.log(`Absent Notice Emails Dispatched:      ${results.absentSent}`);
+  console.log(`Failed / Errors:                      ${results.failed}`);
   console.log('========================================================');
 
   return results;
