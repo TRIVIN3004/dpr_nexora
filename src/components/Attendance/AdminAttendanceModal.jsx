@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Calendar, Clock, User, FileText, History, ShieldAlert } from 'lucide-react';
+import { X, Calendar, Clock, User, FileText, History, ShieldAlert, Mail } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getPersonalEmail } from '../../utils/emailService';
 
 export default function AdminAttendanceModal({ isOpen, onClose, users = [], initialRecord, onSave }) {
   const [employeeId, setEmployeeId] = useState('');
@@ -227,6 +228,24 @@ export default function AdminAttendanceModal({ isOpen, onClose, users = [], init
                   className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600 font-bold"
                 />
               </div>
+
+              {/* Absent Email Notice Info */}
+              {status === 'Absent' && (
+                <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 flex items-center justify-between text-xs gap-3">
+                  <div className="flex items-center gap-2.5 text-rose-800 dark:text-rose-300">
+                    <Mail className="h-4 w-4 shrink-0 text-rose-500" />
+                    <div>
+                      <span className="font-bold block">Resend Absence Alert Notice</span>
+                      <span className="text-[11px] text-slate-600 dark:text-slate-400">
+                        Official absence notice will be dispatched to: <strong className="font-mono text-rose-700 dark:text-rose-300">{getPersonalEmail(selectedUser)}</strong>
+                      </span>
+                    </div>
+                  </div>
+                  <span className="px-2 py-0.5 rounded bg-rose-200 dark:bg-rose-900/60 text-rose-900 dark:text-rose-200 text-[10px] font-extrabold uppercase shrink-0">
+                    Auto-Send
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Action buttons */}

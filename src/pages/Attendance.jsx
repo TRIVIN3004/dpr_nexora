@@ -27,7 +27,11 @@ import {
   Settings as SettingsIcon,
   LayoutDashboard,
   CalendarRange,
-  CalendarDays
+  CalendarDays,
+  Mail,
+  Send,
+  Eye,
+  Check
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { exportTodayAttendancePDF, exportAttendanceHistoryPDF, exportWorkforceAttendancePercentagesPDF } from '../utils/pdfExportTemplates';
@@ -42,10 +46,12 @@ import ReactivateUserModal from '../components/Attendance/ReactivateUserModal';
 import LeaveApplicationModal from '../components/Attendance/LeaveApplicationModal';
 import AdminLeaveReviewModal from '../components/Attendance/AdminLeaveReviewModal';
 import LeaveManagementView from '../components/Attendance/LeaveManagementView';
+import EmailPreviewModal from '../components/EmailPreviewModal';
 
 import { getDatabase, getCurrentUser } from '../utils/database';
 import { useDatabaseStore } from '../context/DatabaseContext';
 import { useTheme } from '../context/ThemeContext';
+import { getPersonalEmail, generateAttendanceAbsentEmail, generateAttendanceWarningEmail, generateAttendanceTerminationEmail } from '../utils/emailService';
 import { 
   getAttendanceRecords, 
   getAttendanceSettings, 
@@ -61,7 +67,10 @@ import {
   applyForLeave,
   updateLeaveApplicationStatus,
   cancelLeaveApplication,
-  autoMarkEveningAbsences
+  autoMarkEveningAbsences,
+  sendAttendanceAbsentEmailAlert,
+  sendAttendanceWarningEmailAlert,
+  sendAttendanceTerminationEmailAlert
 } from '../utils/attendanceDatabase';
 
 // Chart.js imports
@@ -145,6 +154,12 @@ export default function Attendance() {
 
   const [toast, setToast] = useState(null);
 
+  // Resend Email Alert State
+  const [emailSendingMap, setEmailSendingMap] = useState({});
+  const [emailSentMap, setEmailSentMap] = useState({});
+  const [previewModalData, setPreviewModalData] = useState(null);
+  const [batchSending, setBatchSending] = useState(false);
+
   const showToast = (msg, type = 'success') => {
     if (typeof msg === 'string') {
       setToast({ message: msg, type, title: type === 'error' ? 'Error' : 'Notification' });
@@ -152,6 +167,214 @@ export default function Attendance() {
       setToast(msg);
     }
     setTimeout(() => setToast(null), 3500);
+  };
+
+  const [isDispatchingDailyEmails, setIsDispatchingDailyEmails] = useState(false);
+
+  const handleTriggerDaily7pmEmails = async () => {
+    setIsDispatchingDailyEmails(true);
+    showToast('Evaluating & dispatching 7:00 PM Present and Absent emails...');
+    try {
+      const res = await fetch('/api/daily-attendance-cron?force=true', { method: 'POST' });
+      const data = await res.json();
+      if (data.success && data.results) {
+        showToast(
+          `7:00 PM Emails Sent! (${data.results.presentSent} Present, ${data.results.absentSent} Absent)`,
+          'success'
+        );
+      } else {
+        showToast(data.error || 'Processed 7:00 PM daily attendance emails', 'success');
+      }
+    } catch (e) {
+      showToast('Error dispatching 7:00 PM emails: ' + e.message, 'error');
+    } finally {
+      setIsDispatchingDailyEmails(false);
+    }
+  };
+
+  const handleSendAbsenceAlert = async (targetUser, record = null) => {
+    const alertKey = `${targetUser.id}_absent`;
+    setEmailSendingMap(prev => ({ ...prev, [alertKey]: true }));
+    try {
+      const stats = employeeStatsMap[targetUser.id];
+      const recDate = record?.date || todayStr;
+      const remarks = record?.remarks || 'Unexcused Absence';
+      const res = await sendAttendanceAbsentEmailAlert(targetUser, recDate, remarks, stats?.attendancePct);
+      if (res.success) {
+        setEmailSentMap(prev => ({
+          ...prev,
+          [alertKey]: {
+            status: res.simulated ? 'simulated' : 'delivered',
+            time: new Date().toLocaleTimeString(),
+            to: getPersonalEmail(targetUser)
+          }
+        }));
+        showToast(
+          res.simulated 
+            ? `Simulated absence notice logged for ${targetUser.name} (${getPersonalEmail(targetUser)})`
+            : `Absence notice dispatched via Resend to ${getPersonalEmail(targetUser)}!`,
+          'success'
+        );
+      } else {
+        showToast(res.error || 'Failed to dispatch absence notice.', 'error');
+      }
+    } catch (e) {
+      showToast('Error dispatching absence notice: ' + e.message, 'error');
+    } finally {
+      setEmailSendingMap(prev => ({ ...prev, [alertKey]: false }));
+    }
+  };
+
+  const handlePreviewAbsence = (targetUser, record = null) => {
+    const stats = employeeStatsMap[targetUser.id];
+    const personalMail = getPersonalEmail(targetUser);
+    const recDate = record?.date || todayStr;
+    const remarks = record?.remarks || 'Unexcused Absence';
+    const html = generateAttendanceAbsentEmail({
+      employeeName: targetUser.name,
+      employeeId: targetUser.id,
+      department: targetUser.department || 'General',
+      date: recDate,
+      reason: remarks,
+      attendancePct: stats?.attendancePct
+    });
+    setPreviewModalData({
+      isOpen: true,
+      recipientName: targetUser.name,
+      personalEmail: personalMail,
+      subject: `⚠️ Notice: Absence Recorded on ${recDate} [${targetUser.name}]`,
+      html,
+      type: 'attendance_absent',
+      metadata: { employeeId: targetUser.id, date: recDate, reason: remarks }
+    });
+  };
+
+  const handleSendWarningAlert = async (targetUser) => {
+    setEmailSendingMap(prev => ({ ...prev, [targetUser.id]: true }));
+    try {
+      const stats = employeeStatsMap[targetUser.id];
+      const res = await sendAttendanceWarningEmailAlert(targetUser, stats);
+      if (res.success) {
+        setEmailSentMap(prev => ({
+          ...prev,
+          [targetUser.id]: {
+            status: res.simulated ? 'simulated' : 'delivered',
+            time: new Date().toLocaleTimeString(),
+            to: getPersonalEmail(targetUser)
+          }
+        }));
+        showToast(
+          res.simulated 
+            ? `Simulated warning alert logged for ${targetUser.name} (${getPersonalEmail(targetUser)})`
+            : `Warning email dispatched via Resend to ${getPersonalEmail(targetUser)}!`,
+          'success'
+        );
+      } else {
+        showToast(res.error || 'Failed to dispatch email alert.', 'error');
+      }
+    } catch (e) {
+      showToast('Error dispatching alert: ' + e.message, 'error');
+    } finally {
+      setEmailSendingMap(prev => ({ ...prev, [targetUser.id]: false }));
+    }
+  };
+
+  const handleSendTerminationAlert = async (targetUser) => {
+    setEmailSendingMap(prev => ({ ...prev, [targetUser.id]: true }));
+    try {
+      const stats = employeeStatsMap[targetUser.id];
+      const res = await sendAttendanceTerminationEmailAlert(targetUser, stats);
+      if (res.success) {
+        setEmailSentMap(prev => ({
+          ...prev,
+          [targetUser.id]: {
+            status: res.simulated ? 'simulated' : 'delivered',
+            time: new Date().toLocaleTimeString(),
+            to: getPersonalEmail(targetUser)
+          }
+        }));
+        showToast(
+          res.simulated 
+            ? `Simulated suspension notice logged for ${targetUser.name} (${getPersonalEmail(targetUser)})`
+            : `Critical notice dispatched via Resend to ${getPersonalEmail(targetUser)}!`,
+          'success'
+        );
+      } else {
+        showToast(res.error || 'Failed to dispatch notice.', 'error');
+      }
+    } catch (e) {
+      showToast('Error dispatching notice: ' + e.message, 'error');
+    } finally {
+      setEmailSendingMap(prev => ({ ...prev, [targetUser.id]: false }));
+    }
+  };
+
+  const handlePreviewWarning = (targetUser) => {
+    const stats = employeeStatsMap[targetUser.id];
+    const personalMail = getPersonalEmail(targetUser);
+    const html = generateAttendanceWarningEmail({
+      employeeName: targetUser.name,
+      employeeId: targetUser.id,
+      department: targetUser.department || 'General',
+      attendancePct: stats?.attendancePct ?? 64,
+      requiredPct: 75
+    });
+    setPreviewModalData({
+      isOpen: true,
+      recipientName: targetUser.name,
+      personalEmail: personalMail,
+      subject: `⚠️ Nexora Attendance Warning: Attendance Rate at ${stats?.attendancePct ?? 64}%`,
+      html,
+      type: 'attendance_warning',
+      metadata: { employeeId: targetUser.id, attendancePct: stats?.attendancePct }
+    });
+  };
+
+  const handlePreviewTermination = (targetUser) => {
+    const stats = employeeStatsMap[targetUser.id];
+    const personalMail = getPersonalEmail(targetUser);
+    const html = generateAttendanceTerminationEmail({
+      employeeName: targetUser.name,
+      employeeId: targetUser.id,
+      department: targetUser.department || 'General',
+      attendancePct: stats?.attendancePct ?? 42
+    });
+    setPreviewModalData({
+      isOpen: true,
+      recipientName: targetUser.name,
+      personalEmail: personalMail,
+      subject: `🚨 Urgent: Nexora Portal Access Suspended [${targetUser.name}]`,
+      html,
+      type: 'attendance_termination',
+      metadata: { employeeId: targetUser.id, attendancePct: stats?.attendancePct }
+    });
+  };
+
+  const handleBatchSendWarnings = async () => {
+    if (warningsList.length === 0) return;
+    setBatchSending(true);
+    let sentCount = 0;
+    for (const u of warningsList) {
+      try {
+        const stats = employeeStatsMap[u.id];
+        const res = await sendAttendanceWarningEmailAlert(u, stats);
+        if (res.success) {
+          sentCount++;
+          setEmailSentMap(prev => ({
+            ...prev,
+            [u.id]: {
+              status: res.simulated ? 'simulated' : 'delivered',
+              time: new Date().toLocaleTimeString(),
+              to: getPersonalEmail(u)
+            }
+          }));
+        }
+      } catch (err) {
+        console.warn(`Failed warning alert to ${u.name}:`, err);
+      }
+    }
+    setBatchSending(false);
+    showToast(`Batch complete! Delivered email alerts to ${sentCount} staff personal mail IDs.`, 'success');
   };
 
   const { users: dbUsers, projects: dbProjects, attendance: dbAttendance, invalidateStore } = useDatabaseStore();
@@ -1047,6 +1270,16 @@ export default function Attendance() {
                     <FileSpreadsheet className="h-3.5 w-3.5" />
                     <span>Export Excel</span>
                   </button>
+                  <button
+                    type="button"
+                    onClick={handleTriggerDaily7pmEmails}
+                    disabled={isDispatchingDailyEmails}
+                    className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-black flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                    title="Dispatch 7:00 PM Present and Absent emails to all staff now"
+                  >
+                    <Mail className="h-3.5 w-3.5" />
+                    <span>{isDispatchingDailyEmails ? 'Dispatching 7 PM...' : 'Dispatch 7:00 PM Emails'}</span>
+                  </button>
                 </div>
               </div>
 
@@ -1486,6 +1719,10 @@ export default function Attendance() {
                         <div>
                           <span className="font-extrabold text-sm block text-slate-900 dark:text-white">{u.name}</span>
                           <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400">{u.id}</span>
+                          <span className="text-[10px] text-indigo-600 dark:text-indigo-400 flex items-center gap-1 font-mono truncate max-w-[170px]" title={`Linked Personal Email: ${getPersonalEmail(u)}`}>
+                            <Mail className="h-2.5 w-2.5 shrink-0" />
+                            <span className="truncate">{getPersonalEmail(u)}</span>
+                          </span>
                         </div>
                       </td>
                       <td className="p-3.5 font-semibold text-slate-700 dark:text-slate-300">{u.department || 'Engineering'}</td>
@@ -1555,16 +1792,45 @@ export default function Attendance() {
                           : (r?.remarks || (isPast7PM && !isTodaySunday ? 'Auto-Marked Absent (7:00 PM cutoff)' : 'Pending Check-In'))}
                       </td>
                       {isAdmin && (
-                        <td className="p-3.5 text-right">
-                          <button
-                            onClick={() => {
-                              setSelectedRecord(r || { employeeId: u.id, employeeName: u.name, date: todayStr, status: 'Present' });
-                              setShowAdminModal(true);
-                            }}
-                            className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-extrabold cursor-pointer shadow-xs transition-colors"
-                          >
-                            Edit
-                          </button>
+                        <td className="p-3.5 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {(!isPresent && !isLate && r?.status !== 'Leave' && r?.status !== 'Half Day' && !isTodaySunday) && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => handlePreviewAbsence(u, r)}
+                                  title={`Preview Absence Notice Email for ${u.name}`}
+                                  className="p-1.5 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 cursor-pointer transition-colors"
+                                >
+                                  <Eye className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleSendAbsenceAlert(u, r)}
+                                  disabled={emailSendingMap[`${u.id}_absent`]}
+                                  title={`Send Absence Alert via Resend to ${getPersonalEmail(u)}`}
+                                  className="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-extrabold cursor-pointer shadow-xs transition-colors inline-flex items-center gap-1 disabled:opacity-50"
+                                >
+                                  {emailSendingMap[`${u.id}_absent`] ? (
+                                    <span className="inline-block h-3 w-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                  ) : (
+                                    <Mail className="h-3.5 w-3.5" />
+                                  )}
+                                  <span>Alert Mail</span>
+                                </button>
+                              </>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedRecord(r || { employeeId: u.id, employeeName: u.name, date: todayStr, status: 'Present' });
+                                setShowAdminModal(true);
+                              }}
+                              className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-extrabold cursor-pointer shadow-xs transition-colors"
+                            >
+                              Edit
+                            </button>
+                          </div>
                         </td>
                       )}
                     </tr>
@@ -1892,30 +2158,128 @@ export default function Attendance() {
       {/* WARNINGS & DEACTIVATIONS TAB */}
       {activeTab === 'warnings' && (
         <div className="space-y-6">
+          {/* Header Action Banner for Resend Alerts */}
+          <div className="p-5 rounded-2xl border border-indigo-200 dark:border-indigo-800/60 bg-gradient-to-r from-indigo-50 via-white to-purple-50 dark:from-indigo-950/40 dark:via-slate-900/40 dark:to-purple-950/30 backdrop-blur-2xl shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="p-3 rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-500/25">
+                <Mail className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>Resend Email Alerts Pipeline</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                    Personal Mail ID Enabled
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                  Official warning and suspension notices are dispatched directly to staff personal mail IDs so they receive critical updates outside portal access.
+                </p>
+              </div>
+            </div>
+
+            {isAdmin && warningsList.length > 0 && (
+              <button
+                onClick={handleBatchSendWarnings}
+                disabled={batchSending}
+                className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black flex items-center gap-2 shadow-md shadow-indigo-600/20 cursor-pointer disabled:opacity-50 shrink-0 transition-all"
+              >
+                {batchSending ? (
+                  <>
+                    <span className="inline-block h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Dispatching Alerts...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-3.5 w-3.5" />
+                    <span>Dispatch Alerts to All At-Risk Staff ({warningsList.length})</span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+
+          {/* Active Warnings Section */}
           <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl space-y-4">
-            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-bold text-sm">
-              <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-              <span>Active Attendance Warnings (50% - 74%)</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-bold text-sm">
+                <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                <span>Active Attendance Warnings (50% - 74%)</span>
+              </div>
+              <span className="text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2.5 py-1 rounded-full border border-amber-200 dark:border-amber-800/60">
+                {warningsList.length} At-Risk Staff
+              </span>
             </div>
 
             {warningsList.length === 0 ? (
-              <p className="text-xs text-slate-500 dark:text-slate-400 italic">No employees currently under attendance warning status.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 italic py-4 text-center">No employees currently under attendance warning status.</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {warningsList.map(u => {
                   const st = employeeStatsMap[u.id];
+                  const personalMail = getPersonalEmail(u);
+                  const isSending = emailSendingMap[u.id];
+                  const sentInfo = emailSentMap[u.id];
+
                   return (
-                    <div key={u.id} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-amber-200 dark:border-amber-800/60 flex items-center justify-between">
-                      <div className="space-y-1">
-                        <h4 className="text-xs font-bold text-slate-900 dark:text-white">{u.name} ({u.id})</h4>
-                        <p className="text-[11px] text-slate-600 dark:text-slate-400">{u.department} • {u.email}</p>
-                        <span className="inline-block text-[10px] text-amber-800 dark:text-amber-300 font-bold bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800/60">
-                          Warning Notice Issued
-                        </span>
+                    <div key={u.id} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-amber-200 dark:border-amber-800/60 flex flex-col justify-between gap-3 shadow-sm hover:border-amber-400 transition-all">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="space-y-1">
+                          <h4 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-2">
+                            <span>{u.name}</span>
+                            <span className="font-mono text-[10px] text-slate-500 font-normal">({u.id})</span>
+                          </h4>
+                          <p className="text-[11px] text-slate-600 dark:text-slate-400">{u.department} • {u.email}</p>
+                          
+                          {/* Personal Mail ID Badge */}
+                          <div className="flex items-center gap-1.5 text-[11px] text-indigo-700 dark:text-indigo-300 font-semibold bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800/60 inline-flex mt-1">
+                            <Mail className="h-3 w-3 text-indigo-500" />
+                            <span>Alert Mail: <strong className="font-mono">{personalMail}</strong></span>
+                          </div>
+                        </div>
+
+                        <div className="text-right shrink-0">
+                          <span className="text-xl font-black text-amber-700 dark:text-amber-400 font-mono block">{st?.attendancePct}%</span>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Req: 75%</span>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <span className="text-lg font-black text-amber-700 dark:text-amber-400 font-mono block">{st?.attendancePct}%</span>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400">Req: 75%</span>
+
+                      {/* Sent status notification pill */}
+                      {sentInfo && (
+                        <div className="text-[10px] flex items-center gap-1 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-1 rounded border border-emerald-200 dark:border-emerald-800/60">
+                          <Check className="h-3 w-3" />
+                          <span>Alert dispatched to <strong>{sentInfo.to}</strong> at {sentInfo.time} ({sentInfo.status})</span>
+                        </div>
+                      )}
+
+                      {/* Action buttons */}
+                      <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-white/10">
+                        <button
+                          onClick={() => handlePreviewWarning(u)}
+                          className="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-[10px] font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                        >
+                          <Eye className="h-3 w-3" />
+                          <span>Preview Email</span>
+                        </button>
+
+                        {isAdmin && (
+                          <button
+                            onClick={() => handleSendWarningAlert(u)}
+                            disabled={isSending}
+                            className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-bold flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50 transition-colors"
+                          >
+                            {isSending ? (
+                              <>
+                                <span className="inline-block h-2.5 w-2.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                <span>Sending...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Send className="h-3 w-3" />
+                                <span>Send Email Alert (Resend)</span>
+                              </>
+                            )}
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
@@ -1924,40 +2288,101 @@ export default function Attendance() {
             )}
           </div>
 
+          {/* Deactivated Section */}
           <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-white/[0.07] backdrop-blur-2xl shadow-xl space-y-4">
-            <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400 font-bold text-sm">
-              <UserX className="h-5 w-5 text-rose-600 dark:text-rose-400" />
-              <span>Deactivated / Terminated Accounts (&lt;50% Attendance)</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400 font-bold text-sm">
+                <UserX className="h-5 w-5 text-rose-600 dark:text-rose-400" />
+                <span>Deactivated / Suspended Accounts (&lt;50% Attendance)</span>
+              </div>
+              <span className="text-xs font-bold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 px-2.5 py-1 rounded-full border border-rose-200 dark:border-rose-800/60">
+                {terminatedList.length} Suspended
+              </span>
             </div>
 
             {terminatedList.length === 0 ? (
-              <p className="text-xs text-slate-500 dark:text-slate-400 italic">No accounts deactivated under attendance policy.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 italic py-4 text-center">No accounts deactivated under attendance policy.</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {terminatedList.map(u => {
                   const st = employeeStatsMap[u.id];
+                  const personalMail = getPersonalEmail(u);
+                  const isSending = emailSendingMap[u.id];
+                  const sentInfo = emailSentMap[u.id];
+
                   return (
-                    <div key={u.id} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-rose-200 dark:border-rose-800/60 flex items-center justify-between">
-                      <div className="space-y-1">
-                        <h4 className="text-xs font-bold text-slate-900 dark:text-white">{u.name} ({u.id})</h4>
-                        <p className="text-[11px] text-slate-600 dark:text-slate-400">Reason: Attendance Below Company Policy</p>
-                        <span className="inline-block text-[10px] text-rose-800 dark:text-rose-300 font-bold bg-rose-100 dark:bg-rose-950/60 px-2 py-0.5 rounded border border-rose-200 dark:border-rose-800/60">
-                          Login Access Revoked
-                        </span>
+                    <div key={u.id} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-rose-200 dark:border-rose-800/60 flex flex-col justify-between gap-3 shadow-sm hover:border-rose-400 transition-all">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="space-y-1">
+                          <h4 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-2">
+                            <span>{u.name}</span>
+                            <span className="font-mono text-[10px] text-slate-500 font-normal">({u.id})</span>
+                          </h4>
+                          <p className="text-[11px] text-slate-600 dark:text-slate-400">Reason: Attendance Below Company Policy (&lt;50%)</p>
+                          
+                          {/* Personal Mail ID Badge */}
+                          <div className="flex items-center gap-1.5 text-[11px] text-indigo-700 dark:text-indigo-300 font-semibold bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800/60 inline-flex mt-1">
+                            <Mail className="h-3 w-3 text-indigo-500" />
+                            <span>Alert Mail: <strong className="font-mono">{personalMail}</strong></span>
+                          </div>
+                        </div>
+
+                        <div className="text-right shrink-0">
+                          <span className="text-xl font-black text-rose-700 dark:text-rose-400 font-mono block">{st?.attendancePct || 42}%</span>
+                          <span className="inline-block text-[10px] text-rose-800 dark:text-rose-300 font-bold bg-rose-100 dark:bg-rose-950/60 px-2 py-0.5 rounded border border-rose-200 dark:border-rose-800/60 mt-1">
+                            Login Revoked
+                          </span>
+                        </div>
                       </div>
 
-                      <div className="text-right space-y-2">
-                        <span className="text-lg font-black text-rose-700 dark:text-rose-400 font-mono block">{st?.attendancePct || 42}%</span>
+                      {/* Sent status notification pill */}
+                      {sentInfo && (
+                        <div className="text-[10px] flex items-center gap-1 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-1 rounded border border-emerald-200 dark:border-emerald-800/60">
+                          <Check className="h-3 w-3" />
+                          <span>Notice dispatched to <strong>{sentInfo.to}</strong> at {sentInfo.time} ({sentInfo.status})</span>
+                        </div>
+                      )}
+
+                      {/* Actions */}
+                      <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-white/10">
+                        <button
+                          onClick={() => handlePreviewTermination(u)}
+                          className="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-[10px] font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                        >
+                          <Eye className="h-3 w-3" />
+                          <span>Preview Notice</span>
+                        </button>
+
                         {isAdmin && (
-                          <button
-                            onClick={() => {
-                              setTargetReactivateUser(u);
-                              setShowReactivateModal(true);
-                            }}
-                            className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold shadow-sm cursor-pointer"
-                          >
-                            Reactivate Access
-                          </button>
+                          <>
+                            <button
+                              onClick={() => handleSendTerminationAlert(u)}
+                              disabled={isSending}
+                              className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-bold flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50 transition-colors"
+                            >
+                              {isSending ? (
+                                <>
+                                  <span className="inline-block h-2.5 w-2.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                  <span>Sending...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Send className="h-3 w-3" />
+                                  <span>Send Deactivation Notice (Resend)</span>
+                                </>
+                              )}
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                setTargetReactivateUser(u);
+                                setShowReactivateModal(true);
+                              }}
+                              className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold shadow-sm cursor-pointer transition-colors"
+                            >
+                              Reactivate Access
+                            </button>
+                          </>
                         )}
                       </div>
                     </div>
@@ -2121,6 +2546,38 @@ export default function Attendance() {
           )}
         </AnimatePresence>,
         document.body
+      )}
+
+      {/* Resend Email Alert Preview Modal */}
+      {previewModalData && (
+        <EmailPreviewModal
+          isOpen={previewModalData.isOpen}
+          onClose={() => setPreviewModalData(null)}
+          recipientName={previewModalData.recipientName}
+          personalEmail={previewModalData.personalEmail}
+          subject={previewModalData.subject}
+          html={previewModalData.html}
+          type={previewModalData.type}
+          metadata={previewModalData.metadata}
+          onSent={(res) => {
+            if (previewModalData.metadata?.employeeId) {
+              setEmailSentMap(prev => ({
+                ...prev,
+                [previewModalData.metadata.employeeId]: {
+                  status: res.simulated ? 'simulated' : 'delivered',
+                  time: new Date().toLocaleTimeString(),
+                  to: previewModalData.personalEmail
+                }
+              }));
+            }
+            showToast(
+              res.simulated 
+                ? `Simulated email alert logged for ${previewModalData.personalEmail}`
+                : `Email alert delivered via Resend to ${previewModalData.personalEmail}!`,
+              'success'
+            );
+          }}
+        />
       )}
 
     </div>

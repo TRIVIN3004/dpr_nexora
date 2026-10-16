@@ -8,6 +8,8 @@ import {
   deleteProject,
   editProject
 } from '../utils/database';
+import { getPersonalEmail } from '../utils/emailService';
+import BulkPersonalEmailModal from '../components/BulkPersonalEmailModal';
 import { 
   UserPlus, 
   Edit2, 
@@ -38,12 +40,14 @@ export default function TeamManagement() {
   
   // Project creation form states
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
+  const [showBulkEmailModal, setShowBulkEmailModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDescription, setNewProjectDescription] = useState('');
 
   // Form values
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [personalEmail, setPersonalEmail] = useState('');
   const [empId, setEmpId] = useState('');
   const [department, setDepartment] = useState('Engineering');
   const [phone, setPhone] = useState('');
@@ -62,6 +66,7 @@ export default function TeamManagement() {
       id: empId,
       name,
       email,
+      personalEmail: personalEmail.trim() || undefined,
       department,
       phone,
       assignedProjects: assignedProjects.length > 0 ? assignedProjects : ['Nexora ERP']
@@ -85,6 +90,7 @@ export default function TeamManagement() {
     const payload = {
       name,
       email,
+      personalEmail: personalEmail.trim() || undefined,
       department,
       phone,
       assignedProjects: assignedProjects.length > 0 ? assignedProjects : ['Nexora ERP']
@@ -117,6 +123,7 @@ export default function TeamManagement() {
     setSelectedMember(member);
     setName(member.name);
     setEmail(member.email);
+    setPersonalEmail(member.personalEmail || getPersonalEmail(member) || '');
     setEmpId(member.id);
     setDepartment(member.department);
     setPhone(member.phone || '');
@@ -177,6 +184,7 @@ export default function TeamManagement() {
   const resetForm = () => {
     setName('');
     setEmail('');
+    setPersonalEmail('');
     setEmpId('');
     setDepartment('Engineering');
     setPhone('');
@@ -201,7 +209,14 @@ export default function TeamManagement() {
           <h3 className="text-base font-black text-slate-900 dark:text-white tracking-wide">Team Member Management Registry</h3>
           <p className="text-xs font-semibold text-slate-500 dark:text-slate-300 mt-1">Create, edit and manage project allocations for your crew</p>
         </div>
-        <div className="flex gap-2.5">
+        <div className="flex flex-wrap gap-2.5">
+          <button
+            onClick={() => setShowBulkEmailModal(true)}
+            className="px-3.5 py-2 text-xs font-bold rounded-xl border border-emerald-300 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs bg-white dark:bg-emerald-950/20"
+          >
+            <Mail className="h-4 w-4 text-emerald-500" />
+            <span>Link Personal Emails</span>
+          </button>
           <button
             onClick={() => setShowAddProjectModal(true)}
             className="px-4 py-2 text-xs font-bold rounded-xl border border-slate-300 dark:border-white/20 hover:bg-slate-100 dark:hover:bg-white/15 transition-all flex items-center gap-1.5 cursor-pointer text-slate-800 dark:text-white bg-slate-100 dark:bg-white/10 shadow-xs backdrop-blur-md"
@@ -263,6 +278,10 @@ export default function TeamManagement() {
                 <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-200">
                   <Mail className="h-3.5 w-3.5 text-indigo-600 dark:text-[#818cf8]" />
                   <span className="truncate">{member.email}</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800/60">
+                  <Mail className="h-3 w-3 text-emerald-500 shrink-0" />
+                  <span className="truncate">Alert Mail: <strong>{getPersonalEmail(member)}</strong></span>
                 </div>
                 <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-200">
                   <Phone className="h-3.5 w-3.5 text-indigo-600 dark:text-[#818cf8]" />
@@ -346,7 +365,7 @@ export default function TeamManagement() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-slate-700 dark:text-slate-200 font-extrabold">Email *</label>
+                  <label className="text-slate-700 dark:text-slate-200 font-extrabold">Work Email *</label>
                   <input
                     type="email"
                     required
@@ -366,6 +385,22 @@ export default function TeamManagement() {
                     className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold placeholder-slate-400 focus:outline-none focus:border-indigo-500"
                   />
                 </div>
+              </div>
+
+              {/* Personal Email Field for Resend alerts */}
+              <div className="space-y-1">
+                <label className="text-slate-700 dark:text-slate-200 font-extrabold flex items-center justify-between">
+                  <span>Personal Email (Alerts Destination)</span>
+                  <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-800">Resend Enabled</span>
+                </label>
+                <input
+                  type="email"
+                  value={personalEmail}
+                  onChange={(e) => setPersonalEmail(e.target.value)}
+                  placeholder="e.g. employee.personal@gmail.com"
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+                />
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Attendance warnings, leave decisions, and login credentials will be dispatched to this personal mail ID.</span>
               </div>
 
               {/* Project assignments checklist */}
@@ -443,7 +478,7 @@ export default function TeamManagement() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-slate-700 dark:text-slate-200 font-extrabold">Email *</label>
+                  <label className="text-slate-700 dark:text-slate-200 font-extrabold">Work Email *</label>
                   <input
                     type="email"
                     required
@@ -461,6 +496,22 @@ export default function TeamManagement() {
                     className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold placeholder-slate-400 focus:outline-none focus:border-indigo-500"
                   />
                 </div>
+              </div>
+
+              {/* Personal Email Field for Resend alerts */}
+              <div className="space-y-1">
+                <label className="text-slate-700 dark:text-slate-200 font-extrabold flex items-center justify-between">
+                  <span>Personal Email (Alerts Destination)</span>
+                  <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-800">Resend Enabled</span>
+                </label>
+                <input
+                  type="email"
+                  value={personalEmail}
+                  onChange={(e) => setPersonalEmail(e.target.value)}
+                  placeholder="e.g. employee.personal@gmail.com"
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+                />
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Attendance warnings, leave decisions, and login credentials will be dispatched to this personal mail ID.</span>
               </div>
 
               {/* Project assignments checklist */}
@@ -587,6 +638,17 @@ export default function TeamManagement() {
           </div>
         </div>
       )}
+
+      {/* BULK PERSONAL EMAIL LINKER MODAL */}
+      <BulkPersonalEmailModal
+        isOpen={showBulkEmailModal}
+        onClose={() => setShowBulkEmailModal(false)}
+        members={members}
+        onSaved={() => {
+          triggerToast("All personal emails saved and linked to crew profiles!");
+          invalidateStore('users');
+        }}
+      />
 
     </div>
   );

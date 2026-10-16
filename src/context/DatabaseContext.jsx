@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../utils/database';
+import { getPersonalEmail } from '../utils/emailService';
 
 const DatabaseContext = createContext(null);
 
@@ -65,11 +66,15 @@ export function DatabaseProvider({ children }) {
           .limit(100);
 
         if (!error && data) {
-          setUsers(data);
+          const enriched = data.map(u => ({
+            ...u,
+            personalEmail: getPersonalEmail(u)
+          }));
+          setUsers(enriched);
           cacheTimestamps.current[key] = Date.now();
-          try { localStorage.setItem('nexora_users_cache', JSON.stringify(data)); } catch(e){}
+          try { localStorage.setItem('nexora_users_cache', JSON.stringify(enriched)); } catch(e){}
           logRequest('USERS_LIST', data.length, JSON.stringify(data).length);
-          return data;
+          return enriched;
         }
       } catch (err) {
         console.warn("fetchUsers notice:", err);

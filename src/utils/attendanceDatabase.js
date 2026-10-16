@@ -1,4 +1,14 @@
 import { supabase } from './database';
+import { 
+  getPersonalEmail, 
+  sendEmailAlert, 
+  generateAttendanceAbsentEmail,
+  generateAttendancePresentEmail,
+  generateAttendanceWarningEmail, 
+  generateAttendanceTerminationEmail, 
+  generateAccountReactivationEmail, 
+  generateLeaveStatusEmail 
+} from './emailService';
 
 // Global In-Memory Fallback Cache for local preview reliability
 let localAttendanceCache = null;
@@ -382,6 +392,22 @@ export const adminUpdateAttendance = async (attendanceData, adminName) => {
       // ignore notification errors
     }
 
+    // If status is Absent, dispatch Absence Notice to personal email via Resend
+    if (attendanceData.status === 'Absent') {
+      try {
+        const targetStaff = {
+          id: attendanceData.employeeId,
+          name: attendanceData.employeeName,
+          department: attendanceData.department,
+          email: attendanceData.employeeEmail
+        };
+        sendAttendanceAbsentEmailAlert(targetStaff, attendanceData.date, finalRemarks)
+          .catch(err => console.warn('Async absent alert error:', err));
+      } catch (e) {
+        console.warn('Could not dispatch absent email alert:', e);
+      }
+    }
+
     window.dispatchEvent(new Event('database_updated'));
     return { success: true, record: savedRecord };
   } catch (err) {
@@ -551,6 +577,19 @@ export const autoMarkEveningAbsences = async (users = [], existingRecords = []) 
       // ignore duplicate notification error
     }
 
+    // Dispatch absence email alerts via Resend to each auto-marked employee's personal email
+    recordsToUpsert.forEach(rec => {
+      try {
+        const staffMember = staffUsers.find(s => s.id === rec.employeeId) || {
+          id: rec.employeeId,
+          name: rec.employeeName,
+          department: rec.department
+        };
+        sendAttendanceAbsentEmailAlert(staffMember, todayStr, rec.remarks)
+          .catch(err => console.warn('Async evening absence alert dispatch note:', err));
+      } catch (err) {}
+    });
+
     if (!localAttendanceCache) localAttendanceCache = [];
     recordsToUpsert.forEach(rec => {
       const idx = localAttendanceCache.findIndex(r => r.id === rec.id);
@@ -647,6 +686,108 @@ export const evaluateCompanyAttendancePolicy = async (users = [], records = [], 
   return { warnings: warningsList, terminations: terminationList };
 };
 
+// 8b. Dispatch Resend Email Alerts to Personal Email
+export const sendAttendanceAbsentEmailAlert = async (user, date = getTodayString(), reason = 'Unexcused Absence', attendancePct = null) => {
+  const personalMail = getPersonalEmail(user);
+  if (!personalMail) {
+    return { success: false, error: `No personal email registered for ${user.name || user.id}` };
+  }
+
+  const html = generateAttendanceAbsentEmail({
+    employeeName: user.name,
+    employeeId: user.id,
+    department: user.department || 'General',
+    date,
+    reason,
+    attendancePct
+  });
+
+  return await sendEmailAlert({
+    to: personalMail,
+    recipientName: user.name,
+    subject: `⚠️ Notice: Absence Recorded on ${date} [${user.name}]`,
+    html,
+    type: 'attendance_absent',
+    metadata: { employeeId: user.id, date, reason }
+  });
+};
+
+export const sendAttendancePresentEmailAlert = async (user, date = getTodayString(), checkInTime = 'Recorded', checkOutTime = '', attendancePct = null, remarks = 'On time') => {
+  const personalMail = getPersonalEmail(user);
+  if (!personalMail) {
+    return { success: false, error: `No personal email registered for ${user.name || user.id}` };
+  }
+
+  const html = generateAttendancePresentEmail({
+    employeeName: user.name,
+    employeeId: user.id,
+    department: user.department || 'General',
+    date,
+    checkInTime,
+    checkOutTime,
+    attendancePct: attendancePct ?? user.attendancePercentage ?? 95,
+    remarks
+  });
+
+  return await sendEmailAlert({
+    to: personalMail,
+    recipientName: user.name,
+    subject: `✅ Attendance Recorded: Present on ${date} [${user.name}]`,
+    html,
+    type: 'attendance_present',
+    metadata: { employeeId: user.id, date, checkInTime }
+  });
+};
+
+export const sendAttendanceWarningEmailAlert = async (user, stats) => {
+  const personalMail = getPersonalEmail(user);
+  if (!personalMail) {
+    return { success: false, error: `No personal email registered for ${user.name || user.id}` };
+  }
+
+  const attendancePct = stats?.attendancePct ?? user.attendancePercentage ?? 64;
+  const html = generateAttendanceWarningEmail({
+    employeeName: user.name,
+    employeeId: user.id,
+    department: user.department || 'General',
+    attendancePct,
+    requiredPct: 75
+  });
+
+  return await sendEmailAlert({
+    to: personalMail,
+    recipientName: user.name,
+    subject: `⚠️ Notice: Nexora Attendance Warning [${user.name} - ${attendancePct}%]`,
+    html,
+    type: 'attendance_warning',
+    metadata: { employeeId: user.id, attendancePct }
+  });
+};
+
+export const sendAttendanceTerminationEmailAlert = async (user, stats) => {
+  const personalMail = getPersonalEmail(user);
+  if (!personalMail) {
+    return { success: false, error: `No personal email registered for ${user.name || user.id}` };
+  }
+
+  const attendancePct = stats?.attendancePct ?? user.attendancePercentage ?? 42;
+  const html = generateAttendanceTerminationEmail({
+    employeeName: user.name,
+    employeeId: user.id,
+    department: user.department || 'General',
+    attendancePct
+  });
+
+  return await sendEmailAlert({
+    to: personalMail,
+    recipientName: user.name,
+    subject: `🚨 Critical Notice: Nexora Portal Access Suspended [${user.name}]`,
+    html,
+    type: 'attendance_termination',
+    metadata: { employeeId: user.id, attendancePct }
+  });
+};
+
 // 9. Reactivate Terminated Employee (Admin Action)
 export const reactivateEmployeeAccount = async (employeeId, adminName) => {
   try {
@@ -685,6 +826,28 @@ export const reactivateEmployeeAccount = async (employeeId, adminName) => {
       });
     } catch (e) {
       // ignore
+    }
+
+    // 4. Dispatch Reactivation Email Alert to Personal Mail via Resend
+    try {
+      const personalMail = getPersonalEmail(user || { id: employeeId });
+      if (personalMail) {
+        const html = generateAccountReactivationEmail({
+          employeeName: user?.name || `Employee ${employeeId}`,
+          employeeId,
+          adminName
+        });
+        sendEmailAlert({
+          to: personalMail,
+          recipientName: user?.name || `Employee ${employeeId}`,
+          subject: `✅ Nexora Portal Access Restored [${employeeId}]`,
+          html,
+          type: 'account_reactivated',
+          metadata: { employeeId, adminName }
+        }).catch(e => console.warn('Async reactivation email alert error:', e));
+      }
+    } catch (mErr) {
+      console.warn('Could not dispatch reactivation email alert via Resend:', mErr);
     }
 
     window.dispatchEvent(new Event('database_updated'));
@@ -1061,6 +1224,33 @@ export const updateLeaveApplicationStatus = async (applicationId, status, adminR
           read: false
         });
       } catch (e) {}
+
+      // Dispatch Leave Application Decision Email Alert to Personal Mail via Resend
+      try {
+        const personalMail = getPersonalEmail({ id: targetApp.employeeId, email: targetApp.employeeEmail });
+        if (personalMail) {
+          const html = generateLeaveStatusEmail({
+            employeeName: targetApp.employeeName,
+            leaveType: targetApp.leaveType,
+            startDate: targetApp.startDate,
+            endDate: targetApp.endDate,
+            totalDays: targetApp.totalDays,
+            status,
+            remarks: adminRemarks,
+            adminName
+          });
+          sendEmailAlert({
+            to: personalMail,
+            recipientName: targetApp.employeeName,
+            subject: `Nexora Leave Application ${status}: ${targetApp.leaveType}`,
+            html,
+            type: 'leave_status',
+            metadata: { applicationId, status }
+          }).catch(e => console.warn('Async leave email alert error:', e));
+        }
+      } catch (mErr) {
+        console.warn('Could not dispatch leave decision email alert via Resend:', mErr);
+      }
     }
 
     window.dispatchEvent(new Event('database_updated'));

@@ -1,4 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
+import { 
+  getPersonalEmail, 
+  savePersonalEmail, 
+  sendEmailAlert, 
+  generateDprReviewEmail, 
+  generateWelcomeEmail 
+} from './emailService';
 
 let supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 console.log(JSON.stringify(import.meta.env.VITE_SUPABASE_URL));
@@ -135,9 +142,9 @@ export const simulatePasswordReset = async (email) => {
 
 const DEFAULT_FALLBACK_DATABASE = {
   users: [
-    { id: 'USR-001', name: 'Admin User', email: 'admin@nexora.com', role: 'admin', assignedProjects: ['All'] },
-    { id: 'USR-002', name: 'Alex Johnson', email: 'alex@nexora.com', role: 'member', assignedProjects: ['Project Nexora'] },
-    { id: 'USR-003', name: 'Sarah Miller', email: 'sarah@nexora.com', role: 'member', assignedProjects: ['Cloud Infrastructure'] }
+    { id: 'USR-001', name: 'Admin User', email: 'admin@nexora.com', personalEmail: 'trivin.nexora@gmail.com', role: 'admin', assignedProjects: ['All'] },
+    { id: 'USR-002', name: 'Alex Johnson', email: 'alex@nexora.com', personalEmail: 'alex.johnson.personal@gmail.com', role: 'member', assignedProjects: ['Project Nexora'] },
+    { id: 'USR-003', name: 'Sarah Miller', email: 'sarah@nexora.com', personalEmail: 'sarah.miller.personal@gmail.com', role: 'member', assignedProjects: ['Cloud Infrastructure'] }
   ],
   projects: [
     { id: 'PRJ-001', name: 'Project Nexora', status: 'Active', description: 'Enterprise DPR System' },
@@ -198,7 +205,7 @@ export const getDatabase = async () => {
     }
 
     const data = {
-      users: usersRes.data || [],
+      users: (usersRes.data || []).map(u => ({ ...u, personalEmail: getPersonalEmail(u) })),
       projects: projectsRes.data || [],
       reports: reportsRes.data || [],
       announcements: announcementsRes.data || [],
@@ -341,6 +348,31 @@ export const reviewReportStatus = async (reportId, status, feedback, adminName) 
       };
 
       await supabase.from('notifications').insert(newNotification);
+
+      // Dispatch automated Resend email alert to employee's personal mail ID
+      try {
+        const targetPersonalEmail = getPersonalEmail(employee || { email: report.employeeEmail, id: report.employeeId });
+        if (targetPersonalEmail) {
+          const html = generateDprReviewEmail({
+            employeeName: report.employeeName,
+            projectName: report.projectName,
+            moduleName: report.moduleName,
+            status,
+            feedback,
+            adminName
+          });
+          sendEmailAlert({
+            to: targetPersonalEmail,
+            recipientName: report.employeeName,
+            subject: `Nexora DPR Status: ${report.projectName} [${status}]`,
+            html,
+            type: 'dpr_status',
+            metadata: { reportId, status, projectName: report.projectName }
+          }).catch(e => console.warn('Async DPR email alert dispatch warning:', e));
+        }
+      } catch (mailErr) {
+        console.warn('Could not dispatch DPR review email alert via Resend:', mailErr);
+      }
     }
 
     return { success: true, report };
@@ -352,13 +384,21 @@ export const reviewReportStatus = async (reportId, status, feedback, adminName) 
 export const addTeamMember = async (memberData) => {
   try {
     const newId = memberData.id || `EMP-${Math.floor(100 + Math.random() * 900)}`;
+    const personalEmail = memberData.personalEmail || getPersonalEmail({ id: newId, email: memberData.email });
+    
+    // Persist personal email mapping
+    if (personalEmail) {
+      savePersonalEmail(newId, personalEmail);
+    }
+
     const newMember = {
       id: newId,
       password: "123456",
       mustChangePassword: true,
       avatar: memberData.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
       role: "member",
-      ...memberData
+      ...memberData,
+      personalEmail
     };
 
     const { data: existing } = await supabase
@@ -381,13 +421,45 @@ export const addTeamMember = async (memberData) => {
       read: false
     };
 
-    const [userInsert, notifInsert] = await Promise.all([
-      supabase.from('users').insert(newMember),
-      supabase.from('notifications').insert(newNotification)
-    ]);
+    // Strip personalEmail if DB schema column not present to avoid Supabase schema errors
+    const { personalEmail: _, ...dbMember } = newMember;
+    let userInsert;
+    try {
+      userInsert = await supabase.from('users').insert(newMember);
+      if (userInsert.error && userInsert.error.message.includes('personalEmail')) {
+        userInsert = await supabase.from('users').insert(dbMember);
+      }
+    } catch (e) {
+      userInsert = await supabase.from('users').insert(dbMember);
+    }
+
+    const notifInsert = await supabase.from('notifications').insert(newNotification);
 
     if (userInsert.error) throw userInsert.error;
     if (notifInsert.error) throw notifInsert.error;
+
+    // Dispatch welcome credentials alert to personal email via Resend
+    if (personalEmail) {
+      try {
+        const welcomeHtml = generateWelcomeEmail({
+          employeeName: newMember.name,
+          employeeId: newId,
+          workEmail: newMember.email,
+          tempPassword: newMember.password,
+          personalEmail
+        });
+        sendEmailAlert({
+          to: personalEmail,
+          recipientName: newMember.name,
+          subject: 'Welcome to Nexora Portal - Your Account Credentials',
+          html: welcomeHtml,
+          type: 'account_created',
+          metadata: { employeeId: newId }
+        }).catch(e => console.warn('Async welcome email alert warning:', e));
+      } catch (mErr) {
+        console.warn('Could not dispatch welcome email via Resend:', mErr);
+      }
+    }
 
     return { success: true, member: newMember };
   } catch (err) {
@@ -410,14 +482,38 @@ export const editTeamMember = async (memberId, memberData) => {
       }
     }
 
-    const { data, error } = await supabase
-      .from('users')
-      .update(memberData)
-      .eq('id', memberId)
-      .select()
-      .single();
+    if (memberData.personalEmail) {
+      savePersonalEmail(memberId, memberData.personalEmail);
+    }
 
-    if (error) throw error;
+    const { personalEmail: _, ...dbPayload } = memberData;
+    let res;
+    try {
+      res = await supabase
+        .from('users')
+        .update(memberData)
+        .eq('id', memberId)
+        .select()
+        .single();
+      if (res.error && res.error.message.includes('personalEmail')) {
+        res = await supabase
+          .from('users')
+          .update(dbPayload)
+          .eq('id', memberId)
+          .select()
+          .single();
+      }
+    } catch (e) {
+      res = await supabase
+        .from('users')
+        .update(dbPayload)
+        .eq('id', memberId)
+        .select()
+        .single();
+    }
+
+    if (res.error) throw res.error;
+    const data = { ...res.data, personalEmail: memberData.personalEmail || getPersonalEmail(res.data) };
 
     const currentUser = getCurrentUser();
     if (currentUser && currentUser.id === memberId) {
@@ -429,6 +525,7 @@ export const editTeamMember = async (memberId, memberData) => {
     return { success: false, error: err.message };
   }
 };
+
 
 export const deleteTeamMember = async (memberId) => {
   try {

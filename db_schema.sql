@@ -15,6 +15,7 @@ CREATE TABLE public.users (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   email TEXT UNIQUE NOT NULL,
+  "personalEmail" TEXT,
   password TEXT NOT NULL,
   role TEXT NOT NULL DEFAULT 'member',
   department TEXT,

@@ -2,8 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { getCurrentUser, editTeamMember, getDatabase } from '../utils/database';
 import { compressImage, uploadFileToStorage } from '../utils/storageService';
 import { useDatabaseStore } from '../context/DatabaseContext';
-import { User, Shield, Bell, Key, Sparkles, Building2, CheckCircle2, Camera, Check } from 'lucide-react';
+import { User, Shield, Bell, Key, Sparkles, Building2, CheckCircle2, Camera, Check, Mail, Send, Eye, ShieldCheck, ExternalLink, RefreshCw, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import EmailPreviewModal from '../components/EmailPreviewModal';
+import { 
+  getPersonalEmail, 
+  savePersonalEmail, 
+  getResendConfig, 
+  saveResendConfig, 
+  getEmailAlertLogs, 
+  sendEmailAlert, 
+  generateTestEmail 
+} from '../utils/emailService';
 
 const PRESET_AVATARS = [
   { id: '1', name: 'Man 1', url: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150' },
@@ -27,8 +37,18 @@ export default function Settings() {
   // Profile Form States
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [personalEmail, setPersonalEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
+
+  // Resend Configuration State
+  const [resendApiKey, setResendApiKey] = useState('');
+  const [resendFromEmail, setResendFromEmail] = useState('Nexora Alerts <onboarding@resend.dev>');
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [isTestingResend, setIsTestingResend] = useState(false);
+  const [testResult, setTestResult] = useState(null);
+  const [emailLogs, setEmailLogs] = useState([]);
+  const [previewModalData, setPreviewModalData] = useState(null);
 
   // Password reset States
   const [currPassword, setCurrPassword] = useState('');
@@ -51,9 +71,19 @@ export default function Settings() {
     if (user) {
       setName(user.name);
       setEmail(user.email);
+      setPersonalEmail(user.personalEmail || getPersonalEmail(user) || '');
       setPhone(user.phone || '');
       setAvatarUrl(user.avatar || '');
     }
+
+    const cfg = getResendConfig();
+    setResendApiKey(cfg.apiKey || '');
+    setResendFromEmail(cfg.fromEmail || 'Nexora Alerts <onboarding@resend.dev>');
+    setEmailLogs(getEmailAlertLogs());
+
+    const handleLogUpdate = () => setEmailLogs(getEmailAlertLogs());
+    window.addEventListener('nexora:email_alert_sent', handleLogUpdate);
+    return () => window.removeEventListener('nexora:email_alert_sent', handleLogUpdate);
   }, []);
 
   if (!currentUser) return null;
@@ -65,13 +95,57 @@ export default function Settings() {
 
   const handleProfileSave = async (e) => {
     e.preventDefault();
-    const res = await editTeamMember(currentUser.id, { name, email, phone, avatar: avatarUrl });
+    if (personalEmail) {
+      savePersonalEmail(currentUser.id, personalEmail);
+    }
+    const res = await editTeamMember(currentUser.id, { name, email, personalEmail, phone, avatar: avatarUrl });
     if (res.success) {
-      sessionStorage.setItem("nexora_current_user", JSON.stringify({ ...currentUser, name, email, phone, avatar: avatarUrl }));
+      sessionStorage.setItem("nexora_current_user", JSON.stringify({ ...currentUser, name, email, personalEmail, phone, avatar: avatarUrl }));
       triggerToast("Profile details updated successfully!");
       invalidateStore('users');
     } else {
       alert(res.error);
+    }
+  };
+
+  const handleSaveResendSettings = (e) => {
+    e.preventDefault();
+    saveResendConfig({
+      apiKey: resendApiKey.trim(),
+      fromEmail: resendFromEmail.trim()
+    });
+    triggerToast("Resend API settings saved successfully!");
+  };
+
+  const handleSendTestAlert = async () => {
+    const targetEmail = personalEmail || email;
+    if (!targetEmail) {
+      alert("Please provide a personal email address first.");
+      return;
+    }
+    setIsTestingResend(true);
+    setTestResult(null);
+    try {
+      const html = generateTestEmail({ userName: name, personalEmail: targetEmail });
+      const res = await sendEmailAlert({
+        to: targetEmail,
+        recipientName: name,
+        subject: 'Nexora Portal: Resend Email Delivery Test',
+        html,
+        type: 'test_alert',
+        metadata: { triggeredBy: currentUser.id }
+      });
+      setTestResult(res);
+      setEmailLogs(getEmailAlertLogs());
+      if (res.success) {
+        triggerToast(res.simulated ? 'Test alert simulated!' : 'Test email dispatched via Resend!');
+      } else {
+        triggerToast('Failed: ' + (res.error || 'Resend error'));
+      }
+    } catch (err) {
+      setTestResult({ success: false, error: err.message });
+    } finally {
+      setIsTestingResend(false);
     }
   };
 
@@ -288,16 +362,32 @@ export default function Settings() {
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="text-slate-700 dark:text-slate-300 font-semibold">Work Email Address</label>
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-slate-700 dark:text-slate-300 font-semibold">Work Email Address</label>
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-slate-700 dark:text-slate-300 font-semibold flex items-center justify-between">
+                        <span>Personal Email (Alerts Destination)</span>
+                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-800">Resend Enabled</span>
+                      </label>
+                      <input
+                        type="email"
+                        value={personalEmail}
+                        onChange={(e) => setPersonalEmail(e.target.value)}
+                        placeholder="e.g. employee.personal@gmail.com"
+                        className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
                   </div>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 -mt-2">All official attendance warnings, leave approvals, and DPR reviews will be dispatched to this personal email address via Resend.</p>
 
                   <button
                     type="submit"
@@ -424,6 +514,176 @@ export default function Settings() {
                   Save Notification Preferences
                 </button>
               </form>
+
+              {/* RESEND EMAIL SERVICE ENGINE CONFIGURATION */}
+              <div className="border-t border-slate-200 dark:border-white/10 pt-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-indigo-600 dark:text-[#818cf8]" />
+                    <h5 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                      Resend Email Delivery Integration
+                    </h5>
+                  </div>
+                  <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${
+                    resendApiKey && resendApiKey.startsWith('re_')
+                      ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+                      : 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-800'
+                  }`}>
+                    {resendApiKey && resendApiKey.startsWith('re_') ? 'Resend Live Active' : 'Simulation Mode (Test Active)'}
+                  </span>
+                </div>
+
+                <form onSubmit={handleSaveResendSettings} className="space-y-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs">
+                  <div className="space-y-1">
+                    <label className="text-slate-700 dark:text-slate-300 font-semibold flex items-center justify-between">
+                      <span>Resend API Key</span>
+                      <a
+                        href="https://resend.com/api-keys"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 font-bold"
+                      >
+                        <span>Get Free Key on Resend</span>
+                        <ExternalLink className="h-2.5 w-2.5" />
+                      </a>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showApiKey ? 'text' : 'password'}
+                        value={resendApiKey}
+                        onChange={(e) => setResendApiKey(e.target.value)}
+                        placeholder="re_123456789_abcdef..."
+                        className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-mono text-xs focus:outline-none focus:border-indigo-500 pr-16"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowApiKey(!showApiKey)}
+                        className="absolute right-2 top-2 px-2 py-0.5 text-[10px] font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                      >
+                        {showApiKey ? 'Hide' : 'Show'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-slate-700 dark:text-slate-300 font-semibold">Sender Email Address (From)</label>
+                    <input
+                      type="text"
+                      value={resendFromEmail}
+                      onChange={(e) => setResendFromEmail(e.target.value)}
+                      placeholder="Nexora Alerts <onboarding@resend.dev>"
+                      className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs font-mono focus:outline-none focus:border-indigo-500"
+                    />
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Use onboarding@resend.dev for instant sandbox testing, or your custom verified domain on Resend.</span>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2">
+                    <button
+                      type="submit"
+                      className="px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs cursor-pointer"
+                    >
+                      Save Resend Settings
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleSendTestAlert}
+                      disabled={isTestingResend}
+                      className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
+                    >
+                      {isTestingResend ? (
+                        <>
+                          <span className="inline-block h-3 w-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Dispatching...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-3 w-3" />
+                          <span>Send Test to Personal Email</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+
+                {/* Test feedback */}
+                {testResult && (
+                  <div className={`p-3 rounded-xl border text-xs flex items-center gap-2 ${
+                    testResult.success
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
+                      : 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-300'
+                  }`}>
+                    {testResult.success ? <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" /> : <AlertTriangle className="h-4 w-4 shrink-0 text-rose-500" />}
+                    <span>{testResult.message || testResult.error}</span>
+                  </div>
+                )}
+
+                {/* Recent Dispatched Alerts History */}
+                <div className="space-y-2 pt-2">
+                  <div className="flex items-center justify-between">
+                    <h6 className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      Recent Email Alerts History ({emailLogs.length})
+                    </h6>
+                    <button
+                      type="button"
+                      onClick={() => setEmailLogs(getEmailAlertLogs())}
+                      className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold hover:underline flex items-center gap-1"
+                    >
+                      <RefreshCw className="h-2.5 w-2.5" />
+                      <span>Refresh</span>
+                    </button>
+                  </div>
+
+                  {emailLogs.length === 0 ? (
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 italic p-3 rounded-lg bg-slate-50 dark:bg-slate-900/40 text-center">
+                      No email alerts dispatched yet. Send a test alert or trigger attendance warnings to see live logs.
+                    </p>
+                  ) : (
+                    <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                      {emailLogs.slice(0, 8).map((log) => (
+                        <div
+                          key={log.id}
+                          className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 text-xs"
+                        >
+                          <div className="space-y-0.5 truncate">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-slate-900 dark:text-white truncate">{log.subject}</span>
+                              <span className={`text-[9px] font-extrabold px-1.5 py-0.2 rounded uppercase ${
+                                log.status === 'delivered'
+                                  ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
+                                  : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
+                              }`}>
+                                {log.status}
+                              </span>
+                            </div>
+                            <div className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                              <span>To: <strong className="font-mono text-indigo-600 dark:text-indigo-400">{log.to}</strong></span>
+                              <span>•</span>
+                              <span>{new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => setPreviewModalData({
+                              isOpen: true,
+                              recipientName: log.recipientName || 'Staff Member',
+                              personalEmail: log.to,
+                              subject: log.subject,
+                              html: log.html,
+                              type: log.type || 'alert'
+                            })}
+                            className="px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[10px] font-bold shrink-0 flex items-center gap-1 cursor-pointer"
+                          >
+                            <Eye className="h-3 w-3" />
+                            <span>Preview</span>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </motion.div>
           )}
 
@@ -485,6 +745,23 @@ export default function Settings() {
         </div>
 
       </div>
+
+      {/* Email Alert Preview Modal */}
+      {previewModalData && (
+        <EmailPreviewModal
+          isOpen={previewModalData.isOpen}
+          onClose={() => setPreviewModalData(null)}
+          recipientName={previewModalData.recipientName}
+          personalEmail={previewModalData.personalEmail}
+          subject={previewModalData.subject}
+          html={previewModalData.html}
+          type={previewModalData.type}
+          onSent={() => {
+            setEmailLogs(getEmailAlertLogs());
+            triggerToast('Email alert successfully dispatched!');
+          }}
+        />
+      )}
 
     </div>
   );
