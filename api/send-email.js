@@ -51,6 +51,7 @@ export default async function handler(req, res) {
     const { data, error } = await resend.emails.send({
       from,
       to: recipientList,
+      reply_to: 'contactnexoratechs@gmail.com',
       subject: subject || 'Nexora Portal Alert',
       html: html || `<p>${text || subject}</p>`,
       text: text || ''

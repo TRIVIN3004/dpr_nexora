@@ -242,6 +242,7 @@ export async function runDailyAttendanceJob(options = {}) {
       const res = await resend.emails.send({
         from: FROM_EMAIL,
         to: [item.personalMail],
+        reply_to: 'contactnexoratechs@gmail.com',
         subject,
         html,
         text: `Hello ${item.user.name}, your attendance for ${todayStr} has been recorded as PRESENT.`
@@ -287,6 +288,7 @@ export async function runDailyAttendanceJob(options = {}) {
       const res = await resend.emails.send({
         from: FROM_EMAIL,
         to: [item.personalMail],
+        reply_to: 'contactnexoratechs@gmail.com',
         subject,
         html,
         text: `Dear ${item.user.name}, you have been marked Absent for ${todayStr}. Please submit a leave request if this was an excused absence.`

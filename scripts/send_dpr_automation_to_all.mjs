@@ -179,6 +179,7 @@ Automated Workforce & DPR Systems
       const sendResult = await resend.emails.send({
         from: FROM_EMAIL,
         to: [toEmail],
+        reply_to: 'contactnexoratechs@gmail.com',
         subject: SUBJECT,
         html: htmlContent,
         text: plainText
