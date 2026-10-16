@@ -173,9 +173,30 @@ export async function runDailyAttendanceJob(options = {}) {
     }
   }
 
-  console.log(`📊 Summary for today:`);
-  console.log(`   ✅ Present: ${presentList.length}`);
-  console.log(`   ⚠️ Absent:  ${absentList.length}`);
+  // Deduplicate by personalMail: Present takes priority over Absent
+  const uniquePresentMap = new Map();
+  presentList.forEach(item => {
+    const key = item.personalMail.toLowerCase().trim();
+    if (!uniquePresentMap.has(key)) {
+      uniquePresentMap.set(key, item);
+    }
+  });
+
+  const uniqueAbsentMap = new Map();
+  absentList.forEach(item => {
+    const key = item.personalMail.toLowerCase().trim();
+    // Only send absent if not in present list
+    if (!uniquePresentMap.has(key) && !uniqueAbsentMap.has(key)) {
+      uniqueAbsentMap.set(key, item);
+    }
+  });
+
+  const finalPresentList = Array.from(uniquePresentMap.values());
+  const finalAbsentList = Array.from(uniqueAbsentMap.values());
+
+  console.log(`📊 Unique Mailboxes for today:`);
+  console.log(`   ✅ Present: ${finalPresentList.length}`);
+  console.log(`   ⚠️ Absent:  ${finalAbsentList.length}`);
 
   // Upsert absent records into Supabase
   if (recordsToUpsert.length > 0 && !dryRun) {
@@ -196,8 +217,8 @@ export async function runDailyAttendanceJob(options = {}) {
   };
 
   console.log('\n📬 Dispatching "PRESENT" confirmation emails...');
-  for (let i = 0; i < presentList.length; i++) {
-    const item = presentList[i];
+  for (let i = 0; i < finalPresentList.length; i++) {
+    const item = finalPresentList[i];
     const html = generateAttendancePresentEmail({
       employeeName: item.user.name,
       employeeId: item.user.id,
@@ -230,7 +251,7 @@ export async function runDailyAttendanceJob(options = {}) {
         console.error(`❌ PRESENT failed for ${item.user.name}:`, res.error.message);
         results.failed++;
       } else {
-        console.log(`✅ [PRESENT ${i + 1}/${presentList.length}] Sent to ${item.user.name} <${item.personalMail}> (ID: ${res.data?.id})`);
+        console.log(`✅ [PRESENT ${i + 1}/${finalPresentList.length}] Sent to ${item.user.name} <${item.personalMail}> (ID: ${res.data?.id})`);
         results.presentSent++;
       }
     } catch (err) {
@@ -243,8 +264,8 @@ export async function runDailyAttendanceJob(options = {}) {
 
   // 5. Dispatch Absent Emails
   console.log('\n📬 Dispatching "ABSENT" warning/notice emails...');
-  for (let i = 0; i < absentList.length; i++) {
-    const item = absentList[i];
+  for (let i = 0; i < finalAbsentList.length; i++) {
+    const item = finalAbsentList[i];
     const html = generateAttendanceAbsentEmail({
       employeeName: item.user.name,
       employeeId: item.user.id,
