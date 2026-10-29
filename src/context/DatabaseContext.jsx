@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '../utils/database';
+import { supabase, fetchCloudPersonalEmails } from '../utils/database';
 import { getPersonalEmail } from '../utils/emailService';
 
 const DatabaseContext = createContext(null);
@@ -59,16 +59,17 @@ export function DatabaseProvider({ children }) {
 
     const promise = (async () => {
       try {
+        await fetchCloudPersonalEmails().catch(() => {});
         const { data, error } = await supabase
           .from('users')
-          .select('id, name, email, role, department, assignedProjects, phone, mustChangePassword, avatar')
+          .select('*')
           .order('id', { ascending: true })
           .limit(100);
 
         if (!error && data) {
           const enriched = data.map(u => ({
             ...u,
-            personalEmail: getPersonalEmail(u)
+            personalEmail: u.personalEmail || u.personal_email || getPersonalEmail(u)
           }));
           setUsers(enriched);
           cacheTimestamps.current[key] = Date.now();

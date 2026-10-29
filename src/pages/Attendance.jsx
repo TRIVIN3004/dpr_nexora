@@ -43,12 +43,13 @@ import QRCodeAttendance from '../components/Attendance/QRCodeAttendance';
 import FaceRecognitionWidget from '../components/Attendance/FaceRecognitionWidget';
 import AdminAttendanceModal from '../components/Attendance/AdminAttendanceModal';
 import ReactivateUserModal from '../components/Attendance/ReactivateUserModal';
+import TerminationModal from '../components/Attendance/TerminationModal';
 import LeaveApplicationModal from '../components/Attendance/LeaveApplicationModal';
 import AdminLeaveReviewModal from '../components/Attendance/AdminLeaveReviewModal';
 import LeaveManagementView from '../components/Attendance/LeaveManagementView';
 import EmailPreviewModal from '../components/EmailPreviewModal';
 
-import { getDatabase, getCurrentUser } from '../utils/database';
+import { getDatabase, getCurrentUser, deleteTeamMember } from '../utils/database';
 import { useDatabaseStore } from '../context/DatabaseContext';
 import { useTheme } from '../context/ThemeContext';
 import { getPersonalEmail, generateAttendanceAbsentEmail, generateAttendanceWarningEmail, generateAttendanceTerminationEmail } from '../utils/emailService';
@@ -120,6 +121,8 @@ export default function Attendance() {
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [showReactivateModal, setShowReactivateModal] = useState(false);
   const [targetReactivateUser, setTargetReactivateUser] = useState(null);
+  const [showTerminationModal, setShowTerminationModal] = useState(false);
+  const [targetTerminationUser, setTargetTerminationUser] = useState(null);
 
   // Leave Applications State
   const [leaveApplications, setLeaveApplications] = useState([]);
@@ -306,6 +309,50 @@ export default function Attendance() {
       showToast('Error dispatching notice: ' + e.message, 'error');
     } finally {
       setEmailSendingMap(prev => ({ ...prev, [targetUser.id]: false }));
+    }
+  };
+
+  const handleInitiateTermination = (targetUser) => {
+    setTargetTerminationUser(targetUser);
+    setShowTerminationModal(true);
+  };
+
+  const handleConfirmTermination = async (targetUser, options = {}) => {
+    const { sendEmail = true, personalMail, stats } = options;
+    try {
+      if (sendEmail) {
+        try {
+          const userStats = stats || employeeStatsMap[targetUser.id];
+          await sendAttendanceTerminationEmailAlert(targetUser, userStats);
+          setEmailSentMap(prev => ({
+            ...prev,
+            [targetUser.id]: {
+              type: 'termination',
+              to: personalMail || getPersonalEmail(targetUser),
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              status: 'Delivered'
+            }
+          }));
+        } catch (mailErr) {
+          console.warn('Termination notice email alert dispatch warning:', mailErr);
+        }
+      }
+
+      const delRes = await deleteTeamMember(targetUser.id);
+      if (!delRes.success) {
+        showToast(delRes.error || 'Failed to remove member from database.', 'error');
+        return;
+      }
+
+      setUsers(prev => prev.filter(u => u.id !== targetUser.id));
+      setStaffUsers(prev => prev.filter(u => u.id !== targetUser.id));
+
+      window.dispatchEvent(new Event('database_updated'));
+      showToast(`${targetUser.name} has been terminated and removed from the active workforce.`, 'success');
+      loadData();
+    } catch (err) {
+      console.error('Termination execution error:', err);
+      showToast(err.message || 'Error executing termination.', 'error');
     }
   };
 
@@ -1488,6 +1535,17 @@ export default function Attendance() {
 
                             <td className="p-3.5 text-right">
                               <div className="flex items-center justify-end gap-1.5">
+                                {isAdmin && pct < 50 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleInitiateTermination(u)}
+                                    className="px-2.5 py-1.5 rounded-lg bg-rose-700 hover:bg-rose-800 text-white text-[11px] font-black cursor-pointer shadow-xs transition-colors flex items-center gap-1"
+                                    title="Attendance below 50%. Terminate & remove member."
+                                  >
+                                    <UserX className="h-3.5 w-3.5" />
+                                    <span>Terminate</span>
+                                  </button>
+                                )}
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -1822,6 +1880,17 @@ export default function Attendance() {
                                   <span>Alert Mail</span>
                                 </button>
                               </>
+                            )}
+                            {isAdmin && (employeeStatsMap[u.id]?.attendancePct ?? 100) < 50 && (
+                              <button
+                                type="button"
+                                onClick={() => handleInitiateTermination(u)}
+                                title={`Attendance ${(employeeStatsMap[u.id]?.attendancePct ?? 0)}% is below 50%. Terminate and remove member.`}
+                                className="px-2.5 py-1.5 rounded-lg bg-rose-700 hover:bg-rose-800 text-white text-[11px] font-extrabold cursor-pointer shadow-xs transition-colors inline-flex items-center gap-1"
+                              >
+                                <UserX className="h-3.5 w-3.5" />
+                                <span>Terminate</span>
+                              </button>
                             )}
                             <button
                               type="button"
@@ -2385,6 +2454,15 @@ export default function Attendance() {
                             >
                               Reactivate Access
                             </button>
+
+                            <button
+                              onClick={() => handleInitiateTermination(u)}
+                              className="px-3 py-1.5 rounded-lg bg-rose-700 hover:bg-rose-800 text-white text-[10px] font-black flex items-center gap-1.5 shadow-sm cursor-pointer transition-colors"
+                              title="Permanently remove member from active workforce due to attendance falling below 50%"
+                            >
+                              <UserX className="h-3 w-3" />
+                              <span>Terminate & Remove</span>
+                            </button>
                           </>
                         )}
                       </div>
@@ -2480,6 +2558,18 @@ export default function Attendance() {
         onClose={() => setShowReactivateModal(false)}
         targetUser={targetReactivateUser}
         onReactivate={handleReactivateUser}
+      />
+
+      {/* Admin Terminate & Remove Employee Modal */}
+      <TerminationModal 
+        isOpen={showTerminationModal}
+        onClose={() => {
+          setShowTerminationModal(false);
+          setTargetTerminationUser(null);
+        }}
+        targetUser={targetTerminationUser}
+        stats={targetTerminationUser ? employeeStatsMap[targetTerminationUser.id] : null}
+        onConfirmTermination={handleConfirmTermination}
       />
 
       {/* Leave Application Modal */}

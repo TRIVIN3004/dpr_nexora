@@ -75,10 +75,22 @@ export async function runDailyAttendanceJob(options = {}) {
   // 1. Fetch staff members
   console.log('📡 Fetching active staff roster...');
   let users = [];
+  let cloudEmailsMap = {};
   try {
+    // Load cloud personal email mapping from attendance_reports
+    const { data: rep } = await supabase
+      .from('attendance_reports')
+      .select('filters')
+      .eq('id', 'SYS_CONFIG_EMAILS')
+      .maybeSingle();
+    if (rep && rep.filters) {
+      cloudEmailsMap = rep.filters;
+      console.log(`☁️ Loaded ${Object.keys(cloudEmailsMap).length} personal email mappings from cloud config.`);
+    }
+
     const { data, error } = await supabase
       .from('users')
-      .select('id, name, email, role, department')
+      .select('*')
       .order('id', { ascending: true });
 
     if (error || !data || data.length === 0) {
@@ -87,6 +99,7 @@ export async function runDailyAttendanceJob(options = {}) {
         id,
         name: id,
         email: mail,
+        personalEmail: mail,
         department: 'Engineering'
       }));
     } else {
@@ -123,8 +136,12 @@ export async function runDailyAttendanceJob(options = {}) {
   const recordsToUpsert = [];
 
   for (const user of users) {
-    const personalMail = getPersonalEmail(user);
-    if (!personalMail || !personalMail.includes('@')) {
+    const cloudEmail = cloudEmailsMap[user.id] || cloudEmailsMap[(user.id || '').toUpperCase()] || cloudEmailsMap[(user.email || '').toLowerCase().trim()];
+    const resolvedEmail = user.personalEmail || user.personal_email || cloudEmail || getPersonalEmail(user);
+    const personalMail = resolvedEmail ? resolvedEmail.trim() : '';
+
+    if (!personalMail || !personalMail.includes('@') || personalMail.includes('.personal@')) {
+      console.warn(`⚠️ Skipping user ${user.name} (${user.id}) - No valid verified personal email found.`);
       continue;
     }
 

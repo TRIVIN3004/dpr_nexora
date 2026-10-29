@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { 
   getPersonalEmail, 
   savePersonalEmail, 
+  bulkUpdatePersonalEmails,
   sendEmailAlert, 
   generateDprReviewEmail, 
   generateWelcomeEmail 
@@ -59,20 +60,61 @@ export const initDatabase = () => {
   // No-op for Supabase since tables are initialized on server-side.
 };
 
+// Global cloud personal email synchronization
+export const fetchCloudPersonalEmails = async () => {
+  try {
+    const { data } = await supabase
+      .from('attendance_reports')
+      .select('filters')
+      .eq('id', 'SYS_CONFIG_EMAILS')
+      .maybeSingle();
+
+    if (data && data.filters) {
+      bulkUpdatePersonalEmails(data.filters);
+      return data.filters;
+    }
+  } catch (e) {
+    console.warn('Error fetching cloud personal emails:', e);
+  }
+  return {};
+};
+
+export const syncPersonalEmailToCloud = async (mapping = {}) => {
+  try {
+    const current = await fetchCloudPersonalEmails();
+    const merged = { ...current, ...mapping };
+    await supabase
+      .from('attendance_reports')
+      .upsert({
+        id: 'SYS_CONFIG_EMAILS',
+        reportType: 'CONFIG',
+        filters: merged,
+        generatedAt: new Date().toISOString(),
+        generatedBy: 'System'
+      });
+    bulkUpdatePersonalEmails(merged);
+    return merged;
+  } catch (e) {
+    console.warn('Error syncing cloud personal emails:', e);
+  }
+};
+
 export const loginUser = async (email, password) => {
-  console.log("LOGIN START");
-  console.log("Email:", email);
-  console.log("Password:", password);
+  const cleanInput = (email || '').trim();
+  const cleanPassword = (password || '').trim();
 
   try {
-    console.log("Supabase URL:", supabase.supabaseUrl);
-
-    const result = await supabase
+    let result = await supabase
       .from("users")
       .select("*")
-      .eq("email", email);
+      .ilike("email", cleanInput);
 
-    console.log("FULL RESULT:", result);
+    if (result.error || !result.data || !result.data.length) {
+      result = await supabase
+        .from("users")
+        .select("*")
+        .ilike("id", cleanInput);
+    }
 
     if (result.error) {
       console.error(result.error);
@@ -386,9 +428,10 @@ export const addTeamMember = async (memberData) => {
     const newId = memberData.id || `EMP-${Math.floor(100 + Math.random() * 900)}`;
     const personalEmail = memberData.personalEmail || getPersonalEmail({ id: newId, email: memberData.email });
     
-    // Persist personal email mapping
+    // Persist personal email mapping locally and to cloud
     if (personalEmail) {
       savePersonalEmail(newId, personalEmail);
+      syncPersonalEmailToCloud({ [newId]: personalEmail, [memberData.email]: personalEmail }).catch(() => {});
     }
 
     const newMember = {
@@ -422,12 +465,20 @@ export const addTeamMember = async (memberData) => {
     };
 
     // Strip personalEmail if DB schema column not present to avoid Supabase schema errors
-    const { personalEmail: _, ...dbMember } = newMember;
+    const { personalEmail: _, personal_email: __, ...dbMember } = newMember;
     let userInsert;
     try {
-      userInsert = await supabase.from('users').insert(newMember);
-      if (userInsert.error && userInsert.error.message.includes('personalEmail')) {
-        userInsert = await supabase.from('users').insert(dbMember);
+      const payloadWithCols = {
+        ...newMember,
+        personalEmail: personalEmail || undefined,
+        personal_email: personalEmail || undefined
+      };
+      userInsert = await supabase.from('users').insert(payloadWithCols);
+      if (userInsert.error) {
+        userInsert = await supabase.from('users').insert({ ...newMember, personalEmail: personalEmail || undefined });
+        if (userInsert.error) {
+          userInsert = await supabase.from('users').insert(dbMember);
+        }
       }
     } catch (e) {
       userInsert = await supabase.from('users').insert(dbMember);
@@ -484,24 +535,38 @@ export const editTeamMember = async (memberId, memberData) => {
 
     if (memberData.personalEmail) {
       savePersonalEmail(memberId, memberData.personalEmail);
+      syncPersonalEmailToCloud({ [memberId]: memberData.personalEmail, [memberData.email]: memberData.personalEmail }).catch(() => {});
     }
 
-    const { personalEmail: _, ...dbPayload } = memberData;
+    const { personalEmail: _, personal_email: __, ...dbPayload } = memberData;
+    const cleanPersonal = memberData.personalEmail ? memberData.personalEmail.trim() : '';
     let res;
     try {
+      const payloadWithCols = {
+        ...dbPayload,
+        ...(cleanPersonal ? { personalEmail: cleanPersonal, personal_email: cleanPersonal } : {})
+      };
       res = await supabase
         .from('users')
-        .update(memberData)
+        .update(payloadWithCols)
         .eq('id', memberId)
         .select()
         .single();
-      if (res.error && res.error.message.includes('personalEmail')) {
+      if (res.error) {
         res = await supabase
           .from('users')
-          .update(dbPayload)
+          .update({ ...dbPayload, ...(cleanPersonal ? { personalEmail: cleanPersonal } : {}) })
           .eq('id', memberId)
           .select()
           .single();
+        if (res.error) {
+          res = await supabase
+            .from('users')
+            .update(dbPayload)
+            .eq('id', memberId)
+            .select()
+            .single();
+        }
       }
     } catch (e) {
       res = await supabase

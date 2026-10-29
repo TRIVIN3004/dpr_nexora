@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Save, X, Sparkles, Check, AlertCircle } from 'lucide-react';
 import { getPersonalEmail, bulkUpdatePersonalEmails } from '../utils/emailService';
+import { syncPersonalEmailToCloud } from '../utils/database';
 
 export default function BulkPersonalEmailModal({
   isOpen,
@@ -71,8 +72,9 @@ export default function BulkPersonalEmailModal({
     setQuickPasteText('');
   };
 
-  const handleSaveAll = () => {
+  const handleSaveAll = async () => {
     bulkUpdatePersonalEmails(emailMap);
+    await syncPersonalEmailToCloud(emailMap);
     setSaveSuccess(true);
     if (onSaved) onSaved(emailMap);
     setTimeout(() => {

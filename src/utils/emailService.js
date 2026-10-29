@@ -55,9 +55,12 @@ export const DEFAULT_PERSONAL_EMAILS = {
   'EMP-049': 'srdharshanraj@gmail.com',
   'EMP-050': 'keerthivasan30112005@gmail.com',
   'EMP-051': 'gabyo894491@gmail.com',
+  'EMP-052': 'kiruthikayoganand61205@gmail.com',
+  'EMP-053': 'Mubeenabanu2007@gmail.com',
+  'EMP-054': 'rajsoundar637@gmail.com',
+  'EMP-055': 'vedhasivasankar.ss@gmail.com',
+  'EMP-056': 'priyadharshinipanneerselvam24@gmail.com',
   'USR-001': 'contactnexoratechs@gmail.com',
-  'USR-002': 'alex.johnson.personal@gmail.com',
-  'USR-003': 'sarah.miller.personal@gmail.com',
 
   // Work Email Cross-References (lowercase)
   'trivin@nexora.com': 'trivintrivin2005@gmail.com',
@@ -105,6 +108,12 @@ export const DEFAULT_PERSONAL_EMAILS = {
   'dharshanraj@nexora.com': 'srdharshanraj@gmail.com',
   'keerthivasan@nexora.com': 'keerthivasan30112005@gmail.com',
   'jeff@nexora.com': 'gabyo894491@gmail.com',
+  'kiruthika@nexora.com': 'kiruthika.dev@gmail.com',
+  'kiruthikayoganand@nexora.com': 'kiruthikayoganand61205@gmail.com',
+  'mubeena@nexora.com': 'Mubeenabanu2007@gmail.com',
+  'soundararaj@nexora.com': 'rajsoundar637@gmail.com',
+  'vedha@nexora.com': 'vedhasivasankar.ss@gmail.com',
+  'priyadharshini@nexora.com': 'priyadharshinipanneerselvam24@gmail.com',
   'admin@nexora.com': 'contactnexoratechs@gmail.com',
 
   // Name Matches (lowercase trimmed)
@@ -185,7 +194,14 @@ export const DEFAULT_PERSONAL_EMAILS = {
   'waseem ahamed a j': 'waseemay1127@gmail.com',
   'waseem ahmed': 'waseemay1127@outlook.com',
   'yani muizz': 'yani.muizz2008@gmail.com',
-  'yani muizz h': 'yani.muizz2008@gmail.com'
+  'yani muizz h': 'yani.muizz2008@gmail.com',
+  'kiruthika yoganand': 'kiruthikayoganand61205@gmail.com',
+  'mubeena': 'Mubeenabanu2007@gmail.com',
+  'soundararaj': 'rajsoundar637@gmail.com',
+  'vedha': 'vedhasivasankar.ss@gmail.com',
+  'vedha s': 'vedhasivasankar.ss@gmail.com',
+  'priyadharshini': 'priyadharshinipanneerselvam24@gmail.com',
+  'priyadharshini panneerselvam': 'priyadharshinipanneerselvam24@gmail.com'
 };
 
 // Excluded team members list (removed from email notifications)
@@ -213,40 +229,47 @@ export const isExcludedMember = (user) => {
 // 1. Personal Email Resolution
 export const getPersonalEmail = (user) => {
   if (!user || isExcludedMember(user)) return '';
-  if (user.personalEmail && user.personalEmail.trim().length > 3) {
-    if (EXCLUDED_EMAILS.includes(user.personalEmail.toLowerCase().trim())) return '';
-    return user.personalEmail.trim();
+
+  // 1. Check explicit personalEmail property on user object (from Supabase or state)
+  const directPersonalEmail = user.personalEmail || user.personal_email;
+  if (directPersonalEmail && typeof directPersonalEmail === 'string' && directPersonalEmail.trim().length > 3) {
+    const cleaned = directPersonalEmail.trim();
+    if (!EXCLUDED_EMAILS.includes(cleaned.toLowerCase()) && !cleaned.includes('.personal@')) {
+      return cleaned;
+    }
   }
 
-  // Check local mapping cache
+  // 2. Check local mapping cache
   try {
     if (typeof localStorage !== 'undefined') {
       const raw = localStorage.getItem('nexora_personal_emails_map');
       if (raw) {
         const map = JSON.parse(raw);
-        if (user.id && map[user.id]) return map[user.id];
-        if (user.email && map[user.email.toLowerCase()]) return map[user.email.toLowerCase()];
-        if (user.name && map[user.name.toLowerCase().trim()]) return map[user.name.toLowerCase().trim()];
+        if (user.id && map[user.id] && !map[user.id].includes('.personal@')) return map[user.id];
+        if (user.email && map[user.email.toLowerCase()] && !map[user.email.toLowerCase()].includes('.personal@')) return map[user.email.toLowerCase()];
+        if (user.name && map[user.name.toLowerCase().trim()] && !map[user.name.toLowerCase().trim()].includes('.personal@')) return map[user.name.toLowerCase().trim()];
       }
     }
   } catch (e) {
     console.warn('Error reading personal emails map:', e);
   }
 
-  // Fallback to default comprehensive map by ID
-  if (user.id && DEFAULT_PERSONAL_EMAILS[user.id]) {
-    return DEFAULT_PERSONAL_EMAILS[user.id];
-  }
-  if (user.id && DEFAULT_PERSONAL_EMAILS[user.id.toUpperCase()]) {
-    return DEFAULT_PERSONAL_EMAILS[user.id.toUpperCase()];
-  }
-
-  // Fallback by email
-  if (user.email && DEFAULT_PERSONAL_EMAILS[user.email.toLowerCase().trim()]) {
-    return DEFAULT_PERSONAL_EMAILS[user.email.toLowerCase().trim()];
+  // 3. Fallback to comprehensive master map by Employee ID
+  if (user.id) {
+    const idClean = user.id.trim();
+    if (DEFAULT_PERSONAL_EMAILS[idClean]) return DEFAULT_PERSONAL_EMAILS[idClean];
+    if (DEFAULT_PERSONAL_EMAILS[idClean.toUpperCase()]) return DEFAULT_PERSONAL_EMAILS[idClean.toUpperCase()];
   }
 
-  // Fallback by name
+  // 4. Fallback by Work Email Cross-Reference
+  if (user.email) {
+    const emailClean = user.email.toLowerCase().trim();
+    if (DEFAULT_PERSONAL_EMAILS[emailClean]) {
+      return DEFAULT_PERSONAL_EMAILS[emailClean];
+    }
+  }
+
+  // 5. Fallback by Name Matching
   if (user.name) {
     const cleanName = user.name.toLowerCase().trim();
     if (DEFAULT_PERSONAL_EMAILS[cleanName]) {
@@ -257,13 +280,15 @@ export const getPersonalEmail = (user) => {
     if (matchingKey) return DEFAULT_PERSONAL_EMAILS[matchingKey];
   }
 
-  // If work email has standard format, construct personal email or fallback
-  if (user.email && user.email.includes('@nexora.com')) {
-    const prefix = user.email.split('@')[0];
-    return `${prefix}.personal@gmail.com`;
+  // 6. If user's primary email itself is a real personal address (e.g. @gmail.com)
+  if (user.email && (user.email.includes('@gmail.com') || user.email.includes('@outlook.com') || user.email.includes('@yahoo.com') || user.email.includes('@hotmail.com'))) {
+    if (!user.email.includes('.personal@')) {
+      return user.email;
+    }
   }
 
-  return user.email || '';
+  // Strictly return empty string rather than generating fake <name>.personal@gmail.com
+  return '';
 };
 
 export const savePersonalEmail = (userId, personalEmail) => {
