@@ -150,3 +150,4 @@ export default function TerminationModal({
 
   return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 }
+
